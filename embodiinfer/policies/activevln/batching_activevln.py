@@ -79,6 +79,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         tree_repeat_actions: int = 1,
         kv_pool_tokens: int | None = None,
         draft: ActiveVLNDraft | None = None,
+        serial_draft: bool = False,
         preprocess_workers: int = 1,
     ) -> None:
         if type(batch_size) is not int or batch_size < 1:
@@ -101,6 +102,17 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             or int(draft.token_ids.max()) >= policy._lm_head.weight.shape[0]
         ):
             raise ValueError("draft dimensions/vocabulary do not fit the target policy")
+        if type(serial_draft) is not bool:
+            raise ValueError("serial_draft must be a boolean")
+        self._serial_draft = None
+        if serial_draft:
+            if not (cuda_graph and fused_ops and split_attention) or tree_decode:
+                raise ValueError(
+                    "serial_draft requires CUDA graphs, fused ops, split attention and no static tree"
+                )
+            from .serial_draft import validate_serial_draft_profile
+
+            validate_serial_draft_profile(policy, draft, batch_size)
         self.draft = (
             None if draft is None else draft.to(device=parameter.device, dtype=parameter.dtype).eval()
         )
@@ -186,6 +198,10 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             )
         self._resident_rows = [None] * batch_size
         self._owned_rows: list[tuple[torch.Tensor, object] | None] = [None] * batch_size
+        if serial_draft:
+            from .serial_draft import SerialDraftVerifier
+
+            self._serial_draft = SerialDraftVerifier(self)
         self.preprocess_workers = preprocess_workers
         self._preprocess_local = local()
         self._preprocess_pool = (
@@ -262,6 +278,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             "shared_graph_buffers": True,
             "text_graph_executables": len({id(entry.graph) for entry in self.text_graphs.values()}),
             "tree_graph_executables": len({id(entry.graph) for entry in self.tree_graphs.values()}),
+            "serial_draft": self._serial_draft is not None,
+            **({} if self._serial_draft is None else self._serial_draft.stats()),
         }
 
     def prepare(
@@ -328,6 +346,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         capacity = min(limit, 1 << (required - 1).bit_length())
         self.text_graphs.clear()
         self.tree_graphs.clear()
+        if self._serial_draft is not None:
+            self._serial_draft.invalidate()
         self._graph_buffers.clear()
         self._resident_rows = [None] * self.batch_size
         self._replace_storage(capacity)
@@ -461,6 +481,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                 self._pending_generation = None
             self.storage.zero_()
             self._resident_rows = [None] * self.batch_size
+            if self._serial_draft is not None:
+                self._serial_draft.prewarm(context_buckets)
 
     def _capture_contexts(self, query: int, context_buckets: Sequence[int], *, tree: bool = False) -> None:
         graphs = self.tree_graphs if tree else self.text_graphs
@@ -629,6 +651,10 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                 raise RuntimeError("batched prefix is stale or already consumed")
             try:
                 if self.draft is not None:
+                    if self._serial_draft is not None:
+                        from .serial_draft import generate_serial_draft_tokens
+
+                        return generate_serial_draft_tokens(self, prefix, cancelled=cancelled)
                     from .speculation_activevln import generate_batched_draft_tokens
 
                     return generate_batched_draft_tokens(self, prefix, cancelled=cancelled)

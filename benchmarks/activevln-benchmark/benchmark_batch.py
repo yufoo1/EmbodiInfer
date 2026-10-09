@@ -187,6 +187,7 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
                 tree_repeat_actions=config.get("tree_repeat_actions", 1),
                 kv_pool_tokens=config.get("kv_pool_tokens"),
                 draft=draft,
+                serial_draft=config.get("serial_draft", False),
                 preprocess_workers=config.get("preprocess_workers", 1),
             )
             report["phase"] = "graph_capture"

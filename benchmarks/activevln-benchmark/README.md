@@ -10,7 +10,68 @@ The September 25 reference profile below uses `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` 
 
 ## Independent GPU instances
 
-### Learned draft and parallel preprocessing (experimental, October 10)
+### Serial-reference draft verification (opt-in)
+
+`serial_draft=true` enables the learned draft with private numerical plans and
+per-token attention-context auditing. This mode preserves the pinned **serial
+greedy B=4 tensor runtime** as its reference, with fused operators, split
+attention and graphs enabled. It does not use the older static phrase tree as
+an accuracy reference. The full target vocabulary still verifies each proposed
+suffix; a failed context forecast is repaired before committing recurrent state.
+
+The admitted profile is intentionally narrow: Linux, RTX 4090, BF16,
+Torch 2.10.0+cu128, Triton 3.6.0, cuBLAS 12.8.4.1, Transformers 4.51.3,
+the R2R 3B target, B=4 per replica and the trained 16-token draft.
+Use `torch.set_float32_matmul_precision("highest")` and default CUDA reduction
+settings. Other numerical profiles fail explicitly. Existing defaults are
+unchanged. A new GPU/library/batch profile needs separate operator and complete
+trajectory verification before admission.
+
+In the isolated ActiveVLN environment, the optional reference projection backend
+also requires a C++17 compiler (`g++`, or `CXX`), the CUDA developer headers
+(`CUDA_HOME`, default `/usr/local/cuda`) and the headers/library from
+`nvidia-cublas-cu12==12.8.4.1`. It builds a small host-only cuBLASLt bridge on first
+use and caches it under `$XDG_CACHE_HOME/embodiinfer/cublas-reference` (default
+`~/.cache`). Compilation and graph capture happen before the measurement barrier.
+The C++ source is included in the wheel. This feature does not require an
+additional model framework or change process-global module forwards.
+
+Enable these options alongside the complete replay configuration below:
+
+```json
+{
+  "batch_size": 4,
+  "draft_checkpoint": "/absolute/path/model-v1/draft.pt",
+  "serial_draft": true,
+  "tree_decode": false,
+  "cuda_graph": true,
+  "fused_ops": true,
+  "split_attention": true,
+  "preprocess_workers": 4,
+  "text_cache_size": 256
+}
+```
+
+The complete [B=4 configuration](results/4090-learned-draft-20261010/serial-reference-b4-config.json)
+records the tested checkpoint, dataset and local artifact paths. Adjust only paths
+when reproducing this profile. Use a fresh output directory:
+
+```bash
+python benchmarks/activevln-benchmark/benchmark_multi_instance.py \
+  --config benchmarks/activevln-benchmark/results/4090-learned-draft-20261010/serial-reference-b4-config.json \
+  --devices 0,1 --output /absolute/path/new-serial-draft-result
+python benchmarks/activevln-benchmark/compare.py \
+  /absolute/path/serial-reference/summary.json \
+  /absolute/path/new-serial-draft-result/summary.json --output comparison.json
+```
+
+Generate the serial reference with the same configuration and launcher, removing
+`draft_checkpoint` and setting `serial_draft=false`. Keep shard assignment,
+B=4, warmup, query buckets, context limit and every recorded observation the same.
+The comparator requires both exact outputs and common-wall throughput of at
+least 25 observations/s per allocated GPU.
+
+### Earlier learned draft and parallel preprocessing measurements (experimental, October 10)
 
 The new optional `draft_checkpoint` selects a trained feature-conditioned model
 instead of the static phrase tree (`tree_decode=false`). It proposes 15 tokens

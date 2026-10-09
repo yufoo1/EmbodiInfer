@@ -351,6 +351,22 @@ class ActiveVLNGraphRuntime:
                 return project(module.down_proj, activated)
 
         batch, query_length = hidden.shape[:2]
+        serial_draft = getattr(self, "_serial_draft", None)
+        verification = serial_draft is not None and ancestors is not None and query_length == 16
+        if serial_draft is not None:
+
+            def norm(module: torch.nn.Module, x: torch.Tensor) -> torch.Tensor:
+                return serial_draft.norm(module, x, verification=verification)
+
+            if verification:
+                project = serial_draft.project
+
+                def mlp(module: torch.nn.Module, x: torch.Tensor) -> torch.Tensor:
+                    return project(
+                        module.down_proj,
+                        rounded_swiglu(project(module.gate_proj, x), project(module.up_proj, x)),
+                    )
+
         layout = getattr(self, "_cache_layout", None)
         write_lengths = getattr(self, "_write_lengths", None)
         indices = cache_position[:, None] + torch.arange(query_length, device=self.device)[None, :]
@@ -409,13 +425,15 @@ class ActiveVLNGraphRuntime:
             if self.split_attention:
                 from ...backend.triton.split_attention import split_kv_attention
 
-                out = split_kv_attention(
+                attention_impl = serial_draft.attend if verification else split_kv_attention
+                options = {} if verification else {"ancestors": ancestors}
+                out = attention_impl(
                     q,
                     key_cache,
                     value_cache,
                     cache_position,
                     key_bucket,
-                    ancestors=ancestors,
+                    **options,
                     cache_starts=None if layout is None else layout[0],
                     cache_capacities=None if layout is None else layout[1],
                 )

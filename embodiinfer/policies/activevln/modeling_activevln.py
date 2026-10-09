@@ -577,6 +577,7 @@ class ActiveVLNPolicy(VLAPolicy):
         tree_repeat_actions: int = 1,
         kv_pool_tokens: int | None = None,
         draft: ActiveVLNDraft | None = None,
+        serial_draft: bool = False,
         preprocess_workers: int = 1,
     ) -> ActiveVLNBatchedRuntime:
         """Create true greedy tensor batching with explicit per-row memory inputs.
@@ -584,6 +585,8 @@ class ActiveVLNPolicy(VLAPolicy):
         Use the runtime's prepare/prefill/generate methods for separate timing
         scopes. Generic engine session batching and sampled rollout branches
         retain their existing contracts; this is an inference-only policy API.
+        ``serial_draft`` selects the optional pinned serial-reference profile;
+        unsupported numerical environments fail before workspace allocation.
         """
         from .batching_activevln import ActiveVLNBatchedRuntime
 
@@ -600,6 +603,7 @@ class ActiveVLNPolicy(VLAPolicy):
             tree_repeat_actions=tree_repeat_actions,
             kv_pool_tokens=kv_pool_tokens,
             draft=draft,
+            serial_draft=serial_draft,
             preprocess_workers=preprocess_workers,
         )
 

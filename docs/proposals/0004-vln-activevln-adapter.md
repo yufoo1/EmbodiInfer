@@ -823,3 +823,43 @@ not satisfy exact behavior admission against the old static-tree path. Keep the
 learned draft opt-in and experimental; report its speed separately from accuracy
 admission. A numerical tolerance on hidden states does not certify navigation
 success or permit silently changing the exact output comparison.
+
+### Optional serial-reference verification
+
+Add an opt-in draft verification profile whose reference is serial greedy
+decoding inside the same optimized tensor-batch runtime. This reference retains
+the chosen prefill, vision, fused arithmetic and split-attention backends; it is
+distinct from the historical static phrase-tree path. Initially constrain the
+profile to the validated RTX 4090, Torch 2.10.0/CUDA 12.8, BF16, B=4 and 16-token
+draft environment. Reject unsupported profiles explicitly. Keep default behavior
+and the default-off learned draft unchanged.
+
+Concrete cuBLASLt projection planning and shape-matched RMSNorm belong under
+`backend`; they must not import policy or scheduler code. The ActiveVLN policy
+owns reference batch dimensions, causal verification, context forecasts and
+repair. Select projection algorithms with the serial reference's split/reduction
+settings, and fall back to actual serial projections for unsupported shapes.
+Retain the serial RMSNorm accumulation order and intermediate BF16 rounding.
+The optional native bridge requires a C++ compiler and compatible CUDA/cuBLAS
+headers; build artifacts live in a user cache rather than the source tree.
+
+Asynchronous proposal acceptance changes the global context buckets that a
+serial batch would use. Forecast those buckets per row/token, verify proposals
+with the corresponding attention partitions, and audit the complete response
+before committing memory. Revalidate an unsafe suffix in parallel; rejection
+falls back to serial decoding from the last validated prefix. Cancellation or
+failure must leave committed histories untouched. CUDA graphs and forecast
+buffers belong to one runtime instance, with no process-global monkeypatches.
+
+When every remaining root is already terminal, write its KV but skip logits
+for a subsequent token. A guarded ASCII proposal vocabulary can also avoid
+repeated STOP parsing when a suffix cannot complete the literal `stop`; arbitrary
+target roots and unsupported tokenizers retain the original parser. EOS, STOP,
+repetition penalties and context/token budgets retain their existing semantics.
+
+Admission requires complete token/action/stop/cache-length parity at identical
+replica assignments and batch schedules. Small-prefix KV checks supplement that
+gate. Report both summed inference intervals and common job wall time per
+allocated GPU; the latter includes auditing, reporting and the slow replica's
+tail. This profile does not establish navigation SR/SPL or networked serving
+performance.
