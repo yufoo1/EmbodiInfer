@@ -8,9 +8,10 @@ from pathlib import Path
 
 import pytest
 
-_compare = runpy.run_path(
+_comparison_module = runpy.run_path(
     str(Path(__file__).resolve().parents[1] / "benchmarks/activevln-benchmark/compare.py")
-)["compare"]
+)
+_compare = _comparison_module["compare"]
 
 
 def report():
@@ -106,6 +107,104 @@ def batch_report():
         rows=rows,
         batches=batches,
     )
+
+
+def multi_instance_reports():
+    """Split the complete workload once, retaining independent replica batch indices."""
+    source = batch_report()
+    replicas = []
+    for index in range(2):
+        selection = source["selection"][index::2]
+        episodes = {episode["episode_id"] for episode in selection}
+        rows = [copy.deepcopy(row) for row in source["rows"] if row["episode_id"] in episodes]
+        for position, row in enumerate(rows):
+            row["batch_index"] = position // 4
+        batches = [
+            {
+                "batch_index": position // 4,
+                "observations": len(rows[position : position + 4]),
+                "latency_ms": 30.0 * len(rows[position : position + 4]),
+            }
+            for position in range(0, len(rows), 4)
+        ]
+        replicas.append(
+            {
+                **source,
+                "config": {**source["config"], "episode_shards": 2, "episode_shard_index": index},
+                "selection": selection,
+                "selection_sha256": f"shard-{index}",
+                "rows": rows,
+                "batches": batches,
+                "measurement_start_ns": 1_000_000_000,
+                "measurement_end_ns": 1_000_000_000 + len(rows) * 30_000_000,
+                "metrics": {"observations_per_second": 1000 / 30},
+            }
+        )
+    return replicas
+
+
+@pytest.fixture
+def compare_multi(monkeypatch):
+    monkeypatch.syspath_prepend(str(Path(__file__).resolve().parents[1] / "benchmarks/activevln-benchmark"))
+    return _comparison_module["compare_multi_instance"]
+
+
+def test_multi_instance_comparison_checks_complete_shards_without_mutating_reports(compare_multi):
+    baseline = multi_instance_reports()
+    candidate = copy.deepcopy(baseline)
+    saved = copy.deepcopy(candidate)
+    result = compare_multi(baseline, candidate)
+    assert result["observations"] == 2997
+    assert result["exact_behavior_parity"] and result["admitted"]
+    assert result["instances"] == 2
+    assert result["candidate_observations_per_second"] == pytest.approx(1000 / 30)
+    assert candidate == saved
+    candidate[1]["rows"][0]["token_ids"] = [99]
+    changed = compare_multi(baseline, candidate)
+    assert changed["mismatches_by_field"]["token_ids"] == 1
+    assert not changed["admitted"]
+
+
+def test_multi_instance_gate_includes_slow_tail_and_reporting_time(compare_multi):
+    baseline = multi_instance_reports()
+    candidate = copy.deepcopy(baseline)
+    candidate[1]["measurement_end_ns"] = 91_000_000_000
+    result = compare_multi(baseline, candidate)
+    assert result["inference_interval_admitted"]
+    assert result["candidate_wall_observations_per_second_per_gpu"] == pytest.approx(2997 / 90 / 2)
+    assert not result["admitted"]
+
+
+@pytest.mark.parametrize("failure", ["assignment", "missing_frame", "condition", "schedule", "incomplete"])
+def test_multi_instance_comparison_rejects_changed_workload(compare_multi, failure):
+    baseline = multi_instance_reports()
+    candidate = copy.deepcopy(baseline)
+    if failure == "assignment":
+        candidate.reverse()
+    elif failure == "missing_frame":
+        candidate[0]["rows"].pop()
+    elif failure == "condition":
+        candidate[1]["config"]["max_new_tokens"] += 1
+    elif failure == "schedule":
+        candidate[1]["rows"][0]["batch_index"] = 1
+        candidate[1]["rows"][4]["batch_index"] = 0
+    else:
+        candidate[1]["status"] = "error"
+    with pytest.raises(ValueError):
+        compare_multi(baseline, candidate)
+
+
+def test_multi_instance_loader_rejects_failed_processes(tmp_path):
+    with pytest.raises(ValueError, match="successful replicas"):
+        _comparison_module["load_replica_reports"](
+            tmp_path / "summary.json",
+            {
+                "status": "complete",
+                "instances": 2,
+                "replica_reports": ["replica-0.json", "replica-1.json"],
+                "returncodes": [0, 1],
+            },
+        )
 
 
 def test_tensor_batch_comparison_counts_real_observations_and_checks_tokens():

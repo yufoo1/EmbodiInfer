@@ -36,6 +36,90 @@ OUTPUT_FIELDS = (
 EXPECTED_CALLS = {"R2R": 2997, "RxR": 3879}
 
 
+def compare_multi_instance(
+    reference: list[dict[str, Any]], candidate: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Audit complete episode-affine shards and require 25/s per allocated GPU.
+
+    Both runs must use the same replica assignments and batch schedules. The
+    admission gate includes common wall time, including the slower replica's
+    tail and reporting; summed inference intervals remain a separate metric.
+    """
+    from benchmark_multi_instance import aggregate
+
+    if not reference or len(reference) != len(candidate):
+        raise ValueError("comparison requires the same nonempty replica count")
+    for index, (left, right) in enumerate(zip(reference, candidate, strict=True)):
+        for key in ("selection", "selection_sha256", "global_episode_ids"):
+            if left[key] != right[key]:
+                raise ValueError(f"replica {index} assignment changed: {key}")
+        for report in (left, right):
+            config = report["config"]
+            if config.get("episode_shards") != len(reference) or config.get("episode_shard_index") != index:
+                raise ValueError("replica index/count does not match its shard configuration")
+            for key in (*CONDITIONS, "action_space", "query_bucket_size"):
+                if config.get(key) != reference[0]["config"].get(key):
+                    raise ValueError(f"replica experimental condition changed: {key}")
+            for key in ("schema", "dataset", "batch_size", "timing_boundary", "slot_refill"):
+                if report[key] != reference[0][key]:
+                    raise ValueError(f"replica measurement contract changed: {key}")
+
+    metrics = [aggregate(reports) for reports in (reference, candidate)]
+    if any(result["status"] != "complete" for result in metrics):
+        raise ValueError("comparison requires every replica to complete")
+
+    def combine(reports: list[dict[str, Any]]) -> dict[str, Any]:
+        combined = dict(reports[0])
+        combined["selection"] = [episode for report in reports for episode in report["selection"]]
+        combined["selection_sha256"] = hashlib.sha256(
+            json.dumps(combined["selection"], sort_keys=True).encode()
+        ).hexdigest()
+        combined["rows"], combined["batches"] = [], []
+        for report in reports:
+            offset = len(combined["batches"])
+            combined["batches"].extend(
+                {**batch, "batch_index": offset + batch["batch_index"]} for batch in report["batches"]
+            )
+            combined["rows"].extend(
+                {**row, "batch_index": offset + row["batch_index"]} for row in report["rows"]
+            )
+        return combined
+
+    result = compare_batches(combine(reference), combine(candidate))
+    wall_rates = [metric["observations_per_second"] / len(reference) for metric in metrics]
+    result.update(
+        instances=len(reference),
+        baseline_wall_observations_per_second_per_gpu=wall_rates[0],
+        candidate_wall_observations_per_second_per_gpu=wall_rates[1],
+        wall_speedup=wall_rates[1] / wall_rates[0],
+        inference_interval_admitted=result["admitted"],
+        admitted=result["admitted"] and wall_rates[1] >= 25.0,
+        admission_boundary="Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+    )
+    return result
+
+
+def load_replica_reports(summary_path: Path, summary: dict[str, Any]) -> list[dict[str, Any]]:
+    """Load complete sibling reports, rejecting missing or failed worker processes."""
+    names = summary.get("replica_reports", [])
+    count = summary.get("instances")
+    if (
+        summary.get("status") != "complete"
+        or not names
+        or count != len(names)
+        or len(set(names)) != len(names)
+        or summary.get("returncodes") != [0] * count
+    ):
+        raise ValueError("multi-instance summary must contain complete successful replicas")
+    reports = []
+    for name in names:
+        if Path(name).name != name:
+            raise ValueError("replica reports must be sibling filenames")
+        report = json.loads((summary_path.parent / name).read_bytes())
+        reports.append(report)
+    return reports
+
+
 def compare_batches(reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
     """Audit complete tensor-batch replays with identical occupancy and episode order.
 
@@ -223,7 +307,15 @@ def main() -> None:
     )
     args = parser.parse_args()
     reference, candidate = args.reference.read_bytes(), args.candidate.read_bytes()
-    result = compare(json.loads(reference), json.loads(candidate), accuracy_contract=args.accuracy_contract)
+    left, right = json.loads(reference), json.loads(candidate)
+    if left.get("schema") == "activevln.multi_instance.v1":
+        if right.get("schema") != left["schema"] or args.accuracy_contract != "exact":
+            raise ValueError("multi-instance comparison requires matching summaries and exact accuracy")
+        result = compare_multi_instance(
+            load_replica_reports(args.reference, left), load_replica_reports(args.candidate, right)
+        )
+    else:
+        result = compare(left, right, accuracy_contract=args.accuracy_contract)
     result["reference_sha256"] = hashlib.sha256(reference).hexdigest()
     result["candidate_sha256"] = hashlib.sha256(candidate).hexdigest()
     args.output.parent.mkdir(parents=True, exist_ok=True)

@@ -233,6 +233,20 @@ batch amortization without crediting simultaneous execution on another GPU.
 Use them for the 40 ms/sample (25 samples/s per GPU) target. The aggregate
 wall-time rate remains a separate capacity measurement.
 
+For complete multi-instance admission, compare the two `summary.json` files:
+
+```bash
+python benchmarks/activevln-benchmark/compare.py \
+  /absolute/path/reference/summary.json /absolute/path/candidate/summary.json \
+  --output /absolute/path/comparison.json
+```
+
+This checks all 48 episodes across the shards, identical replica assignments and
+batch schedules, successful worker exits and exact output fields. It reports
+inference-interval efficiency separately and requires **common-wall throughput
+divided by allocated GPUs to reach 25/s** for complete-job admission. A result
+above 25/s only inside inference calls does not pass this stronger boundary.
+
 ### Two RTX 4090 instances, October 10, 2026
 
 This run uses source base `78dafc402a1fef65d04c126b0414891392cb2724` plus the
