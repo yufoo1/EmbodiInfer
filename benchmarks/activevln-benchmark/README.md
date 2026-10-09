@@ -19,6 +19,12 @@ accepted suffix. `preprocess_workers=4` gives each CPU worker its own processor
 and tokenizer, with ordered results and H2D on the caller thread. The runtime's
 `close()` releases workers. Both options are off by default.
 
+`text_cache_size=256` additionally caches repeated prompt tokenization per CPU
+worker. Fresh image processing and an actual image-grid check still run on every
+observation. Private KV commits reuse only an unchanged prefix in the exact same
+owned buffer, copying the new suffix. Neither optimization skips observations,
+changes image resolution, or truncates history.
+
 Full R2R replay, BF16, B=4, 33 warmup batch calls, the same checkpoint/data pins
 and complete histories as below:
 
@@ -29,6 +35,8 @@ and complete histories as below:
 | Learned draft, four preprocessing workers | 1 | 39.12 | 25.56 | 15.37 |
 | Learned draft, four preprocessing workers per instance | 2 | 39.70 | **25.19** | 15.21 |
 | Same dual configuration, isolated repeat | 2 | 39.68 | **25.20** | 15.21 |
+| Plus text cache and suffix KV, compact reports | 2 | 39.12 | **25.56** | 15.21 |
+| Same cache configuration, isolated repeat | 2 | 39.12 | **25.56** | 15.21 |
 
 The dual run completed all 2,997 observations once, with no graph fallbacks or
 capacity growth. Replica rates were **24.82 and 25.56/s**; 25.19/s is the pooled
@@ -46,6 +54,30 @@ GPU** when report/audit overhead and the slower tail are included. Thus the
 batch-amortized inference E2E target is reached, but an allocation-normalized
 wall-throughput target of 25/s is not yet reached.
 
+A subsequent dual run with text caching and suffix-only KV commits reached
+**25.65/s per GPU** in the inference interval (replicas 25.34/25.97/s), with
+**zero differences in all 2,997 audited rows** and identical batch schedules
+versus the isolated repeat. Including audit/report/tail time gave 49.96/s
+aggregate, or **24.98/s per allocated GPU**. Thus these two lossless changes
+improve the earlier learned-draft path but do not alone meet the wall target.
+The single-GPU suffix-only run skipped 17,393,819 already-owned prefix tokens
+and copied 2,035,510 tokens; its outputs also matched the previous learned run
+exactly. Its 25.48/s measurement does not establish a standalone E2E gain over
+the previous 25.56/s single-GPU run.
+
+Keeping the same report frequency and every audit field while serializing the
+atomic reports as compact JSON reduced host overhead. This full dual replay
+measured **25.56/s per GPU** in inference E2E and **25.04/s per allocated GPU**
+over the common wall interval, again with zero output or schedule differences.
+An isolated repeat measured 25.56/s in inference E2E and **25.10/s per allocated
+GPU** over the wall interval, with another 2,997 exact output matches. Both
+short replays exceed the wall target, but by only 0.14–0.39%; a robust operating
+margin is not established. Compact reporting is an experiment-harness
+improvement outside the summed inference interval. No simulation or network
+time is included.
+Configs and raw-report hashes are in
+[`cache-optimization-evidence.json`](results/4090-learned-draft-20261010/cache-optimization-evidence.json).
+
 **Accuracy admission remains failed.** Serial versus parallel preprocessing
 produced identical tokens, actions, stopping reasons and cache lengths on all
 2,997 observations. Learned versus static-tree decoding changed actions/tokens
@@ -55,6 +87,18 @@ differences from identical input prefixes. Changed BF16 verification shapes are
 numerically different; full-vocabulary verification does not establish bit-exact
 serial greedy equivalence. No SR/SPL was measured for this draft. Treat its speed
 as an experimental result, not an admitted lossless replacement.
+
+Numerical diagnosis on four identical cached prefixes found the first divergence
+in layer-zero Q/K/V projection, before attention: root output differences were
+0.0625/0.03125/0.00390625 in BF16. cuBLASLt chose different tiles and split-K
+reductions for one-token and sixteen-token input shapes. A diagnostic prototype
+reusing serial GEMM algorithms removed the first-layer projection differences,
+but later attention still diverged and final hidden states did not match. This
+prototype is an unadmitted experiment, not the benchmark implementation. See
+[PyTorch's numerical accuracy guidance](https://docs.pytorch.org/docs/2.10/notes/numerical_accuracy.html)
+and [cuBLASLt algorithm selection](https://docs.nvidia.com/cuda/archive/12.8.0/cublas/index.html#heuristics-cache)
+for the relevant backend behavior; these sources do not substitute for measured
+policy parity.
 
 Training used the R2R teacher on 3,879 RxR observations (73,684 generated tokens).
 Forty whole episodes trained the draft and eight supplied validation. No R2R

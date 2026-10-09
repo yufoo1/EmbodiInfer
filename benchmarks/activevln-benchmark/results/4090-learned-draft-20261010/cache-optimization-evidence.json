@@ -1,0 +1,2702 @@
+{
+  "artifact_root": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010",
+  "source_revision_base": "5993d26a342c718fefddc61414390b04f02424d4",
+  "source_archives": {
+    "embodiinfer-prompt-cache.tar.gz": "f0ca3f74d81eb09e83e5d213a7102cfe6ccdfd848c1e5d32c1855a52ebbd9daf",
+    "embodiinfer-cache-compact.tar.gz": "613b4c1268180110a87d1c62d6adb044f6d50c1dfc629c8e7d778943cda1456a"
+  },
+  "runs": {
+    "dual-learned-b4-text-cache": {
+      "summary": {
+        "schema": "activevln.multi_instance.v1",
+        "status": "complete",
+        "devices": [
+          "0",
+          "1"
+        ],
+        "instances": 2,
+        "batch_per_instance": 4,
+        "maximum_concurrent_observations": 8,
+        "config": {
+          "schema_version": 1,
+          "model": "activevln",
+          "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+          "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 33,
+          "repeats": 1,
+          "attention": "sdpa",
+          "cuda_graph": true,
+          "fused_ops": true,
+          "split_attention": true,
+          "tree_decode": false,
+          "tree_fp32_projection": false,
+          "tree_repeat_actions": 1,
+          "query_bucket_size": 1,
+          "prewarm_context_buckets": [
+            512,
+            1024,
+            2048,
+            4096,
+            8192,
+            16384,
+            32768,
+            65536
+          ],
+          "graph_workspace_tokens": 65536,
+          "max_new_tokens": 512,
+          "max_context": 128000,
+          "do_sample": false,
+          "repetition_penalty": 1.05,
+          "cpu_threads": 4,
+          "max_steps_per_episode": null,
+          "datasets": [
+            {
+              "name": "R2R",
+              "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+              "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+              "episode_limit": 48,
+              "repository": "cywan/StreamVLN-Trajectory-Data",
+              "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+              "split": "published_training_trajectories"
+            }
+          ],
+          "batch_size": 4,
+          "kv_pool_tokens": 128000,
+          "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+          "source_base_revision": "78dafc4",
+          "preload_rgb": true,
+          "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+          "preprocess_workers": 4,
+          "text_cache_size": 256
+        },
+        "replica_reports": [
+          "replica-0.json",
+          "replica-1.json"
+        ],
+        "pids": [
+          293737,
+          293738
+        ],
+        "returncodes": [
+          0,
+          0
+        ],
+        "replica_statuses": [
+          "complete",
+          "complete"
+        ],
+        "metrics": {
+          "status": "complete",
+          "observations": 2997,
+          "episodes": 48,
+          "wall_seconds": 59.986437827,
+          "observations_per_second": 49.96129306166343,
+          "aggregate_amortized_ms_per_observation": 20.015494770437105,
+          "per_instance_amortized_ms_per_observation": 38.98614110677344,
+          "per_instance_observations_per_second": 25.650140578449307,
+          "request_latency_ms": {
+            "mean": 149.6738275388722,
+            "p50": 147.861583,
+            "p95": 179.469238,
+            "p99": 193.740603
+          },
+          "mean_batch_occupancy": 3.8178343949044584,
+          "start_skew_ms": 6.181163,
+          "replica_inference_rates_sum": 51.30235583149515,
+          "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+        }
+      },
+      "wall_per_allocated_gpu": 24.980646530831716,
+      "replicas": [
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 0
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "62c1c8e271b96e3d57823ac34c3da9ee0a9a734ec36c0ccf02ac4802eea19aa0",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "b217e1416df91b37cb74aeedf6bc2b3fae40696f4097dfd18c78c6fcf82f5e74",
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 150.67571390745502,
+              "p50": 150.497739,
+              "p95": 179.5430284,
+              "p99": 192.19472724
+            },
+            "batch_forward_ms": {
+              "mean": 130.51959692030846,
+              "p50": 129.838234,
+              "p95": 159.326196,
+              "p99": 170.8221264
+            },
+            "batch_prefill_ms": {
+              "mean": 89.32883927999855
+            },
+            "batch_decode_ms": {
+              "mean": 41.150087601727876
+            },
+            "amortized_e2e_ms_per_observation": 39.46993448484849,
+            "amortized_forward_ms_per_observation": 34.189981954208754,
+            "observations_per_second": 25.33574005256773
+          },
+          "memory": {
+            "peak_allocated_bytes": 16331223552,
+            "peak_reserved_bytes": 17645436928,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8594697092355815,
+          "measurement_end_ns": 8594757078793642,
+          "sha256": "30757fba339077b7605654cf5673a00bc4c8997c33ce2a98638066ebdad6bd79",
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 1161,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8736125,
+            "owned_kv_copied_tokens": 950412,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1161,
+            "draft_proposed_tokens": 49065,
+            "draft_accepted_tokens": 22494,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 1
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "62c1c8e271b96e3d57823ac34c3da9ee0a9a734ec36c0ccf02ac4802eea19aa0",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "165a64b29ced23e8958d9b9afa6b0a733bd2d2300d2d56eefb7a5a05eadb70bc",
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.04194996717175,
+              "p50": 145.590691,
+              "p95": 178.48421175,
+              "p99": 190.58858015000004
+            },
+            "batch_forward_ms": {
+              "mean": 126.40129210858585,
+              "p50": 124.7820015,
+              "p95": 156.33849075,
+              "p99": 169.11462355000003
+            },
+            "batch_prefill_ms": {
+              "mean": 86.09507257288152
+            },
+            "batch_decode_ms": {
+              "mean": 40.26492694893269
+            },
+            "amortized_e2e_ms_per_observation": 38.51098689616403,
+            "amortized_forward_ms_per_observation": 33.10510031415344,
+            "observations_per_second": 25.966615778927423
+          },
+          "memory": {
+            "peak_allocated_bytes": 16204398080,
+            "peak_reserved_bytes": 17205035008,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8594697098536978,
+          "measurement_end_ns": 8594756517714929,
+          "sha256": "6ef4d9bd061cdd2774fbb593aae184fd145b38930d85ab5148451be5f05997cc",
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 1156,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8762922,
+            "owned_kv_copied_tokens": 982613,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1156,
+            "draft_proposed_tokens": 48630,
+            "draft_accepted_tokens": 22596,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "parity": [
+        {
+          "rank": 0,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1485,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        },
+        {
+          "rank": 1,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1512,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        }
+      ]
+    },
+    "dual-learned-b4-cache-compact": {
+      "summary": {
+        "schema": "activevln.multi_instance.v1",
+        "status": "complete",
+        "devices": [
+          "0",
+          "1"
+        ],
+        "instances": 2,
+        "batch_per_instance": 4,
+        "maximum_concurrent_observations": 8,
+        "config": {
+          "schema_version": 1,
+          "model": "activevln",
+          "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+          "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 33,
+          "repeats": 1,
+          "attention": "sdpa",
+          "cuda_graph": true,
+          "fused_ops": true,
+          "split_attention": true,
+          "tree_decode": false,
+          "tree_fp32_projection": false,
+          "tree_repeat_actions": 1,
+          "query_bucket_size": 1,
+          "prewarm_context_buckets": [
+            512,
+            1024,
+            2048,
+            4096,
+            8192,
+            16384,
+            32768,
+            65536
+          ],
+          "graph_workspace_tokens": 65536,
+          "max_new_tokens": 512,
+          "max_context": 128000,
+          "do_sample": false,
+          "repetition_penalty": 1.05,
+          "cpu_threads": 4,
+          "max_steps_per_episode": null,
+          "datasets": [
+            {
+              "name": "R2R",
+              "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+              "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+              "episode_limit": 48,
+              "repository": "cywan/StreamVLN-Trajectory-Data",
+              "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+              "split": "published_training_trajectories"
+            }
+          ],
+          "batch_size": 4,
+          "kv_pool_tokens": 128000,
+          "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+          "source_base_revision": "78dafc4",
+          "preload_rgb": true,
+          "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+          "preprocess_workers": 4,
+          "text_cache_size": 256
+        },
+        "replica_reports": [
+          "replica-0.json",
+          "replica-1.json"
+        ],
+        "pids": [
+          295209,
+          295210
+        ],
+        "returncodes": [
+          0,
+          0
+        ],
+        "replica_statuses": [
+          "complete",
+          "complete"
+        ],
+        "metrics": {
+          "status": "complete",
+          "observations": 2997,
+          "episodes": 48,
+          "wall_seconds": 59.854042854,
+          "observations_per_second": 50.07180563074885,
+          "aggregate_amortized_ms_per_observation": 19.971318936936935,
+          "per_instance_amortized_ms_per_observation": 39.11982511077744,
+          "per_instance_observations_per_second": 25.56248646736669,
+          "request_latency_ms": {
+            "mean": 150.2020490687354,
+            "p50": 149.072522,
+            "p95": 178.87941259999974,
+            "p99": 193.598995
+          },
+          "mean_batch_occupancy": 3.8178343949044584,
+          "start_skew_ms": 0.879218,
+          "replica_inference_rates_sum": 51.127221568161644,
+          "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+        }
+      },
+      "wall_per_allocated_gpu": 25.035902815374424,
+      "replicas": [
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 0
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "b217e1416df91b37cb74aeedf6bc2b3fae40696f4097dfd18c78c6fcf82f5e74",
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 151.22613641131105,
+              "p50": 151.138502,
+              "p95": 179.43314779999994,
+              "p99": 193.15991019999998
+            },
+            "batch_forward_ms": {
+              "mean": 130.47719250899743,
+              "p50": 129.921756,
+              "p95": 158.6225746,
+              "p99": 172.46143196
+            },
+            "batch_prefill_ms": {
+              "mean": 89.30514906856273
+            },
+            "batch_decode_ms": {
+              "mean": 41.13059280218992
+            },
+            "amortized_e2e_ms_per_observation": 39.61411923501683,
+            "amortized_forward_ms_per_observation": 34.1788739973064,
+            "observations_per_second": 25.243524766191236
+          },
+          "memory": {
+            "peak_allocated_bytes": 16331223552,
+            "peak_reserved_bytes": 17645436928,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8595120724636449,
+          "measurement_end_ns": 8595180577800085,
+          "sha256": "7711dfd42bc5c416a8aca86b775cbfdb3df9cd2fb462fe7345bb75b5264f1d36",
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 1161,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8736125,
+            "owned_kv_copied_tokens": 950412,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1161,
+            "draft_proposed_tokens": 49065,
+            "draft_accepted_tokens": 22494,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 1
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "165a64b29ced23e8958d9b9afa6b0a733bd2d2300d2d56eefb7a5a05eadb70bc",
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.51300200252524,
+              "p50": 145.83070750000002,
+              "p95": 177.62467775,
+              "p99": 188.55100480000007
+            },
+            "batch_forward_ms": {
+              "mean": 126.76187233838385,
+              "p50": 125.204339,
+              "p95": 157.1594675,
+              "p99": 169.28365690000004
+            },
+            "batch_prefill_ms": {
+              "mean": 86.15992588467068
+            },
+            "batch_decode_ms": {
+              "mean": 40.56032378745802
+            },
+            "amortized_e2e_ms_per_observation": 38.63435766732804,
+            "amortized_forward_ms_per_observation": 33.19953799338625,
+            "observations_per_second": 25.883696801970412
+          },
+          "memory": {
+            "peak_allocated_bytes": 16204398080,
+            "peak_reserved_bytes": 17205035008,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8595120723757231,
+          "measurement_end_ns": 8595180156908828,
+          "sha256": "a12e97891e99c30a35006c753a1ed20b474b4a69104a01334c805645e5ed42db",
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 1156,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8762922,
+            "owned_kv_copied_tokens": 982613,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1156,
+            "draft_proposed_tokens": 48630,
+            "draft_accepted_tokens": 22596,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "parity": [
+        {
+          "rank": 0,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1485,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        },
+        {
+          "rank": 1,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1512,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        }
+      ]
+    },
+    "dual-learned-b4-cache-repeat": {
+      "summary": {
+        "schema": "activevln.multi_instance.v1",
+        "status": "complete",
+        "devices": [
+          "0",
+          "1"
+        ],
+        "instances": 2,
+        "batch_per_instance": 4,
+        "maximum_concurrent_observations": 8,
+        "config": {
+          "schema_version": 1,
+          "model": "activevln",
+          "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+          "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 33,
+          "repeats": 1,
+          "attention": "sdpa",
+          "cuda_graph": true,
+          "fused_ops": true,
+          "split_attention": true,
+          "tree_decode": false,
+          "tree_fp32_projection": false,
+          "tree_repeat_actions": 1,
+          "query_bucket_size": 1,
+          "prewarm_context_buckets": [
+            512,
+            1024,
+            2048,
+            4096,
+            8192,
+            16384,
+            32768,
+            65536
+          ],
+          "graph_workspace_tokens": 65536,
+          "max_new_tokens": 512,
+          "max_context": 128000,
+          "do_sample": false,
+          "repetition_penalty": 1.05,
+          "cpu_threads": 4,
+          "max_steps_per_episode": null,
+          "datasets": [
+            {
+              "name": "R2R",
+              "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+              "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+              "episode_limit": 48,
+              "repository": "cywan/StreamVLN-Trajectory-Data",
+              "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+              "split": "published_training_trajectories"
+            }
+          ],
+          "batch_size": 4,
+          "kv_pool_tokens": 128000,
+          "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+          "source_base_revision": "78dafc4",
+          "preload_rgb": true,
+          "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+          "preprocess_workers": 4,
+          "text_cache_size": 256
+        },
+        "replica_reports": [
+          "replica-0.json",
+          "replica-1.json"
+        ],
+        "pids": [
+          295817,
+          295818
+        ],
+        "returncodes": [
+          0,
+          0
+        ],
+        "replica_statuses": [
+          "complete",
+          "complete"
+        ],
+        "metrics": {
+          "status": "complete",
+          "observations": 2997,
+          "episodes": 48,
+          "wall_seconds": 59.708668212,
+          "observations_per_second": 50.19371708909889,
+          "aggregate_amortized_ms_per_observation": 19.922812216216215,
+          "per_instance_amortized_ms_per_observation": 39.11754235201868,
+          "per_instance_observations_per_second": 25.563978201927974,
+          "request_latency_ms": {
+            "mean": 150.2141468545212,
+            "p50": 148.826271,
+            "p95": 179.51151139999996,
+            "p99": 196.348269
+          },
+          "mean_batch_occupancy": 3.8178343949044584,
+          "start_skew_ms": 5.501204,
+          "replica_inference_rates_sum": 51.131723910133836,
+          "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+        }
+      },
+      "wall_per_allocated_gpu": 25.096858544549445,
+      "replicas": [
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 0
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "b217e1416df91b37cb74aeedf6bc2b3fae40696f4097dfd18c78c6fcf82f5e74",
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 151.47002941645243,
+              "p50": 151.006692,
+              "p95": 179.6047902,
+              "p99": 196.74045468
+            },
+            "batch_forward_ms": {
+              "mean": 130.65108670437016,
+              "p50": 129.834525,
+              "p95": 158.3718262,
+              "p99": 172.02821664
+            },
+            "batch_prefill_ms": {
+              "mean": 89.33057275100354
+            },
+            "batch_decode_ms": {
+              "mean": 41.27851545534894
+            },
+            "amortized_e2e_ms_per_observation": 39.67800770572391,
+            "amortized_forward_ms_per_observation": 34.224426079461274,
+            "observations_per_second": 25.202878315277434
+          },
+          "memory": {
+            "peak_allocated_bytes": 16331223552,
+            "peak_reserved_bytes": 17645436928,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8595375332539593,
+          "measurement_end_ns": 8595435041207805,
+          "sha256": "fcff1eae0ff824f1cf161a70648f152e906bc004880d85c1f57aa52596f467b5",
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 1161,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8736125,
+            "owned_kv_copied_tokens": 950412,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1161,
+            "draft_proposed_tokens": 49065,
+            "draft_accepted_tokens": 22494,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "status": "complete",
+          "config": {
+            "schema_version": 1,
+            "model": "activevln",
+            "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+            "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+            "device": "cuda:0",
+            "dtype": "bfloat16",
+            "seed": 42,
+            "warmup_calls": 33,
+            "repeats": 1,
+            "attention": "sdpa",
+            "cuda_graph": true,
+            "fused_ops": true,
+            "split_attention": true,
+            "tree_decode": false,
+            "tree_fp32_projection": false,
+            "tree_repeat_actions": 1,
+            "query_bucket_size": 1,
+            "prewarm_context_buckets": [
+              512,
+              1024,
+              2048,
+              4096,
+              8192,
+              16384,
+              32768,
+              65536
+            ],
+            "graph_workspace_tokens": 65536,
+            "max_new_tokens": 512,
+            "max_context": 128000,
+            "do_sample": false,
+            "repetition_penalty": 1.05,
+            "cpu_threads": 4,
+            "max_steps_per_episode": null,
+            "datasets": [
+              {
+                "name": "R2R",
+                "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+                "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+                "episode_limit": 48,
+                "repository": "cywan/StreamVLN-Trajectory-Data",
+                "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+                "split": "published_training_trajectories"
+              }
+            ],
+            "batch_size": 4,
+            "kv_pool_tokens": 128000,
+            "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+            "source_base_revision": "78dafc4",
+            "preload_rgb": true,
+            "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+            "preprocess_workers": 4,
+            "text_cache_size": 256,
+            "episode_shards": 2,
+            "episode_shard_index": 1
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection_sha256": "165a64b29ced23e8958d9b9afa6b0a733bd2d2300d2d56eefb7a5a05eadb70bc",
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.2561439040404,
+              "p50": 145.681298,
+              "p95": 178.33623400000002,
+              "p99": 191.11278050000004
+            },
+            "batch_forward_ms": {
+              "mean": 126.73745146969698,
+              "p50": 125.1599175,
+              "p95": 156.90250675000001,
+              "p99": 169.52233185000006
+            },
+            "batch_prefill_ms": {
+              "mean": 86.14861864995474
+            },
+            "batch_decode_ms": {
+              "mean": 40.54629593666154
+            },
+            "amortized_e2e_ms_per_observation": 38.56708530820106,
+            "amortized_forward_ms_per_observation": 33.1931420515873,
+            "observations_per_second": 25.9288455948564
+          },
+          "memory": {
+            "peak_allocated_bytes": 16204398080,
+            "peak_reserved_bytes": 17205035008,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "measurement_start_ns": 8595375338040797,
+          "measurement_end_ns": 8595434714957216,
+          "sha256": "c37dce59ef0b98bdd10fa35e929843dc96b3b55c648999f40211816f33133c24",
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 1156,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8762922,
+            "owned_kv_copied_tokens": 982613,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1156,
+            "draft_proposed_tokens": 48630,
+            "draft_accepted_tokens": 22596,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_nodes": {},
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "parity": [
+        {
+          "rank": 0,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1485,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        },
+        {
+          "rank": 1,
+          "reference": "dual-learned-b4-clean",
+          "row_count": 1512,
+          "same_count": true,
+          "changed_rows": 0,
+          "same_schedule": true,
+          "audited_fields": [
+            "batch_index",
+            "episode_id",
+            "step",
+            "token_ids",
+            "text",
+            "stop_reason",
+            "action_mask",
+            "actions",
+            "output_sha256",
+            "parsed_valid",
+            "cache_length"
+          ]
+        }
+      ]
+    }
+  },
+  "accuracy_admission": "New cache changes exactly match the previously recorded learned draft, whose comparison against the static target path still fails. No navigation SR/SPL claim.",
+  "suffix_single": {
+    "status": "complete",
+    "config": {
+      "schema_version": 1,
+      "model": "activevln",
+      "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+      "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "seed": 42,
+      "warmup_calls": 33,
+      "repeats": 1,
+      "attention": "sdpa",
+      "cuda_graph": true,
+      "fused_ops": true,
+      "split_attention": true,
+      "tree_decode": false,
+      "tree_fp32_projection": false,
+      "tree_repeat_actions": 1,
+      "query_bucket_size": 1,
+      "prewarm_context_buckets": [
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        65536
+      ],
+      "graph_workspace_tokens": 65536,
+      "max_new_tokens": 512,
+      "max_context": 128000,
+      "do_sample": false,
+      "repetition_penalty": 1.05,
+      "cpu_threads": 4,
+      "max_steps_per_episode": null,
+      "datasets": [
+        {
+          "name": "R2R",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+          "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+          "episode_limit": 48,
+          "repository": "cywan/StreamVLN-Trajectory-Data",
+          "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+          "split": "published_training_trajectories"
+        }
+      ],
+      "batch_size": 4,
+      "kv_pool_tokens": 128000,
+      "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+      "source_base_revision": "78dafc4",
+      "preload_rgb": true,
+      "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+      "preprocess_workers": 4
+    },
+    "environment": {
+      "gpu": "NVIDIA GeForce RTX 4090",
+      "capability": [
+        8,
+        9
+      ],
+      "cuda": "12.8",
+      "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+      "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+      "executable": "/root/activevln-venv/bin/python",
+      "virtual_environment": "/root/activevln-venv",
+      "packages": {
+        "torch": "2.10.0",
+        "torchvision": "0.25.0",
+        "transformers": "4.51.3",
+        "triton": "3.6.0",
+        "lerobot": null,
+        "numpy": "2.5.2",
+        "Pillow": "12.3.0",
+        "h5py": null
+      },
+      "source_revision": null,
+      "source_python_sha256": "38e44b2841e2e5a0b5521869b84ce291936f98bcb7fd847eccdc4669e6b23456",
+      "dependency_check": null,
+      "driver_version": "580.82.07\n580.82.07"
+    },
+    "selection_sha256": "b1fe693db13a4dcf3fbca696c796250c35b31e8e11126ab39b22deec54231457",
+    "metrics": {
+      "batches": 782,
+      "observations": 2997,
+      "mean_batch_occupancy": 3.8324808184143224,
+      "batch_e2e_ms": {
+        "mean": 150.38880134526855,
+        "p50": 150.212084,
+        "p95": 185.88275894999998,
+        "p99": 204.52338272999992
+      },
+      "batch_forward_ms": {
+        "mean": 128.37587664705882,
+        "p50": 127.7314615,
+        "p95": 162.8562644,
+        "p99": 182.86664927999996
+      },
+      "batch_prefill_ms": {
+        "mean": 87.89875781749521
+      },
+      "batch_decode_ms": {
+        "mean": 40.43566265130592
+      },
+      "amortized_e2e_ms_per_observation": 39.24058813880547,
+      "amortized_forward_ms_per_observation": 33.49680865465466,
+      "observations_per_second": 25.48381783837456
+    },
+    "memory": {
+      "peak_allocated_bytes": 16506341888,
+      "peak_reserved_bytes": 17643339776,
+      "device_total_bytes": 25250627584,
+      "peak_scope": "measurement"
+    },
+    "measurement_start_ns": 8594021901987980,
+    "measurement_end_ns": 8594143229885224,
+    "sha256": "59551321f8aaa1d0371745892c2b911f268216b3d5300ef75930cea390073895",
+    "runtime": {
+      "vision_replays": 782,
+      "vision_fallbacks": 0,
+      "prefill_replays": 782,
+      "prefill_fallbacks": 0,
+      "decode_replays": 0,
+      "decode_fallbacks": 0,
+      "memory_restores": 362,
+      "tree_replays": 2296,
+      "tree_fallbacks": 0,
+      "tree_accepted_tokens": 0,
+      "tree_fallback_tokens": 0,
+      "memory_resident_hits": 2587,
+      "owned_kv_allocations": 261,
+      "owned_kv_reuses": 2736,
+      "owned_kv_prefix_tokens_skipped": 17393819,
+      "owned_kv_copied_tokens": 2035510,
+      "pool_relocations": 62,
+      "tree_verified_rows": 0,
+      "tree_candidate_nodes": 0,
+      "tree_padding_nodes": 0,
+      "prefill_actual_tokens": 497978,
+      "prefill_padding_tokens": 84074,
+      "draft_verification_calls": 2296,
+      "draft_proposed_tokens": 97320,
+      "draft_accepted_tokens": 45125,
+      "vision_graphs": 4,
+      "text_graphs": 456,
+      "tree_decode": false,
+      "tree_repeat_actions": 1,
+      "tree_fp32_projection": false,
+      "tree_nodes": {},
+      "tree_graphs": 8,
+      "capture_enabled": false,
+      "query_bucket_size": 1,
+      "fused_ops": true,
+      "split_attention": true,
+      "workspace_mib": 4500.0,
+      "workspace_tokens": 65536,
+      "model_max_context": 128000,
+      "batch_size": 4,
+      "batching_mode": "padded_tensor_batch",
+      "cuda_graph_requested": true,
+      "capacity_growths": 0,
+      "learned_draft": true,
+      "draft_block_size": 16,
+      "draft_graph": true,
+      "preprocess_workers": 4,
+      "kv_pool_tokens": 128000,
+      "shared_graph_buffers": true,
+      "text_graph_executables": 64,
+      "tree_graph_executables": 8
+    }
+  },
+  "suffix_single_comparison": {
+    "dataset": "R2R",
+    "observations": 2997,
+    "batch_size": 4,
+    "exact_behavior_parity": true,
+    "matching_observations": 2997,
+    "mismatches_by_field": {
+      "token_ids": 0,
+      "output_sha256": 0,
+      "action_mask": 0,
+      "parsed_valid": 0,
+      "stop_reason": 0,
+      "cache_length": 0,
+      "actions": 0,
+      "text": 0
+    },
+    "first_mismatches": [],
+    "baseline_amortized_e2e_ms": 39.12257419953286,
+    "candidate_amortized_e2e_ms": 39.24058813880547,
+    "candidate_observations_per_second": 25.48381783837456,
+    "speedup": 0.9969925542691879,
+    "navigation_success_evaluated": false,
+    "admitted": true,
+    "reference_sha256": "ad29c54cf296cc7ded7af60b43e26e5dfc68797fd8e636636910ca93ea65a14e",
+    "candidate_sha256": "59551321f8aaa1d0371745892c2b911f268216b3d5300ef75930cea390073895"
+  },
+  "validation": {
+    "cpu_regression": "594 passed, 59 skipped, 65 deselected; CUDA_VISIBLE_DEVICES empty; pytest -m not gpu",
+    "ruff": "239 files formatted; checks pass",
+    "inference_source": "cache-compact-source",
+    "reporting": "Same atomic JSON reports every 25 batches, compact serialization; all raw fields retained. Reporting is outside summed inference E2E but inside common wall time."
+  },
+  "numerical_diagnostics": {
+    "projection-kernels-probe.json": {
+      "sha256": "5167fac66c330b18b2733236929aaa7238aaeb7027b65da8f621a736afb4764b",
+      "selected_evidence": {
+        "roots": [
+          412,
+          412,
+          412,
+          412
+        ],
+        "layers": [
+          {
+            "module": "layers.0.self_attn.q_proj",
+            "input_max_abs": 0.0,
+            "output_max_abs": 0.0625,
+            "output_rmse": 0.004058733582496643,
+            "bias": true,
+            "fp32_output_max_abs": 0.0009765625,
+            "serial_vs_split": 0.0625,
+            "block_split_vs_serial": 0.0625,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0,
+            "bmm_split_vs_serial": 0.0625,
+            "kernel_profiles": {
+              "serial": [
+                {
+                  "name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8>(cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8::Params)",
+                  "us": 10.240999999999985
+                }
+              ],
+              "block": [
+                {
+                  "name": "void cutlass::Kernel2<cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_64x64_32x6_tn_align8>(cutlass_80_tensorop_bf16_s16816gemm_relu_bf16_64x64_32x6_tn_align8::Params)",
+                  "us": 6.976000000000113
+                },
+                {
+                  "name": "void cublasLt::splitKreduce_kernel<32, 16, int, __nv_bfloat16, __nv_bfloat16, float, __nv_bfloat16, false, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, true, true, false>(cublasLt::cublasSplitKParams<float>, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+                  "us": 1.887000000000171
+                }
+              ]
+            },
+            "baddbmm_vs_serial": 0.0
+          },
+          {
+            "module": "layers.0.self_attn.k_proj",
+            "input_max_abs": 0.0,
+            "output_max_abs": 0.03125,
+            "output_rmse": 0.0032206529285758734,
+            "bias": true,
+            "fp32_output_max_abs": 0.0,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.03125,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0625,
+            "bmm_split_vs_serial": 0.03125,
+            "kernel_profiles": {
+              "serial": [
+                {
+                  "name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8>(cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_16x16_128x2_tn_align8::Params)",
+                  "us": 2.7840000000001055
+                },
+                {
+                  "name": "void cublasLt::splitKreduce_kernel<32, 16, int, __nv_bfloat16, __nv_bfloat16, float, __nv_bfloat16, false, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, true, true, false>(cublasLt::cublasSplitKParams<float>, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+                  "us": 1.4719999999997526
+                }
+              ],
+              "block": [
+                {
+                  "name": "void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_64x1_tn_align8>(cutlass_80_wmma_tensorop_bf16_s161616gemm_bf16_32x32_64x1_tn_align8::Params)",
+                  "us": 3.3910000000000764
+                },
+                {
+                  "name": "void cublasLt::splitKreduce_kernel<32, 16, int, __nv_bfloat16, __nv_bfloat16, float, __nv_bfloat16, false, __nv_bfloat16, __nv_bfloat16, __nv_bfloat16, true, true, false>(cublasLt::cublasSplitKParams<float>, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, __nv_bfloat16*, float const*, float const*, __nv_bfloat16 const*, __nv_bfloat16 const*, __nv_bfloat16*, void*, long, float*, int*, float*, float*, float const*, float const*, float const*, float const*, float const*)",
+                  "us": 1.7280000000000655
+                }
+              ]
+            },
+            "baddbmm_vs_serial": 0.0625
+          },
+          {
+            "module": "layers.0.self_attn.v_proj",
+            "input_max_abs": 0.0,
+            "output_max_abs": 0.00390625,
+            "output_rmse": 0.0010031856363639235,
+            "bias": true,
+            "fp32_output_max_abs": 0.0,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.00390625,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.00390625,
+            "bmm_split_vs_serial": 0.00390625,
+            "baddbmm_vs_serial": 0.00390625
+          },
+          {
+            "module": "layers.0.self_attn.o_proj",
+            "input_max_abs": 0.0078125,
+            "output_max_abs": 0.015625,
+            "output_rmse": 0.001091618207283318,
+            "bias": false,
+            "fp32_output_max_abs": 0.015625,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.015625,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0,
+            "bmm_split_vs_serial": 0.015625
+          },
+          {
+            "module": "layers.0.mlp.gate_proj",
+            "input_max_abs": 0.015625,
+            "output_max_abs": 0.015625,
+            "output_rmse": 0.0021001771092414856,
+            "bias": false,
+            "fp32_output_max_abs": 0.015625,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.015625,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0,
+            "bmm_split_vs_serial": 0.015625
+          },
+          {
+            "module": "layers.0.mlp.up_proj",
+            "input_max_abs": 0.015625,
+            "output_max_abs": 0.0078125,
+            "output_rmse": 0.0017084234859794378,
+            "bias": false,
+            "fp32_output_max_abs": 0.0078125,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.0078125,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0,
+            "bmm_split_vs_serial": 0.0078125
+          },
+          {
+            "module": "layers.0.mlp.down_proj",
+            "input_max_abs": 0.015625,
+            "output_max_abs": 0.0078125,
+            "output_rmse": 0.0014845618279650807,
+            "bias": false,
+            "fp32_output_max_abs": 0.0078125,
+            "serial_vs_split": 0.0,
+            "block_split_vs_serial": 0.0078125,
+            "block_vs_split": 0.0,
+            "serial_vs_fp32": 0.0,
+            "bmm_split_vs_serial": 0.0078125
+          }
+        ],
+        "kv_by_layer": [
+          {
+            "layer": 0,
+            "max_abs": 0.03125,
+            "rmse": 0.002608677139505744
+          },
+          {
+            "layer": 1,
+            "max_abs": 0.0625,
+            "rmse": 0.0038355314172804356
+          },
+          {
+            "layer": 2,
+            "max_abs": 0.0625,
+            "rmse": 0.004730599001049995
+          },
+          {
+            "layer": 3,
+            "max_abs": 0.03125,
+            "rmse": 0.00549046415835619
+          },
+          {
+            "layer": 4,
+            "max_abs": 0.03125,
+            "rmse": 0.005883830599486828
+          },
+          {
+            "layer": 5,
+            "max_abs": 0.03125,
+            "rmse": 0.006174529902637005
+          },
+          {
+            "layer": 6,
+            "max_abs": 0.03125,
+            "rmse": 0.006300867069512606
+          },
+          {
+            "layer": 7,
+            "max_abs": 0.03125,
+            "rmse": 0.006571441423147917
+          },
+          {
+            "layer": 8,
+            "max_abs": 0.046875,
+            "rmse": 0.006476459093391895
+          },
+          {
+            "layer": 9,
+            "max_abs": 0.0625,
+            "rmse": 0.006619857624173164
+          },
+          {
+            "layer": 10,
+            "max_abs": 0.03125,
+            "rmse": 0.006892702076584101
+          },
+          {
+            "layer": 11,
+            "max_abs": 0.03125,
+            "rmse": 0.006003852933645248
+          },
+          {
+            "layer": 12,
+            "max_abs": 0.0625,
+            "rmse": 0.006132886745035648
+          },
+          {
+            "layer": 13,
+            "max_abs": 0.0390625,
+            "rmse": 0.006175089627504349
+          },
+          {
+            "layer": 14,
+            "max_abs": 0.03125,
+            "rmse": 0.006124465726315975
+          },
+          {
+            "layer": 15,
+            "max_abs": 0.03125,
+            "rmse": 0.005733717232942581
+          },
+          {
+            "layer": 16,
+            "max_abs": 0.046875,
+            "rmse": 0.005849551875144243
+          },
+          {
+            "layer": 17,
+            "max_abs": 0.046875,
+            "rmse": 0.006333634722977877
+          },
+          {
+            "layer": 18,
+            "max_abs": 0.0625,
+            "rmse": 0.00628802552819252
+          },
+          {
+            "layer": 19,
+            "max_abs": 0.0625,
+            "rmse": 0.0067056333646178246
+          },
+          {
+            "layer": 20,
+            "max_abs": 0.03125,
+            "rmse": 0.007304373662918806
+          },
+          {
+            "layer": 21,
+            "max_abs": 0.0625,
+            "rmse": 0.0066785202361643314
+          },
+          {
+            "layer": 22,
+            "max_abs": 0.0625,
+            "rmse": 0.007738753687590361
+          },
+          {
+            "layer": 23,
+            "max_abs": 0.03125,
+            "rmse": 0.00814437959343195
+          },
+          {
+            "layer": 24,
+            "max_abs": 0.03125,
+            "rmse": 0.008214767090976238
+          },
+          {
+            "layer": 25,
+            "max_abs": 0.0625,
+            "rmse": 0.008457545191049576
+          },
+          {
+            "layer": 26,
+            "max_abs": 0.0625,
+            "rmse": 0.00830393098294735
+          },
+          {
+            "layer": 27,
+            "max_abs": 0.0625,
+            "rmse": 0.00911200325936079
+          },
+          {
+            "layer": 28,
+            "max_abs": 0.0625,
+            "rmse": 0.011728991754353046
+          },
+          {
+            "layer": 29,
+            "max_abs": 0.0625,
+            "rmse": 0.012501630932092667
+          },
+          {
+            "layer": 30,
+            "max_abs": 0.0625,
+            "rmse": 0.014105334877967834
+          },
+          {
+            "layer": 31,
+            "max_abs": 0.046875,
+            "rmse": 0.013796061277389526
+          },
+          {
+            "layer": 32,
+            "max_abs": 0.09375,
+            "rmse": 0.018625082448124886
+          },
+          {
+            "layer": 33,
+            "max_abs": 0.140625,
+            "rmse": 0.027253801003098488
+          },
+          {
+            "layer": 34,
+            "max_abs": 0.0625,
+            "rmse": 0.013113170862197876
+          },
+          {
+            "layer": 35,
+            "max_abs": 0.0625,
+            "rmse": 0.011277273297309875
+          }
+        ],
+        "last_hidden_max_abs": 0.625
+      }
+    },
+    "fixed-plan-probe.json": {
+      "sha256": "b26dbab69784c66cb5c4001087453e9ab8b1cb26b87a7d9644648c926b090f10",
+      "selected_evidence": [
+        {
+          "name": "layers.0.self_attn.q_proj",
+          "status": 0,
+          "input_root_equal": true,
+          "fixed_vs_serial_max_abs": 0.0,
+          "fixed_vs_serial_num_changed": 0,
+          "torch_block_vs_serial_max_abs": 0.0625,
+          "fixed_projection_us": 15.015935897827148
+        },
+        {
+          "name": "layers.0.self_attn.k_proj",
+          "status": 0,
+          "input_root_equal": true,
+          "fixed_vs_serial_max_abs": 0.0,
+          "fixed_vs_serial_num_changed": 0,
+          "torch_block_vs_serial_max_abs": 0.03125,
+          "fixed_projection_us": 5.1671037673950195
+        },
+        {
+          "name": "layers.0.self_attn.v_proj",
+          "status": 0,
+          "input_root_equal": true,
+          "fixed_vs_serial_max_abs": 0.0,
+          "fixed_vs_serial_num_changed": 0,
+          "torch_block_vs_serial_max_abs": 0.00390625,
+          "fixed_projection_us": 5.2254719734191895
+        },
+        {
+          "name": "layers.0.self_attn.o_proj",
+          "status": 0,
+          "input_root_equal": false,
+          "fixed_vs_serial_max_abs": 0.015625,
+          "fixed_vs_serial_num_changed": 5505,
+          "torch_block_vs_serial_max_abs": 0.015625,
+          "fixed_projection_us": 15.068160057067871
+        },
+        {
+          "name": "layers.0.mlp.gate_proj",
+          "status": 0,
+          "input_root_equal": false,
+          "fixed_vs_serial_max_abs": 0.015625,
+          "fixed_vs_serial_num_changed": 28777,
+          "torch_block_vs_serial_max_abs": 0.015625,
+          "fixed_projection_us": 79.1695327758789
+        },
+        {
+          "name": "layers.0.mlp.up_proj",
+          "status": 0,
+          "input_root_equal": false,
+          "fixed_vs_serial_max_abs": 0.0078125,
+          "fixed_vs_serial_num_changed": 30771,
+          "torch_block_vs_serial_max_abs": 0.0078125,
+          "fixed_projection_us": 76.99148559570312
+        },
+        {
+          "name": "layers.0.mlp.down_proj",
+          "status": 0,
+          "input_root_equal": false,
+          "fixed_vs_serial_max_abs": 0.0078125,
+          "fixed_vs_serial_num_changed": 5075,
+          "torch_block_vs_serial_max_abs": 0.0078125,
+          "fixed_projection_us": 73.7597427368164
+        }
+      ]
+    },
+    "fixed-plan-layer-probe.json": {
+      "sha256": "1b097cff4d818a1f2c2ea89a6bc933f1bcf2389f9fc732de8dc85f3f8037f701",
+      "selected_evidence": {
+        "block": {
+          "layers": [
+            {
+              "module": "layers.0.self_attn.q_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0625,
+              "output_differences": 3188
+            },
+            {
+              "module": "layers.0.self_attn.k_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.03125,
+              "output_differences": 244
+            },
+            {
+              "module": "layers.0.self_attn.v_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.00390625,
+              "output_differences": 476
+            },
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0078125,
+              "output_max_abs": 0.015625,
+              "output_differences": 5728
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.015625,
+              "output_differences": 30286
+            },
+            {
+              "module": "layers.0.mlp.up_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.0078125,
+              "output_differences": 31791
+            },
+            {
+              "module": "layers.0.mlp.down_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.0078125,
+              "output_differences": 5248
+            }
+          ],
+          "last_hidden_max_abs": 0.625,
+          "last_hidden_differences": 6598,
+          "first_different_projections": [
+            {
+              "module": "layers.0.self_attn.q_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0625,
+              "output_differences": 3188
+            },
+            {
+              "module": "layers.0.self_attn.k_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.03125,
+              "output_differences": 244
+            },
+            {
+              "module": "layers.0.self_attn.v_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.00390625,
+              "output_differences": 476
+            },
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0078125,
+              "output_max_abs": 0.015625,
+              "output_differences": 5728
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.015625,
+              "output_differences": 30286
+            }
+          ]
+        },
+        "qkv_fixed": {
+          "layers": [
+            {
+              "module": "layers.0.self_attn.q_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.k_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.v_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.015625,
+              "output_differences": 3762
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.015625,
+              "output_differences": 25898
+            },
+            {
+              "module": "layers.0.mlp.up_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.0078125,
+              "output_differences": 27320
+            },
+            {
+              "module": "layers.0.mlp.down_proj",
+              "input_max_abs": 0.0234375,
+              "output_max_abs": 0.0078125,
+              "output_differences": 4790
+            }
+          ],
+          "last_hidden_max_abs": 1.0,
+          "last_hidden_differences": 6783,
+          "first_different_projections": [
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.015625,
+              "output_differences": 3762
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.015625,
+              "output_differences": 25898
+            },
+            {
+              "module": "layers.0.mlp.up_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.0078125,
+              "output_differences": 27320
+            },
+            {
+              "module": "layers.0.mlp.down_proj",
+              "input_max_abs": 0.0234375,
+              "output_max_abs": 0.0078125,
+              "output_differences": 4790
+            },
+            {
+              "module": "layers.1.self_attn.q_proj",
+              "input_max_abs": 0.015625,
+              "output_max_abs": 0.015625,
+              "output_differences": 3552
+            }
+          ]
+        },
+        "all_fixed": {
+          "layers": [
+            {
+              "module": "layers.0.self_attn.q_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.k_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.v_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.up_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.down_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            }
+          ],
+          "last_hidden_max_abs": 0.5,
+          "last_hidden_differences": 3179,
+          "first_different_projections": [
+            {
+              "module": "layers.5.self_attn.o_proj",
+              "input_max_abs": 1.9073486328125e-06,
+              "output_max_abs": 0.0001220703125,
+              "output_differences": 3
+            },
+            {
+              "module": "layers.13.self_attn.o_proj",
+              "input_max_abs": 3.814697265625e-06,
+              "output_max_abs": 0.000244140625,
+              "output_differences": 1
+            },
+            {
+              "module": "layers.25.self_attn.o_proj",
+              "input_max_abs": 6.103515625e-05,
+              "output_max_abs": 0.0009765625,
+              "output_differences": 7
+            },
+            {
+              "module": "layers.27.self_attn.o_proj",
+              "input_max_abs": 0.000244140625,
+              "output_max_abs": 0.00390625,
+              "output_differences": 19
+            },
+            {
+              "module": "layers.27.mlp.gate_proj",
+              "input_max_abs": 0.001953125,
+              "output_max_abs": 0.015625,
+              "output_differences": 367
+            }
+          ]
+        }
+      }
+    },
+    "fixed-plan-attention-probe.json": {
+      "sha256": "932e3645905f88e2068411c93c21ba7d2f929e5bb8b7c5a60559f99245358409",
+      "selected_evidence": {
+        "all_fixed": {
+          "attention": [
+            {
+              "layer": 0,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 1,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 2,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 3,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 4,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 1.862645149230957e-09
+            },
+            {
+              "layer": 5,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 1.9073486328125e-06
+            },
+            {
+              "layer": 6,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 7,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 2.7939677238464355e-09
+            },
+            {
+              "layer": 8,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 9,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 10,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 11,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 12,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 13,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 3.814697265625e-06
+            },
+            {
+              "layer": 14,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 15,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 1.9073486328125e-06
+            },
+            {
+              "layer": 16,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 17,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 5.960464477539063e-08
+            },
+            {
+              "layer": 18,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 19,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 20,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 21,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 22,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 23,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 24,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 2.9802322387695312e-08
+            },
+            {
+              "layer": 25,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 6.103515625e-05
+            },
+            {
+              "layer": 26,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.0
+            },
+            {
+              "layer": 27,
+              "query_max_abs": 0.0,
+              "key_max_abs": 0.0,
+              "value_max_abs": 0.0,
+              "output_max_abs": 0.000244140625
+            },
+            {
+              "layer": 28,
+              "query_max_abs": 0.015625,
+              "key_max_abs": 0.015625,
+              "value_max_abs": 0.015625,
+              "output_max_abs": 0.0078125
+            },
+            {
+              "layer": 29,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.0234375,
+              "value_max_abs": 0.015625,
+              "output_max_abs": 0.015625
+            },
+            {
+              "layer": 30,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.015625,
+              "value_max_abs": 0.0625,
+              "output_max_abs": 0.015625
+            },
+            {
+              "layer": 31,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.03125,
+              "value_max_abs": 0.03125,
+              "output_max_abs": 0.03125
+            },
+            {
+              "layer": 32,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.03125,
+              "value_max_abs": 0.0625,
+              "output_max_abs": 0.046875
+            },
+            {
+              "layer": 33,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.03125,
+              "value_max_abs": 0.0703125,
+              "output_max_abs": 0.0546875
+            },
+            {
+              "layer": 34,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.046875,
+              "value_max_abs": 0.046875,
+              "output_max_abs": 0.046875
+            },
+            {
+              "layer": 35,
+              "query_max_abs": 0.0625,
+              "key_max_abs": 0.0625,
+              "value_max_abs": 0.03125,
+              "output_max_abs": 0.03125
+            }
+          ],
+          "layers": [
+            {
+              "module": "layers.0.self_attn.q_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.k_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.v_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.self_attn.o_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.gate_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.up_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            },
+            {
+              "module": "layers.0.mlp.down_proj",
+              "input_max_abs": 0.0,
+              "output_max_abs": 0.0,
+              "output_differences": 0
+            }
+          ],
+          "last_hidden_max_abs": 0.5,
+          "last_hidden_differences": 3179,
+          "first_different_projections": [
+            {
+              "module": "layers.5.self_attn.o_proj",
+              "input_max_abs": 1.9073486328125e-06,
+              "output_max_abs": 0.0001220703125,
+              "output_differences": 3
+            },
+            {
+              "module": "layers.13.self_attn.o_proj",
+              "input_max_abs": 3.814697265625e-06,
+              "output_max_abs": 0.000244140625,
+              "output_differences": 1
+            },
+            {
+              "module": "layers.25.self_attn.o_proj",
+              "input_max_abs": 6.103515625e-05,
+              "output_max_abs": 0.0009765625,
+              "output_differences": 7
+            },
+            {
+              "module": "layers.27.self_attn.o_proj",
+              "input_max_abs": 0.000244140625,
+              "output_max_abs": 0.00390625,
+              "output_differences": 19
+            },
+            {
+              "module": "layers.27.mlp.gate_proj",
+              "input_max_abs": 0.001953125,
+              "output_max_abs": 0.015625,
+              "output_differences": 367
+            }
+          ]
+        }
+      }
+    }
+  }
+}
