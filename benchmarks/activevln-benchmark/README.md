@@ -119,21 +119,41 @@ exploratory.
 | Canonical projection/normalization, causal verification | 25.84 | 750 | 2,997 |
 | Audit context schedule; replay unsafe responses serially | 15.05 | **0** | 2,997 |
 | Retain valid prefixes; repair unsafe tails; fuse normalization | 18.12 | **0** | 2,997 |
+| Revalidate unsafe tails in parallel | 24.03 | **0** | 2,997 |
+| Parallel repair with tuned canonical projection algorithms | 24.10 | **0** | 2,997 |
+| Synchronous acceptance with per-token context schedules | 23.69 | **0** | 2,997 |
+| Synchronous acceptance, newly trained 32-token draft | 21.81 | **0** | 2,997 |
+| Predict per-row context schedules; audit and repair before commit | **24.9693** | **0** | 2,997 |
 
-Both repair variants also preserve every action mask, parsed-valid flag, stopping
+All exact variants also preserve every action mask, parsed-valid flag, stopping
 reason, cache length and decoded text. Context schedules required repair in
-335/782 batches; tail repair still executed 4,245 serial steps. These complete
+335/782 batches in the original repair variants; serial tail repair still
+executed 4,245 steps. Parallel repair reduced this to 459 verification blocks
+and 100 serial steps, including rejected proposals. Forecasting each row's
+canonical context schedule reduced repair to 21/782 batches, 21 additional
+verification blocks and 15 serial steps. Its **24.9693/s remains below 25/s**;
+rounding to two significant digits must not be interpreted as admission.
+These complete
 checks establish behavior parity for the measured canonical reference, but the
 25/s target fails. The prototypes remain outside the shipped runtime. They do
 not establish SR/SPL or accuracy admission for the published faster draft.
 An earlier prototype stopped after 2,963 observations when its copied cuBLASLt
 algorithm did not support the final one-row LM projection; later prototypes
 explicitly fall back to serial projections for that shape.
+A parallel-repair prototype also stopped after 164 observations when one
+verification block required three context buckets; subsequent versions handle
+that case explicitly. Failed partial runs are not throughput results.
 
 A second draft with width 1,024 was also trained for 40 epochs on exactly the
 same disjoint RxR cohorts. Validation again selected epoch 4, with loss 0.19835
 versus 0.19750 for width 512. It has 3,496,251 parameters and was not promoted;
-a larger proposer alone did not improve the validation criterion. Source/artifact
+a larger proposer alone did not improve the validation criterion. A separate
+512-wide, 32-token draft (1,660,555 parameters) selected epoch 4 on the same
+cohorts. Despite longer proposals, synchronous verification calls only fell
+from 2,952 to 2,903, while each call did more work; full replay slowed to
+21.81/s. It was not promoted. The 16- and 32-token validation losses have
+different offset coverage and should not be compared as the same objective.
+Source/artifact
 hashes, full comparisons, failed probes and training evidence are retained in
 [`strict-draft-evidence.json`](results/4090-learned-draft-20261010/strict-draft-evidence.json).
 
