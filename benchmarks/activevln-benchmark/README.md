@@ -100,6 +100,43 @@ and [cuBLASLt algorithm selection](https://docs.nvidia.com/cuda/archive/12.8.0/c
 for the relevant backend behavior; these sources do not substitute for measured
 policy parity.
 
+Follow-up numerical prototypes isolated two additional sources of state drift:
+Torch RMSNorm reduction order changes with row count, and a verifier block can
+select a larger context bucket than the corresponding serial steps. An
+80-observation test with identical input prefixes can have no token differences
+while still changing KV state, which then affects later independent trajectories.
+
+The following diagnostic runs use the same complete R2R B=4 workload and a new
+**serial greedy tensor-runtime reference** (all other selected backends retained,
+neither learned draft nor static tree). They are separate from the earlier
+static-tree comparison and the clean dual-instance performance table. Some runs
+overlapped other diagnostic or training work; their single-replica timings are
+exploratory.
+
+| Diagnostic | Observations/s | Token/action differences from serial | Complete |
+| --- | ---: | ---: | --- |
+| Serial greedy reference | 10.70 | — | 2,997 |
+| Canonical projection/normalization, causal verification | 25.84 | 750 | 2,997 |
+| Audit context schedule; replay unsafe responses serially | 15.05 | **0** | 2,997 |
+| Retain valid prefixes; repair unsafe tails; fuse normalization | 18.12 | **0** | 2,997 |
+
+Both repair variants also preserve every action mask, parsed-valid flag, stopping
+reason, cache length and decoded text. Context schedules required repair in
+335/782 batches; tail repair still executed 4,245 serial steps. These complete
+checks establish behavior parity for the measured canonical reference, but the
+25/s target fails. The prototypes remain outside the shipped runtime. They do
+not establish SR/SPL or accuracy admission for the published faster draft.
+An earlier prototype stopped after 2,963 observations when its copied cuBLASLt
+algorithm did not support the final one-row LM projection; later prototypes
+explicitly fall back to serial projections for that shape.
+
+A second draft with width 1,024 was also trained for 40 epochs on exactly the
+same disjoint RxR cohorts. Validation again selected epoch 4, with loss 0.19835
+versus 0.19750 for width 512. It has 3,496,251 parameters and was not promoted;
+a larger proposer alone did not improve the validation criterion. Source/artifact
+hashes, full comparisons, failed probes and training evidence are retained in
+[`strict-draft-evidence.json`](results/4090-learned-draft-20261010/strict-draft-evidence.json).
+
 Training used the R2R teacher on 3,879 RxR observations (73,684 generated tokens).
 Forty whole episodes trained the draft and eight supplied validation. No R2R
 evaluation episode was used for either split; episodes containing an identical
