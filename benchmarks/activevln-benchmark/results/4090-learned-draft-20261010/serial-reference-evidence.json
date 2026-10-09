@@ -1,0 +1,2934 @@
+{
+  "schema": "activevln.serial_reference_evidence.v1",
+  "date": "2026-10-10",
+  "implementation_commit": "f0eb2018c99742a9b96e07e4eb04ce63113a63e6",
+  "implementation_python_sha256": "24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb",
+  "purpose": "Complete same-shard serial greedy parity and average >=25 observations/s per allocated GPU.",
+  "reference": "Serial greedy in the optimized B4 tensor runtime, no draft or static tree; fused operations, split attention and graphs retained.",
+  "hardware": {
+    "gpus": 2,
+    "model": "NVIDIA GeForce RTX 4090",
+    "driver": "580.82.07",
+    "power_limit_watts": 450
+  },
+  "numerical_profile": {
+    "dtype": "bfloat16",
+    "torch": "2.10.0+cu128",
+    "transformers": "4.51.3",
+    "triton": "3.6.0",
+    "cublas": "12.8.4.1",
+    "matmul_precision": "highest",
+    "allow_bf16_reduced_precision_reduction": true
+  },
+  "workload": {
+    "dataset": "R2R",
+    "episodes": 48,
+    "observations": 2997,
+    "batch_per_instance": 4,
+    "replica_observations": [
+      1485,
+      1512
+    ],
+    "warmup_batch_calls_per_instance": 33,
+    "repeats_per_run": 1,
+    "data_repository": "cywan/StreamVLN-Trajectory-Data",
+    "data_revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+    "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518"
+  },
+  "timing": "Decoded CPU RGB/state to parsed CPU actions. Common job wall additionally includes auditing/reporting and slow-replica tail; excludes disk decoding, loading, graph capture, warmup, HTTP and simulator.",
+  "admission": "All 2997 token/action/stop/cache-length/text records exact; actual observations / common wall seconds / 2 >= 25. No padded rows, tokens or action slots counted as observations.",
+  "limitations": [
+    "Recorded replay only; no SR/SPL, HTTP or multi-node result.",
+    "Profile is limited to the tested B4 R2R checkpoint/library/GPU configuration.",
+    "The short-replay margin over 25/s is small.",
+    "Earlier unguarded learned draft results are not serial-reference admitted."
+  ],
+  "draft": {
+    "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+    "bytes": 7187749,
+    "sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048"
+  },
+  "runs": [
+    {
+      "name": "dual-strict-serial",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/cache-compact-source",
+      "scope": "Clean serial reference with identical round-robin shards.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-serial/summary.json",
+        "bytes": 3120,
+        "sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 142.285411063,
+        "observations_per_second": 21.063297899691293,
+        "aggregate_amortized_ms_per_observation": 47.47594630063397,
+        "per_instance_amortized_ms_per_observation": 93.85906488655323,
+        "per_instance_observations_per_second": 10.654271925771823,
+        "request_latency_ms": {
+          "mean": 361.4121248825492,
+          "p50": 366.729445,
+          "p95": 409.664005,
+          "p99": 428.380384
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 2.705165,
+        "replica_inference_rates_sum": 21.308126715624326,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 10.531648949845646,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "78dafc4",
+        "preload_rgb": true,
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "diagnostic_backend": "serial",
+        "diagnostic_scope": "Clean synchronized dual GPU; round-robin episode-affine shards, each observation exactly once; compare against the same serial shard schedules."
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-serial/replica-0.json",
+            "bytes": 705664,
+            "sha256": "bd2c3fb3f1900f6cec1b507f33b5e8878eaf798f6db5732b71901785a5bc310f"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 359.6280743598972,
+              "p50": 368.565064,
+              "p95": 407.8867872,
+              "p99": 419.64206536
+            },
+            "batch_forward_ms": {
+              "mean": 338.72431688431874,
+              "p50": 347.498718,
+              "p95": 388.2280704,
+              "p99": 400.11464728000004
+            },
+            "batch_prefill_ms": {
+              "mean": 88.95702273802769
+            },
+            "batch_decode_ms": {
+              "mean": 249.7256143589559
+            },
+            "amortized_e2e_ms_per_observation": 94.20560331717172,
+            "amortized_forward_ms_per_observation": 88.72980422087542,
+            "observations_per_second": 10.61507983376739
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16321373696,
+            "peak_reserved_bytes": 17137926144,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 7934,
+            "decode_fallbacks": 0,
+            "memory_restores": 268,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1193,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 58,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 0,
+            "draft_proposed_tokens": 0,
+            "draft_accepted_tokens": 0,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 0,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": false,
+            "draft_block_size": null,
+            "draft_graph": false,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 0
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-serial/replica-1.json",
+            "bytes": 717075,
+            "sha256": "96cfb3b4faeacc50e5904c3d61713fa820625ae7eed37f674ef93f8a134d0371"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 357.0714559065657,
+              "p50": 364.773865,
+              "p95": 411.28339325,
+              "p99": 439.84126125
+            },
+            "batch_forward_ms": {
+              "mean": 336.17030988636367,
+              "p50": 343.704931,
+              "p95": 390.07254375,
+              "p99": 422.48586485
+            },
+            "batch_prefill_ms": {
+              "mean": 85.75494924217763
+            },
+            "batch_decode_ms": {
+              "mean": 250.37394730731694
+            },
+            "amortized_e2e_ms_per_observation": 93.51871464219577,
+            "amortized_forward_ms_per_observation": 88.0446049702381,
+            "observations_per_second": 10.693046881856935
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16178761728,
+            "peak_reserved_bytes": 17892900864,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 8106,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 0,
+            "draft_proposed_tokens": 0,
+            "draft_accepted_tokens": 0,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 0,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": false,
+            "draft_block_size": null,
+            "draft_graph": false,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "dual-strict-v16",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/cache-compact-source",
+      "scope": "Diagnostic external prototype; exact output but fails common-wall target.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v16/summary.json",
+        "bytes": 3999,
+        "sha256": "1fa374025b45938816e9c382b31fec5b3126f167a69231ce48d875348f3fbdb4"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 60.657307697,
+        "observations_per_second": 49.40872112179529,
+        "aggregate_amortized_ms_per_observation": 20.239341907574243,
+        "per_instance_amortized_ms_per_observation": 39.909488537871205,
+        "per_instance_observations_per_second": 25.056697959210194,
+        "request_latency_ms": {
+          "mean": 153.35567308375042,
+          "p50": 151.812126,
+          "p95": 184.75127899999998,
+          "p99": 199.969401
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 3.828301,
+        "replica_inference_rates_sum": 50.114535194905656,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 24.704360560897644,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "78dafc4",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "diagnostic_backend": "v16",
+        "diagnostic_scope": "Clean synchronized dual GPU; round-robin episode-affine shards, each observation exactly once; compare against the same serial shard schedules.",
+        "diagnostic_artifact_sha256": {
+          "prototype_fixed_backend_v8.py": "24b86cfe9243edace579a0de8159104ebd0f3ddf800c44b428c2d6b5a876028d",
+          "canonical_norm_v2.py": "06827ccc4f62bdd404be29a4be4771876c13f06fd390909a0e8832f0ec1ef7e8",
+          "canonical_vector_attention.py": "35169ce1a85bbc9ca4071a5e7c636aec28c5aaadbf6981fdaf5da488ba13cfb8",
+          "cublas_search_plan.cpp": "574211b7aa4143bbb5840604eeae4e434ef2e03ca9cd5447442209d5792615d7",
+          "cublas_search_plan.so": "3e7216256acc13b82be8166e87e8e623325d8b946c7d3e151a2277c89fac0fa6",
+          "prototype_fixed_backend_v16.py": "cc25e8b2b433cad730a9709172e5f8fe9a05b1248d44d3273ebf9cd2e582d5b8",
+          "diagnostic_multi_instance_v2.py": "6cca212ecb444067ee19739cd9f31c83fa558a1e337405df6f691abbb8f2d455"
+        }
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v16/replica-0.json",
+            "bytes": 723321,
+            "sha256": "47bfcd4d15147c09e6c829db62b0a8b698fb78903dda6bad814baa4a4cda016f"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 154.05463858354756,
+              "p50": 154.28406,
+              "p95": 184.45615759999998,
+              "p99": 198.22274376000001
+            },
+            "batch_forward_ms": {
+              "mean": 134.0329834858612,
+              "p50": 133.952644,
+              "p95": 163.5170626,
+              "p99": 179.05263892000002
+            },
+            "batch_prefill_ms": {
+              "mean": 88.78473531924054
+            },
+            "batch_decode_ms": {
+              "mean": 45.20822817746042
+            },
+            "amortized_e2e_ms_per_observation": 40.355053474074076,
+            "amortized_forward_ms_per_observation": 35.110323620202024,
+            "observations_per_second": 24.780043982408436
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359364096,
+            "peak_reserved_bytes": 17811111936,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 54,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 30,
+            "draft_schedule_repair_starts_sum": 500,
+            "parallel_repair_blocks": 30,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v16/replica-1.json",
+            "bytes": 734717,
+            "sha256": "4093cf939490defd267841c2d079e422d7d7d23b11c97e251ed5466960eebe0a"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 150.71081499747476,
+              "p50": 149.4210495,
+              "p95": 184.23692175,
+              "p99": 200.07124740000003
+            },
+            "batch_forward_ms": {
+              "mean": 130.65507959848483,
+              "p50": 128.803068,
+              "p95": 163.3085645,
+              "p99": 179.7172614
+            },
+            "batch_prefill_ms": {
+              "mean": 85.54818584943058
+            },
+            "batch_decode_ms": {
+              "mean": 45.06812843891105
+            },
+            "amortized_e2e_ms_per_observation": 39.471880118386245,
+            "amortized_forward_ms_per_observation": 34.21918751388888,
+            "observations_per_second": 25.33449121249722
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238742016,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 44,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 24,
+            "draft_schedule_repair_starts_sum": 390,
+            "parallel_repair_blocks": 24,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v16-comparison.json",
+          "bytes": 1149,
+          "sha256": "26dbd18136cbdaea52f9edffdfc97a2c1659ab7d6c8ec800ba8ad9e87b3ceac6"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 39.909488537871205,
+          "candidate_observations_per_second": 25.056697959210194,
+          "speedup": 2.3517982395962753,
+          "navigation_success_evaluated": false,
+          "admitted": false,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 24.704360560897644,
+          "wall_speedup": 2.3457257907613522,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "1fa374025b45938816e9c382b31fec5b3126f167a69231ce48d875348f3fbdb4"
+        }
+      }
+    },
+    {
+      "name": "dual-strict-v18",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/cache-compact-source",
+      "scope": "Clean external prototype, full replay.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18/summary.json",
+        "bytes": 3988,
+        "sha256": "25f55085679744a6068d54589b4c28e7c26af881a70c1894abd63900401718a2"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.681322659,
+        "observations_per_second": 50.21671548943209,
+        "aggregate_amortized_ms_per_observation": 19.913687907574243,
+        "per_instance_amortized_ms_per_observation": 39.168696928261596,
+        "per_instance_observations_per_second": 25.53059147797344,
+        "request_latency_ms": {
+          "mean": 150.46375601001,
+          "p50": 149.065497,
+          "p95": 180.1153122,
+          "p99": 206.083938
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 0.188175,
+        "replica_inference_rates_sum": 51.062201954658256,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 25.108357744716045,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "78dafc4",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "diagnostic_backend": "v18",
+        "diagnostic_scope": "Clean synchronized dual GPU; round-robin episode-affine shards, each observation exactly once; compare against the same serial shard schedules.",
+        "diagnostic_artifact_sha256": {
+          "prototype_fixed_backend_v8.py": "24b86cfe9243edace579a0de8159104ebd0f3ddf800c44b428c2d6b5a876028d",
+          "canonical_norm_v2.py": "06827ccc4f62bdd404be29a4be4771876c13f06fd390909a0e8832f0ec1ef7e8",
+          "canonical_vector_attention.py": "35169ce1a85bbc9ca4071a5e7c636aec28c5aaadbf6981fdaf5da488ba13cfb8",
+          "cublas_search_plan.cpp": "574211b7aa4143bbb5840604eeae4e434ef2e03ca9cd5447442209d5792615d7",
+          "cublas_search_plan.so": "3e7216256acc13b82be8166e87e8e623325d8b946c7d3e151a2277c89fac0fa6",
+          "prototype_fixed_backend_v18.py": "6a5e447f7d6b1b8b4dff87abf6bc9b66fa4dc137cbefd6ca8c71c466d0773d4f",
+          "diagnostic_multi_instance_v3.py": "58531dcaf2b045081c0ba49c777433dfea95c674317c200d4be9721209e871bf"
+        }
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18/replica-0.json",
+            "bytes": 723331,
+            "sha256": "8b40b1466b31d3b2026f75c797713e6b912e77ba7900efdd557eabafe979b196"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 151.16262964267352,
+              "p50": 151.582141,
+              "p95": 179.58339099999998,
+              "p99": 206.52499260000002
+            },
+            "batch_forward_ms": {
+              "mean": 130.54548486889462,
+              "p50": 130.563972,
+              "p95": 158.36059179999998,
+              "p99": 175.33308876000004
+            },
+            "batch_prefill_ms": {
+              "mean": 88.79117399867825
+            },
+            "batch_decode_ms": {
+              "mean": 41.714427734708416
+            },
+            "amortized_e2e_ms_per_observation": 39.59748345521886,
+            "amortized_forward_ms_per_observation": 34.19676337643098,
+            "observations_per_second": 25.254130130034874
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359672832,
+            "peak_reserved_bytes": 17813209088,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 9,
+            "draft_schedule_repair_starts_sum": 105,
+            "parallel_repair_blocks": 9,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18/replica-1.json",
+            "bytes": 734744,
+            "sha256": "a844d71cf7e9a5c1fcc08a70d3cb7829244378467e3b14cdd0001164369466bb"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.94525697727272,
+              "p50": 146.0247555,
+              "p95": 179.7307835,
+              "p99": 195.91108795000002
+            },
+            "batch_forward_ms": {
+              "mean": 127.51825656565654,
+              "p50": 125.885899,
+              "p95": 159.0357475,
+              "p99": 176.51637250000002
+            },
+            "batch_prefill_ms": {
+              "mean": 85.56655844293459
+            },
+            "batch_decode_ms": {
+              "mean": 41.91125340895219
+            },
+            "amortized_e2e_ms_per_observation": 38.74756730357143,
+            "amortized_forward_ms_per_observation": 33.39763862433862,
+            "observations_per_second": 25.808071824623383
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238742016,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 12,
+            "draft_schedule_repair_starts_sum": 150,
+            "parallel_repair_blocks": 12,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18-comparison.json",
+          "bytes": 1147,
+          "sha256": "35a08a7c3e6069338f3e05341df74d03797de6e9afb370ac0b44a61c37049e1a"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 39.168696928261596,
+          "candidate_observations_per_second": 25.53059147797344,
+          "speedup": 2.3962774421231923,
+          "navigation_success_evaluated": false,
+          "admitted": true,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 25.108357744716045,
+          "wall_speedup": 2.3840860879704917,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "25f55085679744a6068d54589b4c28e7c26af881a70c1894abd63900401718a2"
+        }
+      }
+    },
+    {
+      "name": "dual-strict-v18-repeat",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/cache-compact-source",
+      "scope": "Isolated external prototype repeat.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18-repeat/summary.json",
+        "bytes": 3998,
+        "sha256": "eb26208adedec88504f0edc64d0668ff7a79fb16cc6b9df8db2efe584b38c8bc"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.663559763,
+        "observations_per_second": 50.231665892965566,
+        "aggregate_amortized_ms_per_observation": 19.907761015348683,
+        "per_instance_amortized_ms_per_observation": 39.066467356356355,
+        "per_instance_observations_per_second": 25.59740021738346,
+        "request_latency_ms": {
+          "mean": 150.05211598832165,
+          "p50": 148.504902,
+          "p95": 179.69454939999997,
+          "p99": 199.795204
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 7.453948,
+        "replica_inference_rates_sum": 51.19667014551048,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 25.115832946482783,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "78dafc4",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "diagnostic_backend": "v18",
+        "diagnostic_scope": "Clean synchronized dual GPU; round-robin episode-affine shards, each observation exactly once; compare against the same serial shard schedules.",
+        "diagnostic_artifact_sha256": {
+          "prototype_fixed_backend_v8.py": "24b86cfe9243edace579a0de8159104ebd0f3ddf800c44b428c2d6b5a876028d",
+          "canonical_norm_v2.py": "06827ccc4f62bdd404be29a4be4771876c13f06fd390909a0e8832f0ec1ef7e8",
+          "canonical_vector_attention.py": "35169ce1a85bbc9ca4071a5e7c636aec28c5aaadbf6981fdaf5da488ba13cfb8",
+          "cublas_search_plan.cpp": "574211b7aa4143bbb5840604eeae4e434ef2e03ca9cd5447442209d5792615d7",
+          "cublas_search_plan.so": "3e7216256acc13b82be8166e87e8e623325d8b946c7d3e151a2277c89fac0fa6",
+          "prototype_fixed_backend_v18.py": "6a5e447f7d6b1b8b4dff87abf6bc9b66fa4dc137cbefd6ca8c71c466d0773d4f",
+          "diagnostic_multi_instance_v3.py": "58531dcaf2b045081c0ba49c777433dfea95c674317c200d4be9721209e871bf"
+        }
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18-repeat/replica-0.json",
+            "bytes": 723320,
+            "sha256": "a2ae43e6d76528e6c34becd532a29998a2fa38ab097e85166c49d1dc1c6c7ece"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 150.94768058354757,
+              "p50": 150.832684,
+              "p95": 179.31899699999997,
+              "p99": 199.79680156
+            },
+            "batch_forward_ms": {
+              "mean": 130.3577013933162,
+              "p50": 130.324102,
+              "p95": 158.14288339999996,
+              "p99": 173.2137734
+            },
+            "batch_prefill_ms": {
+              "mean": 88.74428421059733
+            },
+            "batch_decode_ms": {
+              "mean": 41.572676903790864
+            },
+            "amortized_e2e_ms_per_observation": 39.541176934006735,
+            "amortized_forward_ms_per_observation": 34.14757295757576,
+            "observations_per_second": 25.29009193805677
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359672832,
+            "peak_reserved_bytes": 17813209088,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 9,
+            "draft_schedule_repair_starts_sum": 105,
+            "parallel_repair_blocks": 9,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18-repeat/replica-1.json",
+            "bytes": 734729,
+            "sha256": "0b90678d467d8b14c06ae905618dd2802f9995230bd01304b2b9a319f6e18b40"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.38271444444445,
+              "p50": 145.819969,
+              "p95": 180.2087755,
+              "p99": 197.15414775000002
+            },
+            "batch_forward_ms": {
+              "mean": 127.32932380050505,
+              "p50": 125.5079255,
+              "p95": 158.92715325,
+              "p99": 177.25525375
+            },
+            "batch_prefill_ms": {
+              "mean": 85.55037607327856
+            },
+            "batch_decode_ms": {
+              "mean": 41.7389874915884
+            },
+            "amortized_e2e_ms_per_observation": 38.60023473544974,
+            "amortized_forward_ms_per_observation": 33.34815623346561,
+            "observations_per_second": 25.906578207453713
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "13903fca057a68ee5d12427fa2871398c2e0b7652aa2f34b51cc4c499b9bff77",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238742016,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 12,
+            "draft_schedule_repair_starts_sum": 150,
+            "parallel_repair_blocks": 12,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-strict-v18-repeat-comparison.json",
+          "bytes": 1145,
+          "sha256": "0e4c67c759ad75d5cb7d0cbd7fe1e9d781216577662504b3e91f5cdf9cdd4f67"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 39.066467356356355,
+          "candidate_observations_per_second": 25.59740021738346,
+          "speedup": 2.4025480479304657,
+          "navigation_success_evaluated": false,
+          "admitted": true,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 25.115832946482783,
+          "wall_speedup": 2.38479587252582,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "eb26208adedec88504f0edc64d0668ff7a79fb16cc6b9df8db2efe584b38c8bc"
+        }
+      }
+    },
+    {
+      "name": "dual-serial-native",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-source",
+      "scope": "First repository port; source extraction/lint overlapped part of replay; exploratory timing.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native/summary.json",
+        "bytes": 3048,
+        "sha256": "29baf8aa19df4e65881be38f8dc206cd1c08eecb8bce2f373342c956192d2848"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.558035261,
+        "observations_per_second": 50.32066600025179,
+        "aggregate_amortized_ms_per_observation": 19.872550971304637,
+        "per_instance_amortized_ms_per_observation": 39.15556386219553,
+        "per_instance_observations_per_second": 25.539154627409008,
+        "request_latency_ms": {
+          "mean": 150.40785029329328,
+          "p50": 148.852106,
+          "p95": 180.36141179999998,
+          "p99": 196.38032
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 0.192611,
+        "replica_inference_rates_sum": 51.07956488476712,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 25.160333000125895,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "7ef4d0a",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "serial_draft": true
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native/replica-0.json",
+            "bytes": 722612,
+            "sha256": "693a27bbe7a2b7e8638d96cfb522ef517bf6cf9fa077ef09d33b87dd6519c158"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 151.165443125964,
+              "p50": 151.610874,
+              "p95": 178.0427378,
+              "p99": 193.82463660000002
+            },
+            "batch_forward_ms": {
+              "mean": 130.46655301542415,
+              "p50": 130.737572,
+              "p95": 158.33076299999996,
+              "p99": 173.48592084
+            },
+            "batch_prefill_ms": {
+              "mean": 88.81525188730431
+            },
+            "batch_decode_ms": {
+              "mean": 41.60943147762269
+            },
+            "amortized_e2e_ms_per_observation": 39.59822045521886,
+            "amortized_forward_ms_per_observation": 34.17608695151515,
+            "observations_per_second": 25.25366010149087
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "44395405b456491fa00288fef754226f36f7059a93dc3a3dac2afd52ac27a146",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359673856,
+            "peak_reserved_bytes": 17813209088,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 9,
+            "draft_schedule_repair_starts_sum": 105,
+            "parallel_repair_blocks": 9,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native/replica-1.json",
+            "bytes": 733971,
+            "sha256": "4c49b8f47e2b5bcaf5583ae90bd7a119fefa79a4f2a06cac6a5edd7562ac760a"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.84309979545455,
+              "p50": 145.949893,
+              "p95": 181.0262885,
+              "p99": 196.43537425000002
+            },
+            "batch_forward_ms": {
+              "mean": 127.66251884090909,
+              "p50": 125.842189,
+              "p95": 160.209294,
+              "p99": 176.64077855000002
+            },
+            "batch_prefill_ms": {
+              "mean": 85.6011550595062
+            },
+            "batch_decode_ms": {
+              "mean": 42.02029305756694
+            },
+            "amortized_e2e_ms_per_observation": 38.720811851190476,
+            "amortized_forward_ms_per_observation": 33.43542160119048,
+            "observations_per_second": 25.825904783276254
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "44395405b456491fa00288fef754226f36f7059a93dc3a3dac2afd52ac27a146",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238743040,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 12,
+            "draft_schedule_repair_starts_sum": 150,
+            "parallel_repair_blocks": 12,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-comparison.json",
+          "bytes": 1146,
+          "sha256": "14165ad0b7d1e47b9742ef1e3fe53385538cbd2701ed8d58c2a042bf581243a0"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 39.15556386219553,
+          "candidate_observations_per_second": 25.53915462740901,
+          "speedup": 2.3970811713216986,
+          "navigation_success_evaluated": false,
+          "admitted": true,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 25.160333000125895,
+          "wall_speedup": 2.3890212368400916,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "29baf8aa19df4e65881be38f8dc206cd1c08eecb8bce2f373342c956192d2848"
+        }
+      }
+    },
+    {
+      "name": "dual-serial-native-final",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source",
+      "scope": "Final repository implementation; CPU/GPU tests finished before launch; no other workload.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final/summary.json",
+        "bytes": 3047,
+        "sha256": "f9677d5fc88c4612f4d1a87e95c3e6bad4501bc8d51fc81b5c3485275c05bdde"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.128622427,
+        "observations_per_second": 50.68611235954442,
+        "aggregate_amortized_ms_per_observation": 19.72927007907908,
+        "per_instance_amortized_ms_per_observation": 38.80214727761094,
+        "per_instance_observations_per_second": 25.771769609693884,
+        "request_latency_ms": {
+          "mean": 149.0177752892893,
+          "p50": 147.606379,
+          "p95": 178.69008159999998,
+          "p99": 195.183973
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 0.203074,
+        "replica_inference_rates_sum": 51.54462310328144,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 25.34305617977221,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "7ef4d0a",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "serial_draft": true
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final/replica-0.json",
+            "bytes": 722576,
+            "sha256": "033b4abbe8303c2c1926658ed77e0e0f82a4b22673cc4a521b6bf2c67fd0ec88"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 149.7605617403599,
+              "p50": 150.213728,
+              "p95": 178.2136054,
+              "p99": 194.30416376
+            },
+            "batch_forward_ms": {
+              "mean": 129.93351714910025,
+              "p50": 130.22533,
+              "p95": 157.56774819999995,
+              "p99": 173.12952404
+            },
+            "batch_prefill_ms": {
+              "mean": 88.74701611241828
+            },
+            "batch_decode_ms": {
+              "mean": 41.147392179788234
+            },
+            "amortized_e2e_ms_per_observation": 39.230207755555554,
+            "amortized_forward_ms_per_observation": 34.03645668080808,
+            "observations_per_second": 25.490560902226825
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359673856,
+            "peak_reserved_bytes": 17813209088,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 9,
+            "draft_schedule_repair_starts_sum": 105,
+            "parallel_repair_blocks": 9,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final/replica-1.json",
+            "bytes": 733973,
+            "sha256": "25a04bbe55b6a30fda2ab463668e67da24ef7ac9d09572b94b0aa1ab61f78c39"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 146.54842644949494,
+              "p50": 145.3803615,
+              "p95": 178.90961399999998,
+              "p99": 195.15032305
+            },
+            "batch_forward_ms": {
+              "mean": 127.01176316919191,
+              "p50": 125.315107,
+              "p95": 158.80608775000002,
+              "p99": 175.07175420000004
+            },
+            "batch_prefill_ms": {
+              "mean": 85.51417775587602
+            },
+            "batch_decode_ms": {
+              "mean": 41.459102565591984
+            },
+            "amortized_e2e_ms_per_observation": 38.38173073677248,
+            "amortized_forward_ms_per_observation": 33.264985591931215,
+            "observations_per_second": 26.054062201054613
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238743040,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 12,
+            "draft_schedule_repair_starts_sum": 150,
+            "parallel_repair_blocks": 12,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final-comparison.json",
+          "bytes": 1145,
+          "sha256": "cb758ae4c64ba77d1ba8673b30d7dd536af5c2fb6bd77746682ef5f85facf007"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 38.80214727761094,
+          "candidate_observations_per_second": 25.771769609693884,
+          "speedup": 2.418914196037559,
+          "navigation_success_evaluated": false,
+          "admitted": true,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 25.34305617977221,
+          "wall_speedup": 2.4063711485696304,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "f9677d5fc88c4612f4d1a87e95c3e6bad4501bc8d51fc81b5c3485275c05bdde"
+        }
+      }
+    },
+    {
+      "name": "dual-serial-native-final-repeat",
+      "source_directory": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source",
+      "scope": "Isolated repeat of final repository implementation.",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final-repeat/summary.json",
+        "bytes": 3049,
+        "sha256": "b7dacf6ddb1cc08e68d3c11fbca6b59379d6b16d0d7664803c4977b2c25e0703"
+      },
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.668627065,
+        "observations_per_second": 50.22740001601208,
+        "aggregate_amortized_ms_per_observation": 19.909451806806807,
+        "per_instance_amortized_ms_per_observation": 39.06839901634969,
+        "per_instance_observations_per_second": 25.596134604377088,
+        "request_latency_ms": {
+          "mean": 150.05571820854186,
+          "p50": 148.711367,
+          "p95": 179.49620659999988,
+          "p99": 197.209401
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 0.164716,
+        "replica_inference_rates_sum": 51.19359602995208,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_gpu": 25.11370000800604,
+      "config": {
+        "schema_version": 1,
+        "model": "activevln",
+        "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+        "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 33,
+        "repeats": 1,
+        "attention": "sdpa",
+        "cuda_graph": true,
+        "fused_ops": true,
+        "split_attention": true,
+        "tree_decode": false,
+        "tree_fp32_projection": false,
+        "tree_repeat_actions": 1,
+        "query_bucket_size": 1,
+        "prewarm_context_buckets": [
+          512,
+          1024,
+          2048,
+          4096,
+          8192,
+          16384,
+          32768,
+          65536
+        ],
+        "graph_workspace_tokens": 65536,
+        "max_new_tokens": 512,
+        "max_context": 128000,
+        "do_sample": false,
+        "repetition_penalty": 1.05,
+        "cpu_threads": 4,
+        "max_steps_per_episode": null,
+        "datasets": [
+          {
+            "name": "R2R",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+            "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+            "episode_limit": 48,
+            "repository": "cywan/StreamVLN-Trajectory-Data",
+            "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+            "split": "published_training_trajectories"
+          }
+        ],
+        "batch_size": 4,
+        "kv_pool_tokens": 128000,
+        "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+        "source_base_revision": "7ef4d0a",
+        "preload_rgb": true,
+        "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+        "preprocess_workers": 4,
+        "text_cache_size": 256,
+        "serial_draft": true
+      },
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final-repeat/replica-0.json",
+            "bytes": 722597,
+            "sha256": "521bdb19a7b9ca106ef6d101f9b9e9cea414cd2eae6ec8c5e073fb48b5efedd0"
+          },
+          "observations": 1485,
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 150.84382811825193,
+              "p50": 150.455619,
+              "p95": 178.97559059999998,
+              "p99": 195.41750195999998
+            },
+            "batch_forward_ms": {
+              "mean": 130.2784691799486,
+              "p50": 130.153554,
+              "p95": 158.5233854,
+              "p99": 173.93046876
+            },
+            "batch_prefill_ms": {
+              "mean": 88.82472459454769
+            },
+            "batch_decode_ms": {
+              "mean": 41.41347079534457
+            },
+            "amortized_e2e_ms_per_observation": 39.51397248350168,
+            "amortized_forward_ms_per_observation": 34.12681785252525,
+            "observations_per_second": 25.30750357781747
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16359673856,
+            "peak_reserved_bytes": 17813209088,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 389,
+            "vision_fallbacks": 0,
+            "prefill_replays": 389,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 260,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1201,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1361,
+            "owned_kv_prefix_tokens_skipped": 8737631,
+            "owned_kv_copied_tokens": 950469,
+            "pool_relocations": 56,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 249868,
+            "prefill_padding_tokens": 46524,
+            "draft_verification_calls": 1096,
+            "draft_proposed_tokens": 48315,
+            "draft_accepted_tokens": 22543,
+            "draft_terminal_blocks": 54,
+            "draft_schedule_repaired_batches": 9,
+            "draft_schedule_repair_starts_sum": 105,
+            "parallel_repair_blocks": 9,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final-repeat/replica-1.json",
+            "bytes": 734008,
+            "sha256": "a8cfac77947e2081fc31a347fc2520fabc70c8f9160c84c953ea523258825d38"
+          },
+          "observations": 1512,
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 147.4993502878788,
+              "p50": 146.231835,
+              "p95": 179.1116165,
+              "p99": 197.33506665000004
+            },
+            "batch_forward_ms": {
+              "mean": 127.29911638888889,
+              "p50": 125.42578850000001,
+              "p95": 158.61386149999998,
+              "p99": 176.03702475
+            },
+            "batch_prefill_ms": {
+              "mean": 85.63564480675592
+            },
+            "batch_decode_ms": {
+              "mean": 41.624700731701324
+            },
+            "amortized_e2e_ms_per_observation": 38.63078221825397,
+            "amortized_forward_ms_per_observation": 33.34024476851852,
+            "observations_per_second": 25.886092452134612
+          },
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "memory": {
+            "peak_allocated_bytes": 16238743040,
+            "peak_reserved_bytes": 17309892608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "runtime": {
+            "vision_replays": 396,
+            "vision_fallbacks": 0,
+            "prefill_replays": 396,
+            "prefill_fallbacks": 0,
+            "decode_replays": 0,
+            "decode_fallbacks": 0,
+            "memory_restores": 251,
+            "tree_replays": 0,
+            "tree_fallbacks": 0,
+            "tree_accepted_tokens": 0,
+            "tree_fallback_tokens": 0,
+            "memory_resident_hits": 1237,
+            "owned_kv_allocations": 124,
+            "owned_kv_reuses": 1388,
+            "owned_kv_prefix_tokens_skipped": 8766951,
+            "owned_kv_copied_tokens": 982696,
+            "pool_relocations": 55,
+            "tree_verified_rows": 0,
+            "tree_candidate_nodes": 0,
+            "tree_padding_nodes": 0,
+            "prefill_actual_tokens": 248110,
+            "prefill_padding_tokens": 39434,
+            "draft_verification_calls": 1112,
+            "draft_proposed_tokens": 48105,
+            "draft_accepted_tokens": 22857,
+            "draft_terminal_blocks": 44,
+            "draft_schedule_repaired_batches": 12,
+            "draft_schedule_repair_starts_sum": 150,
+            "parallel_repair_blocks": 12,
+            "vision_graphs": 4,
+            "text_graphs": 456,
+            "tree_decode": false,
+            "tree_repeat_actions": 1,
+            "tree_fp32_projection": false,
+            "tree_graphs": 8,
+            "capture_enabled": false,
+            "query_bucket_size": 1,
+            "fused_ops": true,
+            "split_attention": true,
+            "workspace_mib": 4500.0,
+            "workspace_tokens": 65536,
+            "model_max_context": 128000,
+            "batch_size": 4,
+            "batching_mode": "padded_tensor_batch",
+            "cuda_graph_requested": true,
+            "capacity_growths": 0,
+            "learned_draft": true,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000,
+            "shared_graph_buffers": true,
+            "text_graph_executables": 64,
+            "tree_graph_executables": 8,
+            "serial_draft": true,
+            "serial_draft_context_graphs": 84,
+            "serial_draft_projection_fallback_shapes": 0,
+            "serial_draft_stop_trigger_tokens": 2
+          }
+        }
+      ],
+      "comparison": {
+        "artifact": {
+          "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/dual-serial-native-final-repeat-comparison.json",
+          "bytes": 1146,
+          "sha256": "04fe0f63fc96446c97bc95f58878e5961aba77e125acdab1a629bda57e98c540"
+        },
+        "result": {
+          "dataset": "R2R",
+          "observations": 2997,
+          "batch_size": 4,
+          "exact_behavior_parity": true,
+          "matching_observations": 2997,
+          "mismatches_by_field": {
+            "token_ids": 0,
+            "output_sha256": 0,
+            "action_mask": 0,
+            "parsed_valid": 0,
+            "stop_reason": 0,
+            "cache_length": 0,
+            "actions": 0,
+            "text": 0
+          },
+          "first_mismatches": [],
+          "baseline_amortized_e2e_ms": 93.85906488655323,
+          "candidate_amortized_e2e_ms": 39.06839901634969,
+          "candidate_observations_per_second": 25.596134604377088,
+          "speedup": 2.4024292586771794,
+          "navigation_success_evaluated": false,
+          "admitted": true,
+          "instances": 2,
+          "baseline_wall_observations_per_second_per_gpu": 10.531648949845646,
+          "candidate_wall_observations_per_second_per_gpu": 25.11370000800604,
+          "wall_speedup": 2.3845933459806514,
+          "inference_interval_admitted": true,
+          "admission_boundary": "Exact output parity and at least 25 observations/s per allocated GPU over common wall time.",
+          "reference_sha256": "c57286fd43ff4691f5a6c5de2683d7112ebcf493e077f2a9fbf3b6bee0a05083",
+          "candidate_sha256": "b7dacf6ddb1cc08e68d3c11fbca6b59379d6b16d0d7664803c4977b2c25e0703"
+        }
+      }
+    }
+  ],
+  "backend_probe": {
+    "artifact": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/serial-backend-probe.json",
+      "bytes": 1715,
+      "sha256": "cdb8138d6379a581f155eb674764b569693e49695a2f013102c270d147b82a88"
+    },
+    "result": {
+      "norm": [
+        {
+          "batch": 1,
+          "query": 1,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 1,
+          "query": 16,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 2,
+          "query": 16,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 3,
+          "query": 16,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 4,
+          "query": 16,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 8,
+          "query": 16,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 4,
+          "query": 192,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 4,
+          "query": 247,
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "batch": 4,
+          "query": 388,
+          "different_values": 0,
+          "max_abs": 0.0
+        }
+      ],
+      "linear": [
+        {
+          "module": "layers.0.self_attn.q_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.self_attn.k_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.self_attn.v_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.self_attn.o_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.mlp.gate_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.mlp.up_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        },
+        {
+          "module": "layers.0.mlp.down_proj",
+          "different_values": 0,
+          "max_abs": 0.0
+        }
+      ],
+      "serial_fallback_shapes": 0
+    }
+  },
+  "prefix_probe": {
+    "artifact": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/serial-native-prefix-parity.json",
+      "bytes": 29899,
+      "sha256": "6ec38e93833304bd79b9dd8981f48b1981118494ad4d235cc32364ba1911ea9a"
+    },
+    "observations": 80,
+    "token_mismatches": 0,
+    "max_new_kv_abs_difference": 0.0
+  },
+  "stop_shortcut_probe": {
+    "artifact": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/fast-stop-probe-v3.json",
+      "bytes": 1009,
+      "sha256": "dd673dbedf5ec2e3f24d34e029ce376133b001d0e2463f05790379bed65ec249"
+    },
+    "result": {
+      "eos_token_ids": [
+        151645,
+        151643
+      ],
+      "tokenizer_cleanup": false,
+      "draft_vocabulary": {
+        "11": ",",
+        "15": "0",
+        "16": "1",
+        "17": "2",
+        "18": "3",
+        "19": "4",
+        "20": "5",
+        "22": "7",
+        "220": " ",
+        "412": "turn",
+        "1290": " right",
+        "2115": " left",
+        "2484": " turn",
+        "2936": " stop",
+        "3271": " move",
+        "3397": "move",
+        "4637": " forward",
+        "6226": "cm",
+        "9495": "stop",
+        "12348": " degrees",
+        "151645": ""
+      },
+      "trigger_tokens": [
+        2936,
+        9495
+      ],
+      "actual_complete_serial_replay": {
+        "sequences": 2997,
+        "prefixes": 51548,
+        "skipped_parses": 45909
+      },
+      "including_10000_random_full_vocabulary_roots_and_draft_suffixes": {
+        "sequences": 12997,
+        "prefixes": 144912,
+        "skipped_parses": 117367
+      },
+      "differences": 0,
+      "scope": "Only prefixes before first stop are reachable; arbitrary target roots are checked with the original parser, suffixes come from the verified ASCII draft vocabulary."
+    }
+  },
+  "validation": {
+    "serial-targeted-tests-v3.log": {
+      "artifact": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-targeted-tests-v3.log",
+        "bytes": 99,
+        "sha256": "5f4267c4d9beb21f004dc1e956108bafe70c40635ba20d6c5fd32fc819a5b6ae"
+      },
+      "tail": "........................................................                 [100%]\n56 passed in 7.64s\n"
+    },
+    "serial-regression-tests-v2.log": {
+      "artifact": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-regression-tests-v2.log",
+        "bytes": 859,
+        "sha256": "33d6628f9d0ded9f8b6de7fea297deab70ea5e0484caa86fd14f1c55a03c5a0c"
+      },
+      "tail": "........................................................................ [ 10%]\n........................................................................ [ 21%]\n.......sssss............................................................ [ 32%]\n........................................................................ [ 43%]\n..........................................................ss....ssssss.. [ 54%]\n...s..........................s..............................ssssssss.ss [ 64%]\n..ssss.................................................................. [ 75%]\n............................................sssssssssssss............... [ 86%]\n........................................................................ [ 97%]\n.....ssssssssss..                                                        [100%]\n613 passed, 54 skipped, 80 deselected in 115.91s (0:01:55)\n"
+    },
+    "serial-ruff.log": {
+      "artifact": {
+        "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-ruff.log",
+        "bytes": 47,
+        "sha256": "c1ff6e65a3efb493949c4b30201db50151eec917de566502bdcd04e8f92fe887"
+      },
+      "tail": "All checks passed!\n244 files already formatted\n"
+    },
+    "wheel": {
+      "path": "/tmp/embodiinfer-serial-wheel/embodiinfer-0.1.0-py3-none-any.whl",
+      "sha256": "b64703de5ec3fd62b0f98233c505f26d900ef7b1e38636803aeb4f871d1af865",
+      "result": "Built with setuptools 78.1.1; optional C++ source in wheel exactly matches implementation source."
+    }
+  },
+  "implementation_files": {
+    "embodiinfer/backend/torch/_cublas_reference.cpp": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/backend/torch/_cublas_reference.cpp",
+      "bytes": 6787,
+      "sha256": "6d8d3b4789e36e27531a9f11bf503212f05470487526384b59631d66b4cec56a"
+    },
+    "embodiinfer/backend/torch/cublas_reference.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/backend/torch/cublas_reference.py",
+      "bytes": 8040,
+      "sha256": "6dd88407c9a7d5697f912aa5d3c1e6cbf5011e25db9b471cae8ed948374d6a03"
+    },
+    "embodiinfer/backend/triton/reference_norm.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/backend/triton/reference_norm.py",
+      "bytes": 2986,
+      "sha256": "830a31602fdb159412c952ca3d4f54fdc87fb0bf0dbb9a6c5d235a5fa3b5bd42"
+    },
+    "embodiinfer/policies/activevln/serial_draft.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/policies/activevln/serial_draft.py",
+      "bytes": 28914,
+      "sha256": "03e7c6aed024f9f5dc106c992a27475b48ab1490036a39a2643074a19c117bf6"
+    },
+    "embodiinfer/policies/activevln/batching_activevln.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/policies/activevln/batching_activevln.py",
+      "bytes": 40148,
+      "sha256": "fbe73b9123c487909f684280a868bb7c181c7c068ed677a39ddb852ac39f5549"
+    },
+    "embodiinfer/policies/activevln/cuda_graph.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/policies/activevln/cuda_graph.py",
+      "bytes": 29156,
+      "sha256": "6ec51c3129e8e94d81738f361eb9c17953b71549d6d47ee74f55a142abaae14f"
+    },
+    "embodiinfer/policies/activevln/modeling_activevln.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/embodiinfer/policies/activevln/modeling_activevln.py",
+      "bytes": 39061,
+      "sha256": "33c63a1fd6e0c6d0af79baad2d4d956acb0d2df78a44532a21a4cb4a3fc858e9"
+    },
+    "benchmarks/activevln-benchmark/benchmark_batch.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/benchmarks/activevln-benchmark/benchmark_batch.py",
+      "bytes": 16853,
+      "sha256": "56f95bb801fb5b35545eb887d7d8744dfe1691910bb1f46f551be88bd0c732fd"
+    },
+    "benchmarks/activevln-benchmark/benchmark_multi_instance.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/benchmarks/activevln-benchmark/benchmark_multi_instance.py",
+      "bytes": 10106,
+      "sha256": "a29d88664e93c9f628a20f2a99a79f95b8c9642ff9750fb408dcdcecd54dba0f"
+    },
+    "benchmarks/activevln-benchmark/compare.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/benchmarks/activevln-benchmark/compare.py",
+      "bytes": 15207,
+      "sha256": "a5c38a2d39a7e2843a0e46b1908b7efda833264766a3ae08ca0757f328e00025"
+    },
+    "tests/test_activevln_serial_draft.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/tests/test_activevln_serial_draft.py",
+      "bytes": 5046,
+      "sha256": "43d4829f978e3b3de1aa16a135b72126ca601254361b5952a5dd2ebbd4b8cded"
+    },
+    "tests/test_reference_batch_backend.py": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/tests/test_reference_batch_backend.py",
+      "bytes": 4075,
+      "sha256": "a046cce6bfe6903d5e9c504aa570f29f2e4112a7d4480e4b84b0cfe6c3a12e48"
+    },
+    "pyproject.toml": {
+      "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/serial-v2-source/pyproject.toml",
+      "bytes": 9081,
+      "sha256": "95134210c64f91b5d5a3af7565220283881488a561552d46ca768e836d8862f5"
+    }
+  },
+  "raw_artifact_bundle": {
+    "path": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/serial-reference-artifacts-20261010.tar.gz",
+    "bytes": 6457972,
+    "sha256": "ce84ad5ec382ff26a8e10b7bc7d16b1a1d682d1418cc4c2ee73c01e8beb469fd",
+    "scope": "Full replica reports/configurations/logs, comparisons, operator and prefix probes, validation logs, and trained model-v1 checkpoint/metadata."
+  }
+}

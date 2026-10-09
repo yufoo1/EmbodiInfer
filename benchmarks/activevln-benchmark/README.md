@@ -12,6 +12,48 @@ The September 25 reference profile below uses `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` 
 
 ### Serial-reference draft verification (opt-in)
 
+Complete R2R replay on **2 × RTX 4090, B=4 per GPU** now passes the strict
+serial-reference gate. Both final repository runs completed the same 48 episodes
+and 2,997 unique observations, using the same episode-affine shards and batch
+schedules as the serial baseline. Both matched every recorded token, action,
+mask, validity, stop reason, text/hash and cache length.
+
+| Configuration | Inference E2E observations/s per GPU | Common-wall observations/s per allocated GPU | Common wall seconds | Output differences |
+| --- | ---: | ---: | ---: | ---: |
+| Serial greedy reference | 10.6543 | 10.5316 | 142.2854 | reference |
+| Repository serial-reference draft | 25.7718 | 25.3431 | 59.1286 | 0 / 2,997 |
+| Isolated repeat, identical implementation | 25.5961 | 25.1137 | 59.6686 | 0 / 2,997 |
+
+The final runs used commit `f0eb201` and source Python
+SHA-256 `24c7cb5a0eab84ba187173a4c0b793c49ad4253bf1c72935eb814fe004ce37eb`; the C++ source is hashed separately
+in the evidence. No other test/model workload overlapped these two runs.
+Common-wall rates include CPU preprocessing, model execution, action parsing,
+output audits, periodic reports and the slower replica tail. They count actual
+observations and divide by **two allocated GPUs**. Mean batch occupancy was
+3.8178; the largest measured allocated peak was 15.236 GiB per GPU.
+
+Thus the measured complete-job result is **25.1137–25.3431/s per GPU**,
+with a minimum margin of 0.45% over 25/s. These are short recorded
+replays, not a sustained production SLO or a multi-node/network benchmark.
+Startup, graph capture, warmup and disk image decoding are outside both timing
+scopes. No navigation SR/SPL was measured.
+
+Supplementary validation: 80 observations retained canonical serial history and
+matched both tokens and newly generated KV bit-for-bit; nine real-width norm
+cases and all seven real first-layer projections matched serial Torch values.
+The final regression suite passed 613 CPU tests (54 skipped, 80 deselected), and
+the targeted 56-test run included 10 passing CUDA operator tests. Ruff passed,
+and wheel inspection confirmed inclusion of the optional native bridge source.
+
+Full configurations, raw-report paths/hashes, per-replica timings and memory,
+all exact comparison fields, prototype results, and validation logs are recorded
+in [`serial-reference-evidence.json`](results/4090-learned-draft-20261010/serial-reference-evidence.json).
+The raw bundle, including the trained draft checkpoint, is retained at
+`/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/serial-reference-artifacts-20261010.tar.gz`
+and its SHA-256 is recorded in the evidence.
+The earlier unguarded draft measurements below retain their separate accuracy
+limitations; this result does not retroactively admit them.
+
 `serial_draft=true` enables the learned draft with private numerical plans and
 per-token attention-context auditing. This mode preserves the pinned **serial
 greedy B=4 tensor runtime** as its reference, with fused operators, split
