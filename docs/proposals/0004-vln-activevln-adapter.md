@@ -801,6 +801,22 @@ thread. Warmup initializes workers before timing; runtime `close()` releases the
 Default execution remains serial. Complete replay must show exact token/action
 parity between the serial and parallel preprocessing paths.
 
+The optional processor `text_cache_size` bounds an LRU of immutable prompt
+tokenization, keyed by instruction, initial/follow-up turn and image shape.
+It defaults to zero. Every observation still passes through the original image
+processor; reuse additionally requires the actual image grid to match. Cache
+entries retain no image pixels, target answers or episode history. Returned
+token/mask tensors are cloned, and worker-local processors own separate caches.
+
+Committing a turn to an existing private KV buffer copies only the newly added
+suffix when the incoming memory has that exact backing buffer and owner.
+Allocation, owner changes and foreign buffers still copy the full history.
+Previously committed prefixes remain immutable through row reuse/reordering.
+Counters report copied and skipped prefix tokens; full replay must preserve all
+audited outputs. Atomic benchmark reports retain every field but use compact
+JSON to reduce host reporting overhead between calls. Report this separately
+from changes to the timed inference interval.
+
 Initial real-weight draft verification changes some BF16 greedy decisions, even
 when both paths start from identical cached prefixes. Full replay therefore does
 not satisfy exact behavior admission against the old static-tree path. Keep the

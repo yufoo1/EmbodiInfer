@@ -932,6 +932,7 @@ def _build_activevln(
     repetition_penalty: float = 1.05,
     do_sample: bool = True,
     action_space: str = "r2r",
+    text_cache_size: int = 0,
     **overrides,
 ) -> VLAPolicy:
     if checkpoint is None:
@@ -959,7 +960,11 @@ def _build_activevln(
     )
     _validate_qwen(qwen)
     processor = ActiveVLNProcessor(
-        checkpoint, revision, allow_download=allow_download, action_space=action_space
+        checkpoint,
+        revision,
+        allow_download=allow_download,
+        action_space=action_space,
+        text_cache_size=text_cache_size,
     )
     return ActiveVLNPolicy(
         qwen,

@@ -45,7 +45,9 @@ def save_report(path: Path, report: dict[str, Any]) -> None:
     """Atomically retain completed calls, including when a later batch fails."""
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(report, indent=2, allow_nan=False) + "\n")
+    # Reports contain every action and token. Avoid repeatedly indenting that
+    # growing audit payload on the inference thread between measured batches.
+    temporary.write_text(json.dumps(report, separators=(",", ":"), allow_nan=False) + "\n")
     temporary.replace(path)
 
 
@@ -157,6 +159,7 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
             do_sample=config.get("do_sample", False),
             repetition_penalty=config["repetition_penalty"],
             action_space=config.get("action_space", "r2r"),
+            text_cache_size=config.get("text_cache_size", 0),
         )
         policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
         report["model_load_seconds"] = time.perf_counter() - start

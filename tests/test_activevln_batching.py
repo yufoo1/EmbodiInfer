@@ -360,6 +360,40 @@ def test_pooled_rows_relocate_and_reorder_without_changing_committed_histories()
         torch.testing.assert_close(memory.packed_kv, snapshots[row], rtol=0, atol=0)
 
 
+@torch.inference_mode()
+def test_suffix_only_commit_matches_fresh_buffers_through_reuse_and_reordering():
+    from types import MethodType
+
+    policy = _policy()
+    options = dict(batch_size=2, workspace_tokens=64, kv_pool_tokens=256, query_bucket_size=1)
+    optimized = policy.create_batched_runtime(**options)
+    reference = policy.create_batched_runtime(**options)
+    original_commit = reference._commit_row_kv
+
+    def fresh_commit(self, row, length, memory):
+        self._owned_rows[row] = None
+        return original_commit(row, length, memory)
+
+    reference._commit_row_kv = MethodType(fresh_commit, reference)
+    left, right = [None, None], [None, None]
+    retained = []
+    observations = [_observation("3 4"), _observation("7 8 9")]
+    for step in range(4):
+        if step == 2:
+            left, right = left[::-1], right[::-1]
+        actual = optimized.generate(optimized.prefill(optimized.prepare(observations, left)))
+        expected = reference.generate(reference.prefill(reference.prepare(observations, right)))
+        for a, b in zip(actual, expected, strict=True):
+            torch.testing.assert_close(a.token_ids, b.token_ids, rtol=0, atol=0)
+            torch.testing.assert_close(a.memory.packed_kv, b.memory.packed_kv, rtol=0, atol=0)
+            retained.append((a.memory, a.memory.packed_kv.clone()))
+        for memory, snapshot in retained:
+            torch.testing.assert_close(memory.packed_kv, snapshot, rtol=0, atol=0)
+        left, right = [g.memory for g in actual], [g.memory for g in expected]
+    assert optimized.counters["owned_kv_prefix_tokens_skipped"] > 0
+    assert optimized.counters["owned_kv_copied_tokens"] < reference.counters["owned_kv_copied_tokens"]
+
+
 @pytest.mark.gpu
 @pytest.mark.parametrize("batch", [1, 2, 4])
 @torch.inference_mode()

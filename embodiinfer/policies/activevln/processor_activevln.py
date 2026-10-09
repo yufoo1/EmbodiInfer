@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -56,9 +57,12 @@ class ActiveVLNProcessor:
         *,
         allow_download: bool = False,
         action_space: str = "r2r",
+        text_cache_size: int = 0,
     ) -> None:
         from transformers import AutoProcessor
 
+        if type(text_cache_size) is not int or text_cache_size < 0:
+            raise ValueError("text_cache_size must be a nonnegative Python integer")
         if action_space not in SYSTEM_PROMPTS:
             raise ValueError(f"unknown ActiveVLN action space: {action_space!r}")
         path = Path(checkpoint)
@@ -71,6 +75,8 @@ class ActiveVLNProcessor:
             local_files_only=not allow_download,
         )
         self.action_space = action_space
+        self.text_cache_size = text_cache_size
+        self._text_cache: OrderedDict[tuple[str, bool, tuple[int, ...]], ProcessedTurn] = OrderedDict()
 
     @property
     def tokenizer(self):
@@ -95,8 +101,30 @@ class ActiveVLNProcessor:
         return Image.fromarray(array, mode="RGB")
 
     def process_turn(self, observation: Observation, *, initial: bool) -> ProcessedTurn:
+        """Process fresh pixels; optionally reuse bounded, immutable prompt tokenization.
+
+        A cache hit still runs the same image processor and checks its actual
+        grid before reusing token IDs. No image, generated answer or history is
+        cached. Processor configuration is fixed for the object's lifetime.
+        """
         if not observation.instruction:
             raise ValueError("ActiveVLN requires Observation.instruction")
+        key = (observation.instruction, initial, tuple(observation.images.shape))
+        cached = self._text_cache.get(key)
+        if cached is not None:
+            pixels = self._processor.image_processor(
+                images=[self._pil_image(observation)], return_tensors="pt"
+            )
+            if torch.equal(pixels.image_grid_thw, cached.image_grid_thw):
+                self._text_cache.move_to_end(key)
+                return ProcessedTurn(
+                    cached.input_ids.clone(),
+                    cached.attention_mask.clone(),
+                    pixels.pixel_values,
+                    pixels.image_grid_thw,
+                    cached.serialized_prompt,
+                    cached.prompt_sha256,
+                )
         text = render_turn_text(
             self._processor, observation.instruction, initial=initial, action_space=self.action_space
         )
@@ -110,7 +138,7 @@ class ActiveVLNProcessor:
         missing = [name for name in required if name not in encoded]
         if missing:
             raise RuntimeError(f"Qwen processor omitted required ActiveVLN fields: {missing}")
-        return ProcessedTurn(
+        turn = ProcessedTurn(
             input_ids=encoded.input_ids,
             attention_mask=encoded.attention_mask,
             pixel_values=encoded.pixel_values,
@@ -118,3 +146,16 @@ class ActiveVLNProcessor:
             serialized_prompt=text,
             prompt_sha256=hashlib.sha256(text.encode()).hexdigest(),
         )
+        if self.text_cache_size:
+            self._text_cache[key] = ProcessedTurn(
+                turn.input_ids.clone(),
+                turn.attention_mask.clone(),
+                torch.empty(0),
+                turn.image_grid_thw.clone(),
+                turn.serialized_prompt,
+                turn.prompt_sha256,
+            )
+            self._text_cache.move_to_end(key)
+            while len(self._text_cache) > self.text_cache_size:
+                self._text_cache.popitem(last=False)
+        return turn

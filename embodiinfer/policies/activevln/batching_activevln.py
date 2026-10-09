@@ -222,6 +222,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             memory_resident_hits=0,
             owned_kv_allocations=0,
             owned_kv_reuses=0,
+            owned_kv_prefix_tokens_skipped=0,
+            owned_kv_copied_tokens=0,
             pool_relocations=0,
             tree_verified_rows=0,
             tree_candidate_nodes=0,
@@ -711,6 +713,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         (``memory is None``). A different live owner always gets a fresh buffer
         so earlier memories keep their committed histories. Capacity grows by a
         fixed token alignment instead of a full-history reallocation.
+        An unchanged prefix already resides in the owned buffer; only the new
+        turn and response need copying when that exact backing buffer is reused.
         """
         source = self._row_kv(row, 0, length)
         entry = self._owned_rows[row]
@@ -722,7 +726,14 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             )
             if reusable:
                 self.counters["owned_kv_reuses"] += 1
-                owned[..., :length, :].copy_(source)
+                start = (
+                    memory.seq_len
+                    if memory is not None and memory._packed_kv is owned and memory.seq_len <= length
+                    else 0
+                )
+                owned[..., start:length, :].copy_(source[..., start:length, :])
+                self.counters["owned_kv_prefix_tokens_skipped"] += start
+                self.counters["owned_kv_copied_tokens"] += length - start
                 return owned
             if holder is None:
                 # Let the dead buffer go before allocating its replacement.
@@ -735,6 +746,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         capacity = max(capacity, length)
         owned = source.new_empty((*source.shape[:-2], capacity, source.shape[-1]))
         self.counters["owned_kv_allocations"] += 1
+        self.counters["owned_kv_copied_tokens"] += length
         owned[..., :length, :].copy_(source)
         return owned
 
