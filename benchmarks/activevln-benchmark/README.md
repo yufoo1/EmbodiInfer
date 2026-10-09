@@ -53,6 +53,136 @@ batch amortization without crediting simultaneous execution on another GPU.
 Use them for the 40 ms/sample (25 samples/s per GPU) target. The aggregate
 wall-time rate remains a separate capacity measurement.
 
+### Two RTX 4090 instances, October 10, 2026
+
+This run uses source base `78dafc402a1fef65d04c126b0414891392cb2724` plus the
+benchmark launcher changes, on two RTX 4090 cards with 24,564 MiB each and a
+450 W power limit. The stack is Python 3.12.3, Torch 2.10.0+cu128,
+Transformers 4.51.3, Triton 3.6.0 and NVIDIA driver 580.82.07. Each process
+uses four CPU threads, BF16, greedy decoding, seed 42, repetition penalty 1.05,
+max_new_tokens=512 and max_context=128000. Each condition has one complete
+replay after 33 warmup batch calls; no confidence interval is implied.
+
+R2R uses `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` at revision
+`160987313e3e869705f42400d1b8f28177044518`, with the R2R action space. RxR uses
+its own checkpoint, `Arvil/Qwen2.5-VL-3B_rl_rxr_4000_step350` at revision
+`476f8410abb7749da8f5fed810c020984d578564`, with the RxR action space. All four
+weight shards and the tokenizer were SHA256-verified against checkpoint
+metadata for each model. The replay data is
+`cywan/StreamVLN-Trajectory-Data` at revision
+`dc61ee9b4e90aa7ba63c1163b2134df5610dccb9`, with the 48-episode selection
+described above.
+
+Both instances enable CUDA Graph, rounded Triton fusion, split-KV attention,
+root-partitioned action-tree verification, packed KV scratch, resident-prefix
+reuse, committed KV buffer reuse, shared graph buffers and shared eligible
+graph executables. query_bucket_size=1, tree_repeat_actions=1 and
+tree_fp32_projection=false retain the selected optimization profile. Graph
+workspace is 65,536 tokens for R2R and 128,000 for RxR. No quantization,
+history truncation or reduced generation limit is used.
+
+The table uses the common elapsed wall interval defined above. Mean and P95
+are observation-weighted full request waits, in milliseconds. Memory is the
+larger **PyTorch allocated** peak across the two instances, in GiB; it excludes
+non-PyTorch GPU allocations. OOM peaks cover only execution until failure.
+
+| Dataset | Batch per instance | Aggregate samples/s | Mean request ms | P95 request ms | Peak allocated GiB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| R2R | 1 | 26.77 | 70.59 | 86.41 | 13.34 |
+| R2R | 2 | 33.15 | 113.44 | 140.29 | 14.03 |
+| R2R | 4 | 37.97 | 197.65 | 230.25 | 15.20 |
+| R2R | 8, pool 128,000 | 35.99 | 364.13 | 432.46 | 17.87 |
+| RxR | 1 | 14.66 | 114.81 | 204.47 | 15.42 |
+| RxR | 2 | 15.81 | 213.51 | 340.37 | 17.03 |
+| RxR | 4, pool 147,456 | 15.44 | 411.13 | 660.58 | 21.25 |
+| RxR | 8, pool 196,608 | OOM during warmup | — | — | 21.01 |
+
+R2R B=8 initially failed with a 256,000-token scratch pool after 768 combined
+observations. Reducing its reserved pool to 128,000 completed all 2,997
+observations with zero graph fallbacks or capacity growth. All 768 overlapping
+outputs match exactly between the failed and successful runs. This adjustment
+changes reserved scratch memory, not the context limit. Mean batch occupancy is
+3.82 for R2R B=4 and 6.23 for B=8; partially filled tails affect the finite-replay
+throughput.
+
+The original RxR B=4 run completed 1,360 observations on GPU 0 before failing
+to allocate a 1.41 GiB committed KV buffer; GPU 1 completed its 1,788
+observations. RxR B=8 failed while allocating a 432 MiB committed KV buffer
+during warmup, before any measured observations. Neither partial run has an
+admitted aggregate rate. Retrying B=4 with a 147,456-token pool completes all
+3,879 observations, with zero graph fallbacks, capacity growth or invalid
+parses. All 3,148 outputs shared with the original run match exactly. The
+smaller pool preserves full histories and all inference switches.
+The fixed round-robin partition assigns 2,091/1,788
+RxR observations to the two GPUs, so the common elapsed time includes load
+imbalance as well as partially filled batches.
+
+The requested target is **25 samples/s per instance after batch amortization**,
+equivalent to at most 40 ms per sample. The aggregate two-GPU rates above are
+capacity measurements and do not establish that target. For the target metric,
+sum each replica's batch call durations and divide by the total actual
+observations, including partially filled batches. Concurrent execution on
+another GPU does not reduce this per-sample cost. Pooling those durations across
+replicas gives a sample-weighted estimate of per-instance efficiency, not their
+combined throughput. E2E covers decoded CPU RGB through parsed actions; the
+complete-model column excludes preprocessing and action parsing.
+
+| Dataset | Batch per instance | Amortized E2E ms/sample | Normalized samples/s | Amortized model ms/sample | Meets 25 samples/s E2E |
+| --- | ---: | ---: | ---: | ---: | --- |
+| R2R | 1 | 70.59 | 14.17 | 59.27 | No |
+| R2R | 2 | 57.49 | 17.40 | 46.60 | No |
+| R2R | 4 | 51.44 | 19.44 | 40.80 | No |
+| R2R | 8 | 53.95 | 18.54 | 43.32 | No |
+| RxR | 1 | 114.81 | 8.71 | 102.94 | No |
+| RxR | 2 | 107.00 | 9.35 | 95.61 | No |
+| RxR | 4 | 107.91 | 9.27 | 96.77 | No |
+| RxR | 8 | OOM during warmup | — | — | Not completed |
+
+Neither dataset meets the per-instance target in this replay. R2R is best at
+B=4: model execution alone is 40.80 ms/sample (24.51 samples/s), with another
+10.64 ms/sample outside the model interval. RxR is best at B=2, where even
+model execution alone takes 95.61 ms/sample (10.46 samples/s). Multiple
+instances increase aggregate capacity while preserving per-instance inference
+efficiency. These amortized costs are not individual request response times;
+the preceding table retains full request waits. The corrected machine-readable table and resolved configurations are in
+[`results/4090-multi-instance-20261010`](results/4090-multi-instance-20261010),
+including the metric definition, failed runs and artifact SHA256 digests.
+
+The single-GPU R2R B=1 control reaches 13.12 samples/s versus 26.77 for two
+instances, with mean request waits of 70.59 ms in both. All 2,997 token
+sequences, actions, masks, parse flags, stopping reasons and cache lengths
+match exactly. The corresponding RxR control reaches 8.26 samples/s versus
+14.66 for two instances, with mean waits of 114.53/114.81 ms. All 3,879 RxR
+outputs match on those same fields. The observed aggregate speedups are
+2.04x for R2R and 1.77x for RxR. This checks process isolation at B=1; it does
+not establish optimized-versus-eager parity, cross-batch parity or navigation
+SR/SPL.
+
+RxR B=1 contains one invalid parse in both the single- and dual-instance
+runs: episode 38, step 62 generates four actions, exceeding the parser's
+three-action limit. The raw output and failure flag are retained. The original
+full B=2 run has no invalid parses. Throughput therefore does not imply that
+every generated action chunk is valid.
+
+The B=1 replay has mean/max cached lengths of 6,484/21,181 tokens for R2R
+and 14,869/52,859 for RxR. Mean complete model time is 59.27/102.94 ms,
+respectively. Both completed profiles have zero vision, prefill, decode and
+tree graph fallbacks. For RxR B=2, the two replicas take 245.32/177.23 seconds;
+the 68-second tail contributes to the aggregate result. Their inference-only
+rate sum is 18.95 samples/s, a diagnostic that also remains below 25 samples/s.
+
+Raw configurations, replica reports, logs, source provenance, allocation
+failures, parity checks and independently recomputed CSV/JSON tables are under
+`runs/multi-instance-4090-20261010/` (ignored generated artifacts). The remote
+experiment directory is
+`/mnt/zhouzhenyuan/activevln-multi-instance-20261010`. CPU validation passed
+36 relevant tests, with nine GPU-marked tests deselected; the real-weight
+measurements above are separate from those unit tests.
+`executed-source.tar.gz` preserves the executed source and license files;
+its Python source digest matches every measured replica report. The adjacent
+`multi-instance-4090-20261010.tar.gz` bundles the reports and reproduction
+artifacts without model weights or dataset images.
+
 ## Tensor batches
 
 `benchmark_batch.py` measures true tensor batches with independent episode

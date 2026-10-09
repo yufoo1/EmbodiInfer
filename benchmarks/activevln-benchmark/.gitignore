@@ -2,3 +2,9 @@
 runs/
 reports/
 *-config.json
+
+# Curated compact reports; raw per-frame artifacts remain under runs/.
+!results/
+!results/4090-multi-instance-20261010/
+!results/4090-multi-instance-20261010/*.csv
+!results/4090-multi-instance-20261010/*.json

@@ -1,0 +1,109 @@
+{
+  "metric": "Sum of each replica batch duration divided by total actual observations. Batch amortization allowed; no credit from concurrent GPU execution. E2E covers decoded CPU RGB to parsed actions, excludes disk decoding, HTTP and simulator time.",
+  "rows": [
+    {
+      "trial": "r2r-b1",
+      "dataset": "R2R",
+      "batch_per_instance": 1,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 70.58774012312313,
+      "normalized_samples_s": 14.166766045431451,
+      "amortized_model_ms": 59.26865577510845,
+      "model_samples_s": 16.872324619516313,
+      "amortized_replica_wall_ms": 74.34515207374041,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "r2r-b2",
+      "dataset": "R2R",
+      "batch_per_instance": 2,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 57.48663296629964,
+      "normalized_samples_s": 17.395348247065183,
+      "amortized_model_ms": 46.59697922856189,
+      "model_samples_s": 21.460618618535772,
+      "amortized_replica_wall_ms": 59.17501489422756,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "r2r-b4",
+      "dataset": "R2R",
+      "batch_per_instance": 4,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 51.436674260593925,
+      "normalized_samples_s": 19.441381356300255,
+      "amortized_model_ms": 40.800867236236236,
+      "model_samples_s": 24.50928295739449,
+      "amortized_replica_wall_ms": 52.50017875909243,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "r2r-b8-pool128k",
+      "dataset": "R2R",
+      "batch_per_instance": 8,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 53.94767848381715,
+      "normalized_samples_s": 18.53647882735071,
+      "amortized_model_ms": 43.318128996997,
+      "model_samples_s": 23.08502290275105,
+      "amortized_replica_wall_ms": 54.63150712746079,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "rxr-b1",
+      "dataset": "RxR",
+      "batch_per_instance": 1,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 114.80941139932973,
+      "normalized_samples_s": 8.710087333535778,
+      "amortized_model_ms": 102.94402743722608,
+      "model_samples_s": 9.714016683578723,
+      "amortized_replica_wall_ms": 118.87155908945606,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "rxr-b2",
+      "dataset": "RxR",
+      "batch_per_instance": 2,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 107.00402045810776,
+      "normalized_samples_s": 9.345443243335904,
+      "amortized_model_ms": 95.61136604872391,
+      "model_samples_s": 10.459007556595273,
+      "amortized_replica_wall_ms": 108.93247644289765,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "rxr-b4-pool147456",
+      "dataset": "RxR",
+      "batch_per_instance": 4,
+      "status": "complete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": 107.91024534261408,
+      "normalized_samples_s": 9.266960674818307,
+      "amortized_model_ms": 96.76675087986595,
+      "model_samples_s": 10.334128106062801,
+      "amortized_replica_wall_ms": 108.8767645328693,
+      "meets_e2e_target": false
+    },
+    {
+      "trial": "rxr-b8",
+      "dataset": "RxR",
+      "batch_per_instance": 8,
+      "status": "incomplete",
+      "target_samples_s": 25,
+      "amortized_e2e_ms": null,
+      "normalized_samples_s": null,
+      "amortized_model_ms": null,
+      "model_samples_s": null,
+      "amortized_replica_wall_ms": null,
+      "meets_e2e_target": false
+    }
+  ]
+}
