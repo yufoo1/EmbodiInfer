@@ -1,0 +1,2286 @@
+{
+  "artifact_root": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05",
+  "dual": {
+    "bf16": {
+      "profile": "bf16",
+      "batch_size": 4,
+      "observations_per_replica": 1600,
+      "workload": "same full LIBERO-10 selection on each independent replica; only per-GPU efficiency is claimed",
+      "status": "complete",
+      "pids": [
+        289364,
+        289365
+      ],
+      "returncodes": [
+        0,
+        0
+      ],
+      "per_gpu_observations_per_second": 33.588972655901564,
+      "per_gpu_amortized_e2e_ms": 29.771675670000004,
+      "replica_metrics": [
+        {
+          "calls": 400,
+          "inference_seconds": 47.704397607000004,
+          "latency_ms": {
+            "mean": 119.26099401750001,
+            "p50": 119.32656650000001,
+            "p95": 120.97407455,
+            "p99": 126.70825526
+          },
+          "calls_per_second": 8.384971198992883,
+          "observations": 1600,
+          "observations_per_second": 33.53988479597153,
+          "amortized_e2e_ms_per_observation": 29.815248504375003,
+          "action_slots_per_second": 1676.9942397985765,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 80.10740587234497,
+              "p50": 80.3988151550293,
+              "p95": 80.84413146972656,
+              "p99": 81.1237490081787
+            },
+            "decode_ms": {
+              "mean": 23.420890154838563,
+              "p50": 23.50182342529297,
+              "p95": 23.63606491088867,
+              "p99": 23.777291030883788
+            },
+            "gpu_inference_ms": {
+              "mean": 103.52829626083374,
+              "p50": 103.87865829467773,
+              "p95": 104.4432373046875,
+              "p99": 104.66641174316406
+            },
+            "pure_inference_ms": {
+              "mean": 103.5660928375,
+              "p50": 103.916331,
+              "p95": 104.47643895,
+              "p99": 104.71074829
+            }
+          },
+          "model_calls_per_second": 9.655669849098645
+        },
+        {
+          "calls": 400,
+          "inference_seconds": 47.56496453700001,
+          "latency_ms": {
+            "mean": 118.91241134250002,
+            "p50": 118.973419,
+            "p95": 120.75809405,
+            "p99": 126.1874402
+          },
+          "calls_per_second": 8.409551103288358,
+          "observations": 1600,
+          "observations_per_second": 33.63820441315343,
+          "amortized_e2e_ms_per_observation": 29.728102835625005,
+          "action_slots_per_second": 1681.9102206576715,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 80.03546493530274,
+              "p50": 80.29439926147461,
+              "p95": 80.63411369323731,
+              "p99": 80.76288864135742
+            },
+            "decode_ms": {
+              "mean": 23.220873832702637,
+              "p50": 23.310335159301758,
+              "p95": 23.44555444717407,
+              "p99": 23.45574378967285
+            },
+            "gpu_inference_ms": {
+              "mean": 103.2563387298584,
+              "p50": 103.59500885009766,
+              "p95": 104.00056228637695,
+              "p99": 104.1778807067871
+            },
+            "pure_inference_ms": {
+              "mean": 103.293781805,
+              "p50": 103.634185,
+              "p95": 104.03972635000001,
+              "p99": 104.21306
+            }
+          },
+          "model_calls_per_second": 9.681124870496266
+        }
+      ],
+      "replica_memory": [
+        {
+          "cuda_peak_allocated_mib": 11431.07958984375,
+          "cuda_peak_reserved_mib": 12266.0,
+          "process_peak_rss_mib": 8349.421875,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        {
+          "cuda_peak_allocated_mib": 11431.07958984375,
+          "cuda_peak_reserved_mib": 12266.0,
+          "process_peak_rss_mib": 8349.20703125,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        }
+      ],
+      "measurement_overlap_seconds": 56.30621979,
+      "start_skew_ms": 0.365711
+    },
+    "fp8": {
+      "profile": "fp8",
+      "batch_size": 4,
+      "observations_per_replica": 1600,
+      "workload": "same full LIBERO-10 selection on each independent replica; only per-GPU efficiency is claimed",
+      "status": "complete",
+      "pids": [
+        290185,
+        290186
+      ],
+      "returncodes": [
+        0,
+        0
+      ],
+      "per_gpu_observations_per_second": 41.58939701330401,
+      "per_gpu_amortized_e2e_ms": 24.044590011249998,
+      "replica_metrics": [
+        {
+          "calls": 400,
+          "inference_seconds": 38.390917191999996,
+          "latency_ms": {
+            "mean": 95.97729297999999,
+            "p50": 95.853983,
+            "p95": 97.38347025,
+            "p99": 102.24869892
+          },
+          "calls_per_second": 10.419131118944797,
+          "observations": 1600,
+          "observations_per_second": 41.67652447577919,
+          "amortized_e2e_ms_per_observation": 23.994323244999997,
+          "action_slots_per_second": 2083.8262237889594,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 57.39702391624451,
+              "p50": 57.511423110961914,
+              "p95": 57.737728881835935,
+              "p99": 57.985137405395506
+            },
+            "decode_ms": {
+              "mean": 23.17863335132599,
+              "p50": 23.237632751464844,
+              "p95": 23.361638450622557,
+              "p99": 23.38018367767334
+            },
+            "gpu_inference_ms": {
+              "mean": 80.57565734863282,
+              "p50": 80.79564666748047,
+              "p95": 81.04320106506347,
+              "p99": 81.25984260559082
+            },
+            "pure_inference_ms": {
+              "mean": 80.613612995,
+              "p50": 80.835345,
+              "p95": 81.0825296,
+              "p99": 81.30155702
+            }
+          },
+          "model_calls_per_second": 12.404852764284666
+        },
+        {
+          "calls": 400,
+          "inference_seconds": 38.551770843999996,
+          "latency_ms": {
+            "mean": 96.37942711,
+            "p50": 96.1957625,
+            "p95": 98.30459244999999,
+            "p99": 103.00488734999999
+          },
+          "calls_per_second": 10.375658270500796,
+          "observations": 1600,
+          "observations_per_second": 41.502633082003186,
+          "amortized_e2e_ms_per_observation": 24.0948567775,
+          "action_slots_per_second": 2075.1316541001593,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 57.51383237838745,
+              "p50": 57.6363525390625,
+              "p95": 57.864192962646484,
+              "p99": 57.93314846038818
+            },
+            "decode_ms": {
+              "mean": 23.16502466201782,
+              "p50": 23.221248626708984,
+              "p95": 23.382117652893065,
+              "p99": 23.39125202178955
+            },
+            "gpu_inference_ms": {
+              "mean": 80.67885688781739,
+              "p50": 80.88422393798828,
+              "p95": 81.15625076293945,
+              "p99": 81.28838668823242
+            },
+            "pure_inference_ms": {
+              "mean": 80.71603051,
+              "p50": 80.9162965,
+              "p95": 81.19206285,
+              "p99": 81.33421078
+            }
+          },
+          "model_calls_per_second": 12.38911271629133
+        }
+      ],
+      "replica_memory": [
+        {
+          "cuda_peak_allocated_mib": 7071.59423828125,
+          "cuda_peak_reserved_mib": 9124.0,
+          "process_peak_rss_mib": 8353.01953125,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        {
+          "cuda_peak_allocated_mib": 7071.59423828125,
+          "cuda_peak_reserved_mib": 9124.0,
+          "process_peak_rss_mib": 8357.921875,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        }
+      ],
+      "measurement_overlap_seconds": 47.451816073,
+      "start_skew_ms": 3.064715
+    }
+  },
+  "replicas": {
+    "bf16": [
+      {
+        "schema": "inference_quantization_performance_v1",
+        "report_created_utc": "2026-10-09T20:33:12.555348+00:00",
+        "config": {
+          "schema_version": 1,
+          "model": "pi05",
+          "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 400,
+          "repeats": 1,
+          "compile_backend": "inductor",
+          "quantization": null,
+          "cuda_graph": true,
+          "num_steps": 10,
+          "dataset": {
+            "name": "LIBERO-10",
+            "repository": "yifengzhu-hf/LIBERO-datasets",
+            "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+            "task_limit": 10,
+            "demos_per_task": 10,
+            "frames_per_demo": 16,
+            "sample_limit": null
+          },
+          "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/dual-b4-bf16/replica-0.json",
+          "native_inference": true,
+          "prefix_cuda_graph": true,
+          "denoise_attention": "triton",
+          "prefix_attention": "triton",
+          "cpu_threads": 4,
+          "low_cpu_mem_usage": true,
+          "batch_size": 4,
+          "validate_data_only": false
+        },
+        "environment": {
+          "gpu": "NVIDIA GeForce RTX 4090",
+          "capability": [
+            8,
+            9
+          ],
+          "cuda": "12.9",
+          "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+          "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+          "packages": {
+            "torch": "2.13.0+cu129",
+            "torchvision": "0.28.0+cu129",
+            "transformers": "5.3.0",
+            "triton": "3.7.1",
+            "lerobot": "0.5.1",
+            "numpy": "2.2.6",
+            "Pillow": "12.3.0",
+            "h5py": "3.16.0"
+          },
+          "source_revision": null,
+          "source_python_sha256": "9222208d6f415ea07944e3b7234742934684951d265b103171d7e0ac323b5065",
+          "dependency_check": {
+            "inherited_runtime_issues": [
+              "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+              "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+            ],
+            "new_issues": [],
+            "pip_check_exit": 1,
+            "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+          },
+          "driver_version": "580.82.07\n580.82.07"
+        },
+        "batch_size": 4,
+        "timing_boundary": "decoded_cpu_rgb_and_state_to_cpu_action_chunk_including_pre_and_postprocessing",
+        "excluded": [
+          "weights_loading",
+          "file_read_and_decode",
+          "warmup",
+          "simulation",
+          "network",
+          "report_validation_and_hashing"
+        ],
+        "model_timing_contract": {
+          "prefill_ms": "CUDA elapsed: vision/text/state encoding to reusable prefix",
+          "decode_ms": "CUDA elapsed: all generation steps including noise/sampling, before action restoration",
+          "gpu_inference_ms": "CUDA elapsed across prefill plus complete decode; no intermediate synchronization",
+          "pure_inference_ms": "synchronized wall time across the same model interval, including host dispatch",
+          "excluded": [
+            "input_preprocessing",
+            "input_H2D",
+            "output_postprocessing",
+            "output_D2H"
+          ],
+          "e2e_note": "original CPU observation-to-action scope retained; includes profiling overhead"
+        },
+        "runtime": "embodiinfer",
+        "metrics": {
+          "calls": 400,
+          "inference_seconds": 47.704397607000004,
+          "latency_ms": {
+            "mean": 119.26099401750001,
+            "p50": 119.32656650000001,
+            "p95": 120.97407455,
+            "p99": 126.70825526
+          },
+          "calls_per_second": 8.384971198992883,
+          "observations": 1600,
+          "observations_per_second": 33.53988479597153,
+          "amortized_e2e_ms_per_observation": 29.815248504375003,
+          "action_slots_per_second": 1676.9942397985765,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 80.10740587234497,
+              "p50": 80.3988151550293,
+              "p95": 80.84413146972656,
+              "p99": 81.1237490081787
+            },
+            "decode_ms": {
+              "mean": 23.420890154838563,
+              "p50": 23.50182342529297,
+              "p95": 23.63606491088867,
+              "p99": 23.777291030883788
+            },
+            "gpu_inference_ms": {
+              "mean": 103.52829626083374,
+              "p50": 103.87865829467773,
+              "p95": 104.4432373046875,
+              "p99": 104.66641174316406
+            },
+            "pure_inference_ms": {
+              "mean": 103.5660928375,
+              "p50": 103.916331,
+              "p95": 104.47643895,
+              "p99": 104.71074829
+            }
+          },
+          "model_calls_per_second": 9.655669849098645
+        },
+        "memory": {
+          "cuda_peak_allocated_mib": 11431.07958984375,
+          "cuda_peak_reserved_mib": 12266.0,
+          "process_peak_rss_mib": 8349.421875,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        "selection_sha256": "92be73f628b54f35c5f0ece7ea0e6babc4a6e3b3a4fd43adc0662bbfa516eb69",
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "selected_samples": 1600,
+        "policy": "pi05",
+        "output_scope": "physical_action_chunk",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "tokenizer": {
+          "name": "google/paligemma-3b-pt-224",
+          "vocab_size": 257152,
+          "probe_token_ids": {
+            "open the drawer": [
+              2,
+              4141,
+              573,
+              39635
+            ],
+            "close the drawer": [
+              2,
+              3446,
+              573,
+              39635
+            ],
+            "pick up the black bowl": [
+              2,
+              18075,
+              908,
+              573,
+              2656,
+              14581
+            ]
+          }
+        },
+        "num_steps": 10,
+        "action_horizon": 50,
+        "state_layout": "eef_pos3_axis_angle3_gripper2",
+        "image_transform": "stored_opengl_vertical_flip_then_PIL_bilinear_224_then_checkpoint_processor",
+        "model_load_seconds": 81.82812495343387,
+        "warmup_seconds_including_data_io": 131.25191294401884,
+        "runtime_before_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "quantized_linears": 0
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 1,
+          "compiled_inference_helpers": 4
+        },
+        "measurement_start_ns": 8592979370628445,
+        "measurement_end_ns": 8593035951210619,
+        "runtime_after_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "quantized_linears": 0
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 1,
+          "compiled_inference_helpers": 4
+        },
+        "raw_sha256": "3980f0980fa8427c835cce3d116dcf73d7b7fac53419ad4be9feff201de4e065"
+      },
+      {
+        "schema": "inference_quantization_performance_v1",
+        "report_created_utc": "2026-10-09T20:33:12.281332+00:00",
+        "config": {
+          "schema_version": 1,
+          "model": "pi05",
+          "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 400,
+          "repeats": 1,
+          "compile_backend": "inductor",
+          "quantization": null,
+          "cuda_graph": true,
+          "num_steps": 10,
+          "dataset": {
+            "name": "LIBERO-10",
+            "repository": "yifengzhu-hf/LIBERO-datasets",
+            "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+            "task_limit": 10,
+            "demos_per_task": 10,
+            "frames_per_demo": 16,
+            "sample_limit": null
+          },
+          "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/dual-b4-bf16/replica-1.json",
+          "native_inference": true,
+          "prefix_cuda_graph": true,
+          "denoise_attention": "triton",
+          "prefix_attention": "triton",
+          "cpu_threads": 4,
+          "low_cpu_mem_usage": true,
+          "batch_size": 4,
+          "validate_data_only": false
+        },
+        "environment": {
+          "gpu": "NVIDIA GeForce RTX 4090",
+          "capability": [
+            8,
+            9
+          ],
+          "cuda": "12.9",
+          "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+          "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+          "packages": {
+            "torch": "2.13.0+cu129",
+            "torchvision": "0.28.0+cu129",
+            "transformers": "5.3.0",
+            "triton": "3.7.1",
+            "lerobot": "0.5.1",
+            "numpy": "2.2.6",
+            "Pillow": "12.3.0",
+            "h5py": "3.16.0"
+          },
+          "source_revision": null,
+          "source_python_sha256": "9222208d6f415ea07944e3b7234742934684951d265b103171d7e0ac323b5065",
+          "dependency_check": {
+            "inherited_runtime_issues": [
+              "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+              "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+            ],
+            "new_issues": [],
+            "pip_check_exit": 1,
+            "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+          },
+          "driver_version": "580.82.07\n580.82.07"
+        },
+        "batch_size": 4,
+        "timing_boundary": "decoded_cpu_rgb_and_state_to_cpu_action_chunk_including_pre_and_postprocessing",
+        "excluded": [
+          "weights_loading",
+          "file_read_and_decode",
+          "warmup",
+          "simulation",
+          "network",
+          "report_validation_and_hashing"
+        ],
+        "model_timing_contract": {
+          "prefill_ms": "CUDA elapsed: vision/text/state encoding to reusable prefix",
+          "decode_ms": "CUDA elapsed: all generation steps including noise/sampling, before action restoration",
+          "gpu_inference_ms": "CUDA elapsed across prefill plus complete decode; no intermediate synchronization",
+          "pure_inference_ms": "synchronized wall time across the same model interval, including host dispatch",
+          "excluded": [
+            "input_preprocessing",
+            "input_H2D",
+            "output_postprocessing",
+            "output_D2H"
+          ],
+          "e2e_note": "original CPU observation-to-action scope retained; includes profiling overhead"
+        },
+        "runtime": "embodiinfer",
+        "metrics": {
+          "calls": 400,
+          "inference_seconds": 47.56496453700001,
+          "latency_ms": {
+            "mean": 118.91241134250002,
+            "p50": 118.973419,
+            "p95": 120.75809405,
+            "p99": 126.1874402
+          },
+          "calls_per_second": 8.409551103288358,
+          "observations": 1600,
+          "observations_per_second": 33.63820441315343,
+          "amortized_e2e_ms_per_observation": 29.728102835625005,
+          "action_slots_per_second": 1681.9102206576715,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 80.03546493530274,
+              "p50": 80.29439926147461,
+              "p95": 80.63411369323731,
+              "p99": 80.76288864135742
+            },
+            "decode_ms": {
+              "mean": 23.220873832702637,
+              "p50": 23.310335159301758,
+              "p95": 23.44555444717407,
+              "p99": 23.45574378967285
+            },
+            "gpu_inference_ms": {
+              "mean": 103.2563387298584,
+              "p50": 103.59500885009766,
+              "p95": 104.00056228637695,
+              "p99": 104.1778807067871
+            },
+            "pure_inference_ms": {
+              "mean": 103.293781805,
+              "p50": 103.634185,
+              "p95": 104.03972635000001,
+              "p99": 104.21306
+            }
+          },
+          "model_calls_per_second": 9.681124870496266
+        },
+        "memory": {
+          "cuda_peak_allocated_mib": 11431.07958984375,
+          "cuda_peak_reserved_mib": 12266.0,
+          "process_peak_rss_mib": 8349.20703125,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        "selection_sha256": "92be73f628b54f35c5f0ece7ea0e6babc4a6e3b3a4fd43adc0662bbfa516eb69",
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "selected_samples": 1600,
+        "policy": "pi05",
+        "output_scope": "physical_action_chunk",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "tokenizer": {
+          "name": "google/paligemma-3b-pt-224",
+          "vocab_size": 257152,
+          "probe_token_ids": {
+            "open the drawer": [
+              2,
+              4141,
+              573,
+              39635
+            ],
+            "close the drawer": [
+              2,
+              3446,
+              573,
+              39635
+            ],
+            "pick up the black bowl": [
+              2,
+              18075,
+              908,
+              573,
+              2656,
+              14581
+            ]
+          }
+        },
+        "num_steps": 10,
+        "action_horizon": 50,
+        "state_layout": "eef_pos3_axis_angle3_gripper2",
+        "image_transform": "stored_opengl_vertical_flip_then_PIL_bilinear_224_then_checkpoint_processor",
+        "model_load_seconds": 81.97739499807358,
+        "warmup_seconds_including_data_io": 131.10100034065545,
+        "runtime_before_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "quantized_linears": 0
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 1,
+          "compiled_inference_helpers": 4
+        },
+        "measurement_start_ns": 8592979370994156,
+        "measurement_end_ns": 8593035677213946,
+        "runtime_after_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "quantized_linears": 0
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 1,
+          "compiled_inference_helpers": 4
+        },
+        "raw_sha256": "8e525b71fc00a0b2e6e7adcdadccde82697c4e37568f0148fc05e968fb974e84"
+      }
+    ],
+    "fp8": [
+      {
+        "schema": "inference_quantization_performance_v1",
+        "report_created_utc": "2026-10-09T20:37:03.913919+00:00",
+        "config": {
+          "schema_version": 1,
+          "model": "pi05",
+          "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 400,
+          "repeats": 1,
+          "compile_backend": "inductor",
+          "quantization": {
+            "method": "fp8",
+            "backend": "native",
+            "scaling_scheme": "tensorwise",
+            "ignored_layers": [
+              "expert.*"
+            ]
+          },
+          "cuda_graph": true,
+          "num_steps": 10,
+          "dataset": {
+            "name": "LIBERO-10",
+            "repository": "yifengzhu-hf/LIBERO-datasets",
+            "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+            "task_limit": 10,
+            "demos_per_task": 10,
+            "frames_per_demo": 16,
+            "sample_limit": null
+          },
+          "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/dual-b4-fp8/replica-0.json",
+          "native_inference": true,
+          "prefix_cuda_graph": true,
+          "denoise_attention": "triton",
+          "prefix_attention": "triton",
+          "cpu_threads": 4,
+          "low_cpu_mem_usage": true,
+          "batch_size": 4,
+          "validate_data_only": false
+        },
+        "environment": {
+          "gpu": "NVIDIA GeForce RTX 4090",
+          "capability": [
+            8,
+            9
+          ],
+          "cuda": "12.9",
+          "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+          "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+          "packages": {
+            "torch": "2.13.0+cu129",
+            "torchvision": "0.28.0+cu129",
+            "transformers": "5.3.0",
+            "triton": "3.7.1",
+            "lerobot": "0.5.1",
+            "numpy": "2.2.6",
+            "Pillow": "12.3.0",
+            "h5py": "3.16.0"
+          },
+          "source_revision": null,
+          "source_python_sha256": "9222208d6f415ea07944e3b7234742934684951d265b103171d7e0ac323b5065",
+          "dependency_check": {
+            "inherited_runtime_issues": [
+              "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+              "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+            ],
+            "new_issues": [],
+            "pip_check_exit": 1,
+            "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+          },
+          "driver_version": "580.82.07\n580.82.07"
+        },
+        "batch_size": 4,
+        "timing_boundary": "decoded_cpu_rgb_and_state_to_cpu_action_chunk_including_pre_and_postprocessing",
+        "excluded": [
+          "weights_loading",
+          "file_read_and_decode",
+          "warmup",
+          "simulation",
+          "network",
+          "report_validation_and_hashing"
+        ],
+        "model_timing_contract": {
+          "prefill_ms": "CUDA elapsed: vision/text/state encoding to reusable prefix",
+          "decode_ms": "CUDA elapsed: all generation steps including noise/sampling, before action restoration",
+          "gpu_inference_ms": "CUDA elapsed across prefill plus complete decode; no intermediate synchronization",
+          "pure_inference_ms": "synchronized wall time across the same model interval, including host dispatch",
+          "excluded": [
+            "input_preprocessing",
+            "input_H2D",
+            "output_postprocessing",
+            "output_D2H"
+          ],
+          "e2e_note": "original CPU observation-to-action scope retained; includes profiling overhead"
+        },
+        "runtime": "embodiinfer",
+        "metrics": {
+          "calls": 400,
+          "inference_seconds": 38.390917191999996,
+          "latency_ms": {
+            "mean": 95.97729297999999,
+            "p50": 95.853983,
+            "p95": 97.38347025,
+            "p99": 102.24869892
+          },
+          "calls_per_second": 10.419131118944797,
+          "observations": 1600,
+          "observations_per_second": 41.67652447577919,
+          "amortized_e2e_ms_per_observation": 23.994323244999997,
+          "action_slots_per_second": 2083.8262237889594,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 57.39702391624451,
+              "p50": 57.511423110961914,
+              "p95": 57.737728881835935,
+              "p99": 57.985137405395506
+            },
+            "decode_ms": {
+              "mean": 23.17863335132599,
+              "p50": 23.237632751464844,
+              "p95": 23.361638450622557,
+              "p99": 23.38018367767334
+            },
+            "gpu_inference_ms": {
+              "mean": 80.57565734863282,
+              "p50": 80.79564666748047,
+              "p95": 81.04320106506347,
+              "p99": 81.25984260559082
+            },
+            "pure_inference_ms": {
+              "mean": 80.613612995,
+              "p50": 80.835345,
+              "p95": 81.0825296,
+              "p99": 81.30155702
+            }
+          },
+          "model_calls_per_second": 12.404852764284666
+        },
+        "memory": {
+          "cuda_peak_allocated_mib": 7071.59423828125,
+          "cuda_peak_reserved_mib": 9124.0,
+          "process_peak_rss_mib": 8353.01953125,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        "selection_sha256": "92be73f628b54f35c5f0ece7ea0e6babc4a6e3b3a4fd43adc0662bbfa516eb69",
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "selected_samples": 1600,
+        "policy": "pi05",
+        "output_scope": "physical_action_chunk",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "tokenizer": {
+          "name": "google/paligemma-3b-pt-224",
+          "vocab_size": 257152,
+          "probe_token_ids": {
+            "open the drawer": [
+              2,
+              4141,
+              573,
+              39635
+            ],
+            "close the drawer": [
+              2,
+              3446,
+              573,
+              39635
+            ],
+            "pick up the black bowl": [
+              2,
+              18075,
+              908,
+              573,
+              2656,
+              14581
+            ]
+          }
+        },
+        "num_steps": 10,
+        "action_horizon": 50,
+        "state_layout": "eef_pos3_axis_angle3_gripper2",
+        "image_transform": "stored_opengl_vertical_flip_then_PIL_bilinear_224_then_checkpoint_processor",
+        "model_load_seconds": 71.59466529078782,
+        "warmup_seconds_including_data_io": 89.11254017241299,
+        "runtime_before_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "linear_groups": {
+              "FP8Linear:native:native": 126
+            },
+            "scale_groups": {
+              "torch.float32:tensorwise": 126
+            },
+            "quantized_linears": 126
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 0,
+          "compiled_inference_helpers": 4
+        },
+        "measurement_start_ns": 8593219850252135,
+        "measurement_end_ns": 8593267305132923,
+        "runtime_after_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "linear_groups": {
+              "FP8Linear:native:native": 126
+            },
+            "scale_groups": {
+              "torch.float32:tensorwise": 126
+            },
+            "quantized_linears": 126
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 0,
+          "compiled_inference_helpers": 4
+        },
+        "raw_sha256": "eff8237e0459bfc76de748387722a03900e525544c84b72dd762391c84aa37ca"
+      },
+      {
+        "schema": "inference_quantization_performance_v1",
+        "report_created_utc": "2026-10-09T20:37:03.915558+00:00",
+        "config": {
+          "schema_version": 1,
+          "model": "pi05",
+          "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+          "device": "cuda:0",
+          "dtype": "bfloat16",
+          "seed": 42,
+          "warmup_calls": 400,
+          "repeats": 1,
+          "compile_backend": "inductor",
+          "quantization": {
+            "method": "fp8",
+            "backend": "native",
+            "scaling_scheme": "tensorwise",
+            "ignored_layers": [
+              "expert.*"
+            ]
+          },
+          "cuda_graph": true,
+          "num_steps": 10,
+          "dataset": {
+            "name": "LIBERO-10",
+            "repository": "yifengzhu-hf/LIBERO-datasets",
+            "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+            "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+            "task_limit": 10,
+            "demos_per_task": 10,
+            "frames_per_demo": 16,
+            "sample_limit": null
+          },
+          "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/dual-b4-fp8/replica-1.json",
+          "native_inference": true,
+          "prefix_cuda_graph": true,
+          "denoise_attention": "triton",
+          "prefix_attention": "triton",
+          "cpu_threads": 4,
+          "low_cpu_mem_usage": true,
+          "batch_size": 4,
+          "validate_data_only": false
+        },
+        "environment": {
+          "gpu": "NVIDIA GeForce RTX 4090",
+          "capability": [
+            8,
+            9
+          ],
+          "cuda": "12.9",
+          "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+          "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+          "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+          "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+          "packages": {
+            "torch": "2.13.0+cu129",
+            "torchvision": "0.28.0+cu129",
+            "transformers": "5.3.0",
+            "triton": "3.7.1",
+            "lerobot": "0.5.1",
+            "numpy": "2.2.6",
+            "Pillow": "12.3.0",
+            "h5py": "3.16.0"
+          },
+          "source_revision": null,
+          "source_python_sha256": "9222208d6f415ea07944e3b7234742934684951d265b103171d7e0ac323b5065",
+          "dependency_check": {
+            "inherited_runtime_issues": [
+              "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+              "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+            ],
+            "new_issues": [],
+            "pip_check_exit": 1,
+            "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+          },
+          "driver_version": "580.82.07\n580.82.07"
+        },
+        "batch_size": 4,
+        "timing_boundary": "decoded_cpu_rgb_and_state_to_cpu_action_chunk_including_pre_and_postprocessing",
+        "excluded": [
+          "weights_loading",
+          "file_read_and_decode",
+          "warmup",
+          "simulation",
+          "network",
+          "report_validation_and_hashing"
+        ],
+        "model_timing_contract": {
+          "prefill_ms": "CUDA elapsed: vision/text/state encoding to reusable prefix",
+          "decode_ms": "CUDA elapsed: all generation steps including noise/sampling, before action restoration",
+          "gpu_inference_ms": "CUDA elapsed across prefill plus complete decode; no intermediate synchronization",
+          "pure_inference_ms": "synchronized wall time across the same model interval, including host dispatch",
+          "excluded": [
+            "input_preprocessing",
+            "input_H2D",
+            "output_postprocessing",
+            "output_D2H"
+          ],
+          "e2e_note": "original CPU observation-to-action scope retained; includes profiling overhead"
+        },
+        "runtime": "embodiinfer",
+        "metrics": {
+          "calls": 400,
+          "inference_seconds": 38.551770843999996,
+          "latency_ms": {
+            "mean": 96.37942711,
+            "p50": 96.1957625,
+            "p95": 98.30459244999999,
+            "p99": 103.00488734999999
+          },
+          "calls_per_second": 10.375658270500796,
+          "observations": 1600,
+          "observations_per_second": 41.502633082003186,
+          "amortized_e2e_ms_per_observation": 24.0948567775,
+          "action_slots_per_second": 2075.1316541001593,
+          "generated_tokens_per_second": 0.0,
+          "model_timing_ms": {
+            "prefill_ms": {
+              "mean": 57.51383237838745,
+              "p50": 57.6363525390625,
+              "p95": 57.864192962646484,
+              "p99": 57.93314846038818
+            },
+            "decode_ms": {
+              "mean": 23.16502466201782,
+              "p50": 23.221248626708984,
+              "p95": 23.382117652893065,
+              "p99": 23.39125202178955
+            },
+            "gpu_inference_ms": {
+              "mean": 80.67885688781739,
+              "p50": 80.88422393798828,
+              "p95": 81.15625076293945,
+              "p99": 81.28838668823242
+            },
+            "pure_inference_ms": {
+              "mean": 80.71603051,
+              "p50": 80.9162965,
+              "p95": 81.19206285,
+              "p99": 81.33421078
+            }
+          },
+          "model_calls_per_second": 12.38911271629133
+        },
+        "memory": {
+          "cuda_peak_allocated_mib": 7071.59423828125,
+          "cuda_peak_reserved_mib": 9124.0,
+          "process_peak_rss_mib": 8357.921875,
+          "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+        },
+        "selection_sha256": "92be73f628b54f35c5f0ece7ea0e6babc4a6e3b3a4fd43adc0662bbfa516eb69",
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "selected_samples": 1600,
+        "policy": "pi05",
+        "output_scope": "physical_action_chunk",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "tokenizer": {
+          "name": "google/paligemma-3b-pt-224",
+          "vocab_size": 257152,
+          "probe_token_ids": {
+            "open the drawer": [
+              2,
+              4141,
+              573,
+              39635
+            ],
+            "close the drawer": [
+              2,
+              3446,
+              573,
+              39635
+            ],
+            "pick up the black bowl": [
+              2,
+              18075,
+              908,
+              573,
+              2656,
+              14581
+            ]
+          }
+        },
+        "num_steps": 10,
+        "action_horizon": 50,
+        "state_layout": "eef_pos3_axis_angle3_gripper2",
+        "image_transform": "stored_opengl_vertical_flip_then_PIL_bilinear_224_then_checkpoint_processor",
+        "model_load_seconds": 71.60229329951108,
+        "warmup_seconds_including_data_io": 89.28004702180624,
+        "runtime_before_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "linear_groups": {
+              "FP8Linear:native:native": 126
+            },
+            "scale_groups": {
+              "torch.float32:tensorwise": 126
+            },
+            "quantized_linears": 126
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 0,
+          "compiled_inference_helpers": 4
+        },
+        "measurement_start_ns": 8593219853316850,
+        "measurement_end_ns": 8593267306889704,
+        "runtime_after_measurement": {
+          "graphs": {
+            "enabled": true,
+            "capture_count": 4,
+            "engine_capture_count": 0,
+            "pi05_native": {
+              "prefix_graphs": 2,
+              "loop_graphs": 2,
+              "schedules": 2,
+              "capture_count": 4
+            },
+            "entries": []
+          },
+          "compile_backend": "inductor",
+          "native_inference": true,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "quantization": {
+            "linear_groups": {
+              "FP8Linear:native:native": 126
+            },
+            "scale_groups": {
+              "torch.float32:tensorwise": 126
+            },
+            "quantized_linears": 126
+          },
+          "compiled_image_encoders": 1,
+          "compiled_prefix_encoders": 0,
+          "compiled_inference_helpers": 4
+        },
+        "raw_sha256": "df171fdccaaab2129aa3756fc64928b599ce388c9ec82947625f91924ef95dac"
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "observations": 1600,
+      "mae": 0.0041228618327953884,
+      "rmse": 0.033086530502859,
+      "maximum_absolute_error": 2.0092384815216064,
+      "per_action_dimension_mae": [
+        0.0060827747637871655,
+        0.007036083808355033,
+        0.006014152920106426,
+        0.0007240533356973174,
+        0.0013307372714712984,
+        0.0012577867868734756,
+        0.006414443943277001
+      ],
+      "per_action_dimension_rmse": [
+        0.011129915225888423,
+        0.020816939565862076,
+        0.014157529759917525,
+        0.0015215418874005174,
+        0.002431830438183978,
+        0.0023567360622969054,
+        0.08301560561980977
+      ],
+      "note": "Physical action dimensions have different units; this is output drift, not task success.",
+      "replica": 0
+    },
+    {
+      "observations": 1600,
+      "mae": 0.0041228618327953884,
+      "rmse": 0.033086530502859,
+      "maximum_absolute_error": 2.0092384815216064,
+      "per_action_dimension_mae": [
+        0.0060827747637871655,
+        0.007036083808355033,
+        0.006014152920106426,
+        0.0007240533356973174,
+        0.0013307372714712984,
+        0.0012577867868734756,
+        0.006414443943277001
+      ],
+      "per_action_dimension_rmse": [
+        0.011129915225888423,
+        0.020816939565862076,
+        0.014157529759917525,
+        0.0015215418874005174,
+        0.002431830438183978,
+        0.0023567360622969054,
+        0.08301560561980977
+      ],
+      "note": "Physical action dimensions have different units; this is output drift, not task success.",
+      "replica": 1
+    }
+  ],
+  "tokenizer_validation": {
+    "passed": true,
+    "calls": 119,
+    "corrected_vocab_size": 257152,
+    "scope": "Exact text token IDs; LIBERO instructions, state-text probes, whitespace and Unicode",
+    "model_sha256": "8986bb4f423f07f8c7f70d0dbe3526fb2316056c17bae71b1ea975e77a168fc6",
+    "tokenizer_json_sha256": "d06bc2f8c946a6178486eb3cfc05878e72d807a566b14cdb9fee7fca1ffa77da",
+    "packages": {
+      "transformers": "5.3.0",
+      "tokenizers": "0.22.2",
+      "sentencepiece": "0.2.1",
+      "protobuf": "6.33.6"
+    }
+  },
+  "single_gpu_profiles": {
+    "bf16-b1": {
+      "config": {
+        "schema_version": 1,
+        "model": "pi05",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 1600,
+        "repeats": 1,
+        "compile_backend": "inductor",
+        "quantization": null,
+        "cuda_graph": true,
+        "num_steps": 10,
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/bf16-b1.json",
+        "native_inference": true,
+        "prefix_cuda_graph": true,
+        "denoise_attention": "triton",
+        "prefix_attention": "triton",
+        "cpu_threads": 4,
+        "validate_data_only": false
+      },
+      "environment": {
+        "gpu": "NVIDIA GeForce RTX 4090",
+        "capability": [
+          8,
+          9
+        ],
+        "cuda": "12.9",
+        "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+        "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+        "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+        "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+        "packages": {
+          "torch": "2.13.0+cu129",
+          "torchvision": "0.28.0+cu129",
+          "transformers": "5.3.0",
+          "triton": "3.7.1",
+          "lerobot": "0.5.1",
+          "numpy": "2.2.6",
+          "Pillow": "12.3.0",
+          "h5py": "3.16.0"
+        },
+        "source_revision": null,
+        "source_python_sha256": "3e9a95665ff7d6ba3731e7aed542e3651d0c33f0814d8791b9343f3eb52b5ba6",
+        "dependency_check": {
+          "inherited_runtime_issues": [
+            "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+            "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+          ],
+          "new_issues": [],
+          "pip_check_exit": 1,
+          "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+        },
+        "driver_version": "580.82.07\n580.82.07"
+      },
+      "metrics": {
+        "calls": 1600,
+        "inference_seconds": 68.529294425,
+        "latency_ms": {
+          "mean": 42.830809015625,
+          "p50": 42.7555725,
+          "p95": 43.566047350000005,
+          "p99": 45.73131395
+        },
+        "calls_per_second": 23.347679462117853,
+        "action_slots_per_second": 1167.3839731058927,
+        "generated_tokens_per_second": 0.0,
+        "model_timing_ms": {
+          "prefill_ms": {
+            "mean": 23.795375703573228,
+            "p50": 23.780351638793945,
+            "p95": 23.95038766860962,
+            "p99": 24.079461460113524
+          },
+          "decode_ms": {
+            "mean": 14.586809492111206,
+            "p50": 14.56230354309082,
+            "p95": 14.749695777893066,
+            "p99": 14.770186176300049
+          },
+          "gpu_inference_ms": {
+            "mean": 38.38218514204025,
+            "p50": 38.375423431396484,
+            "p95": 38.63449478149414,
+            "p99": 38.75947353363037
+          },
+          "pure_inference_ms": {
+            "mean": 38.412503935000004,
+            "p50": 38.4048365,
+            "p95": 38.6650548,
+            "p99": 38.78829338
+          }
+        },
+        "model_calls_per_second": 26.03318965335239
+      },
+      "memory": {
+        "cuda_peak_allocated_mib": 11055.47314453125,
+        "cuda_peak_reserved_mib": 11668.0,
+        "process_peak_rss_mib": 40405.47265625,
+        "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+      },
+      "runtime_before_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "quantized_linears": 0
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 1,
+        "compiled_inference_helpers": 4
+      },
+      "runtime_after_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "quantized_linears": 0
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 1,
+        "compiled_inference_helpers": 4
+      }
+    },
+    "fp8-native-b1": {
+      "config": {
+        "schema_version": 1,
+        "model": "pi05",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 1600,
+        "repeats": 1,
+        "compile_backend": "none",
+        "quantization": {
+          "method": "fp8",
+          "backend": "native",
+          "scaling_scheme": "channelwise"
+        },
+        "cuda_graph": true,
+        "num_steps": 10,
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/fp8-native-b1.json",
+        "native_inference": true,
+        "prefix_cuda_graph": true,
+        "denoise_attention": "triton",
+        "prefix_attention": "triton",
+        "cpu_threads": 4,
+        "validate_data_only": false
+      },
+      "environment": {
+        "gpu": "NVIDIA GeForce RTX 4090",
+        "capability": [
+          8,
+          9
+        ],
+        "cuda": "12.9",
+        "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+        "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+        "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+        "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+        "packages": {
+          "torch": "2.13.0+cu129",
+          "torchvision": "0.28.0+cu129",
+          "transformers": "5.3.0",
+          "triton": "3.7.1",
+          "lerobot": "0.5.1",
+          "numpy": "2.2.6",
+          "Pillow": "12.3.0",
+          "h5py": "3.16.0"
+        },
+        "source_revision": null,
+        "source_python_sha256": "5272281a8a98672cc79f25cc0ce16cd0706d72dc85714a077ecb332b14ff2ef8",
+        "dependency_check": {
+          "inherited_runtime_issues": [
+            "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+            "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+          ],
+          "new_issues": [],
+          "pip_check_exit": 1,
+          "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+        },
+        "driver_version": "580.82.07\n580.82.07"
+      },
+      "metrics": {
+        "calls": 1600,
+        "inference_seconds": 106.447920748,
+        "latency_ms": {
+          "mean": 66.5299504675,
+          "p50": 66.459021,
+          "p95": 67.07565355,
+          "p99": 69.38372178
+        },
+        "calls_per_second": 15.03082435764779,
+        "action_slots_per_second": 751.5412178823896,
+        "generated_tokens_per_second": 0.0,
+        "model_timing_ms": {
+          "prefill_ms": {
+            "mean": 44.82639766931534,
+            "p50": 44.835838317871094,
+            "p95": 44.92200946807861,
+            "p99": 45.01606369018555
+          },
+          "decode_ms": {
+            "mean": 17.112785873413085,
+            "p50": 17.131519317626953,
+            "p95": 17.155071258544922,
+            "p99": 17.16737054824829
+          },
+          "gpu_inference_ms": {
+            "mean": 61.93918355703354,
+            "p50": 61.9683837890625,
+            "p95": 62.07390594482422,
+            "p99": 62.166015625
+          },
+          "pure_inference_ms": {
+            "mean": 61.96993539937501,
+            "p50": 61.997521,
+            "p95": 62.10711275,
+            "p99": 62.198348020000005
+          }
+        },
+        "model_calls_per_second": 16.136857228514806
+      },
+      "memory": {
+        "cuda_peak_allocated_mib": 6021.71533203125,
+        "cuda_peak_reserved_mib": 7606.0,
+        "process_peak_rss_mib": 40404.48046875,
+        "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+      },
+      "runtime_before_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "none",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 252
+          },
+          "scale_groups": {
+            "torch.float32:channel_or_block": 252
+          },
+          "quantized_linears": 252
+        },
+        "compiled_image_encoders": 0,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 0
+      },
+      "runtime_after_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "none",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 252
+          },
+          "scale_groups": {
+            "torch.float32:channel_or_block": 252
+          },
+          "quantized_linears": 252
+        },
+        "compiled_image_encoders": 0,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 0
+      }
+    },
+    "fp8-prefix-b1": {
+      "config": {
+        "schema_version": 1,
+        "model": "pi05",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 1600,
+        "repeats": 1,
+        "compile_backend": "inductor",
+        "quantization": {
+          "method": "fp8",
+          "backend": "native",
+          "scaling_scheme": "tensorwise",
+          "ignored_layers": [
+            "expert.*"
+          ]
+        },
+        "cuda_graph": true,
+        "num_steps": 10,
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/fp8-prefix-b1.json",
+        "native_inference": true,
+        "prefix_cuda_graph": true,
+        "denoise_attention": "triton",
+        "prefix_attention": "triton",
+        "cpu_threads": 4,
+        "low_cpu_mem_usage": true,
+        "batch_size": 1,
+        "validate_data_only": false
+      },
+      "environment": {
+        "gpu": "NVIDIA GeForce RTX 4090",
+        "capability": [
+          8,
+          9
+        ],
+        "cuda": "12.9",
+        "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+        "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+        "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+        "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+        "packages": {
+          "torch": "2.13.0+cu129",
+          "torchvision": "0.28.0+cu129",
+          "transformers": "5.3.0",
+          "triton": "3.7.1",
+          "lerobot": "0.5.1",
+          "numpy": "2.2.6",
+          "Pillow": "12.3.0",
+          "h5py": "3.16.0"
+        },
+        "source_revision": null,
+        "source_python_sha256": "ead3acfbce2ec665fc51422bc19d804806a81c33942d3daac294bd77d41c8727",
+        "dependency_check": {
+          "inherited_runtime_issues": [
+            "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+            "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+          ],
+          "new_issues": [],
+          "pip_check_exit": 1,
+          "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+        },
+        "driver_version": "580.82.07\n580.82.07"
+      },
+      "metrics": {
+        "calls": 1600,
+        "inference_seconds": 57.901265167,
+        "latency_ms": {
+          "mean": 36.188290729375,
+          "p50": 36.059919,
+          "p95": 37.2326429,
+          "p99": 39.033247089999996
+        },
+        "calls_per_second": 27.633247656769637,
+        "observations": 1600,
+        "observations_per_second": 27.633247656769637,
+        "amortized_e2e_ms_per_observation": 36.188290729375,
+        "action_slots_per_second": 1381.6623828384818,
+        "generated_tokens_per_second": 0.0,
+        "model_timing_ms": {
+          "prefill_ms": {
+            "mean": 16.99829602122307,
+            "p50": 16.99942398071289,
+            "p95": 17.076274585723876,
+            "p99": 17.184768676757812
+          },
+          "decode_ms": {
+            "mean": 14.500538172125816,
+            "p50": 14.519295692443848,
+            "p95": 14.525440216064453,
+            "p99": 14.528512001037598
+          },
+          "gpu_inference_ms": {
+            "mean": 31.4988341486454,
+            "p50": 31.518720626831055,
+            "p95": 31.59557123184204,
+            "p99": 31.70408390045166
+          },
+          "pure_inference_ms": {
+            "mean": 31.530809325625,
+            "p50": 31.5491305,
+            "p95": 31.6328802,
+            "p99": 31.74668157
+          }
+        },
+        "model_calls_per_second": 31.71501212267656
+      },
+      "memory": {
+        "cuda_peak_allocated_mib": 6692.697265625,
+        "cuda_peak_reserved_mib": 8146.0,
+        "process_peak_rss_mib": 8348.1640625,
+        "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+      },
+      "runtime_before_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 126
+          },
+          "scale_groups": {
+            "torch.float32:tensorwise": 126
+          },
+          "quantized_linears": 126
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 4
+      },
+      "runtime_after_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 6,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 3,
+            "loop_graphs": 3,
+            "schedules": 3,
+            "capture_count": 6
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 3,
+          "loop_graphs": 3,
+          "schedules": 3,
+          "capture_count": 6
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 126
+          },
+          "scale_groups": {
+            "torch.float32:tensorwise": 126
+          },
+          "quantized_linears": 126
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 4
+      }
+    },
+    "bf16-b4": {
+      "config": {
+        "schema_version": 1,
+        "model": "pi05",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 400,
+        "repeats": 1,
+        "compile_backend": "inductor",
+        "quantization": null,
+        "cuda_graph": true,
+        "num_steps": 10,
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/bf16-b4.json",
+        "native_inference": true,
+        "prefix_cuda_graph": true,
+        "denoise_attention": "triton",
+        "prefix_attention": "triton",
+        "cpu_threads": 4,
+        "low_cpu_mem_usage": true,
+        "batch_size": 4,
+        "validate_data_only": false
+      },
+      "environment": {
+        "gpu": "NVIDIA GeForce RTX 4090",
+        "capability": [
+          8,
+          9
+        ],
+        "cuda": "12.9",
+        "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+        "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+        "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+        "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+        "packages": {
+          "torch": "2.13.0+cu129",
+          "torchvision": "0.28.0+cu129",
+          "transformers": "5.3.0",
+          "triton": "3.7.1",
+          "lerobot": "0.5.1",
+          "numpy": "2.2.6",
+          "Pillow": "12.3.0",
+          "h5py": "3.16.0"
+        },
+        "source_revision": null,
+        "source_python_sha256": "ead3acfbce2ec665fc51422bc19d804806a81c33942d3daac294bd77d41c8727",
+        "dependency_check": {
+          "inherited_runtime_issues": [
+            "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+            "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+          ],
+          "new_issues": [],
+          "pip_check_exit": 1,
+          "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+        },
+        "driver_version": "580.82.07\n580.82.07"
+      },
+      "metrics": {
+        "calls": 400,
+        "inference_seconds": 47.578374781,
+        "latency_ms": {
+          "mean": 118.94593695249999,
+          "p50": 118.9472935,
+          "p95": 121.47387194999997,
+          "p99": 127.20889422
+        },
+        "calls_per_second": 8.407180821984202,
+        "observations": 1600,
+        "observations_per_second": 33.62872328793681,
+        "amortized_e2e_ms_per_observation": 29.736484238124998,
+        "action_slots_per_second": 1681.4361643968402,
+        "generated_tokens_per_second": 0.0,
+        "model_timing_ms": {
+          "prefill_ms": {
+            "mean": 79.84708696365357,
+            "p50": 80.07014465332031,
+            "p95": 80.64122657775879,
+            "p99": 80.88301811218261
+          },
+          "decode_ms": {
+            "mean": 23.348464288711547,
+            "p50": 23.428096771240234,
+            "p95": 23.556095123291016,
+            "p99": 23.724031448364258
+          },
+          "gpu_inference_ms": {
+            "mean": 103.19555126190185,
+            "p50": 103.53561401367188,
+            "p95": 104.14029006958008,
+            "p99": 104.37538970947266
+          },
+          "pure_inference_ms": {
+            "mean": 103.23611785250002,
+            "p50": 103.5798655,
+            "p95": 104.18653119999999,
+            "p99": 104.4338347
+          }
+        },
+        "model_calls_per_second": 9.686532395849712
+      },
+      "memory": {
+        "cuda_peak_allocated_mib": 11431.07958984375,
+        "cuda_peak_reserved_mib": 12268.0,
+        "process_peak_rss_mib": 8356.4296875,
+        "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+      },
+      "runtime_before_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 4,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 2,
+          "loop_graphs": 2,
+          "schedules": 2,
+          "capture_count": 4
+        },
+        "quantization": {
+          "quantized_linears": 0
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 1,
+        "compiled_inference_helpers": 4
+      },
+      "runtime_after_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 4,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 2,
+          "loop_graphs": 2,
+          "schedules": 2,
+          "capture_count": 4
+        },
+        "quantization": {
+          "quantized_linears": 0
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 1,
+        "compiled_inference_helpers": 4
+      }
+    },
+    "fp8-prefix-b4": {
+      "config": {
+        "schema_version": 1,
+        "model": "pi05",
+        "checkpoint": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-models/pi05",
+        "device": "cuda:0",
+        "dtype": "bfloat16",
+        "seed": 42,
+        "warmup_calls": 400,
+        "repeats": 1,
+        "compile_backend": "inductor",
+        "quantization": {
+          "method": "fp8",
+          "backend": "native",
+          "scaling_scheme": "tensorwise",
+          "ignored_layers": [
+            "expert.*"
+          ]
+        },
+        "cuda_graph": true,
+        "num_steps": 10,
+        "dataset": {
+          "name": "LIBERO-10",
+          "repository": "yifengzhu-hf/LIBERO-datasets",
+          "revision": "f13aa24a3da8c43c7225569f28c562979fa0e35a",
+          "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/libero/libero_10",
+          "task_limit": 10,
+          "demos_per_task": 10,
+          "frames_per_demo": 16,
+          "sample_limit": null
+        },
+        "output": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/pi05/fp8-prefix-b4.json",
+        "native_inference": true,
+        "prefix_cuda_graph": true,
+        "denoise_attention": "triton",
+        "prefix_attention": "triton",
+        "cpu_threads": 4,
+        "low_cpu_mem_usage": true,
+        "batch_size": 4,
+        "validate_data_only": false
+      },
+      "environment": {
+        "gpu": "NVIDIA GeForce RTX 4090",
+        "capability": [
+          8,
+          9
+        ],
+        "cuda": "12.9",
+        "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+        "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+        "executable": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv/bin/python",
+        "virtual_environment": "/mnt/zhouzhenyuan/RLinf-inference-benchmarks/benchmarks/pi05-benchmark/.venv",
+        "packages": {
+          "torch": "2.13.0+cu129",
+          "torchvision": "0.28.0+cu129",
+          "transformers": "5.3.0",
+          "triton": "3.7.1",
+          "lerobot": "0.5.1",
+          "numpy": "2.2.6",
+          "Pillow": "12.3.0",
+          "h5py": "3.16.0"
+        },
+        "source_revision": null,
+        "source_python_sha256": "ead3acfbce2ec665fc51422bc19d804806a81c33942d3daac294bd77d41c8727",
+        "dependency_check": {
+          "inherited_runtime_issues": [
+            "lerobot 0.5.1 has requirement torch<2.11.0,>=2.7, but you have torch 2.13.0+cu129.",
+            "lerobot 0.5.1 has requirement torchvision<0.26.0,>=0.22.0, but you have torchvision 0.28.0+cu129."
+          ],
+          "new_issues": [],
+          "pip_check_exit": 1,
+          "note": "4090 runtime overrides LeRobot Torch upper bounds; runtime validation is required"
+        },
+        "driver_version": "580.82.07\n580.82.07"
+      },
+      "metrics": {
+        "calls": 400,
+        "inference_seconds": 38.437559618,
+        "latency_ms": {
+          "mean": 96.093899045,
+          "p50": 96.13405700000001,
+          "p95": 97.61171074999999,
+          "p99": 98.51809292
+        },
+        "calls_per_second": 10.406487924188694,
+        "observations": 1600,
+        "observations_per_second": 41.625951696754775,
+        "amortized_e2e_ms_per_observation": 24.02347476125,
+        "action_slots_per_second": 2081.2975848377387,
+        "generated_tokens_per_second": 0.0,
+        "model_timing_ms": {
+          "prefill_ms": {
+            "mean": 57.47020047187805,
+            "p50": 57.57747268676758,
+            "p95": 57.834853935241696,
+            "p99": 58.034728851318356
+          },
+          "decode_ms": {
+            "mean": 23.27984767436981,
+            "p50": 23.326208114624023,
+            "p95": 23.45369529724121,
+            "p99": 23.51308822631836
+          },
+          "gpu_inference_ms": {
+            "mean": 80.75004810333252,
+            "p50": 80.93076705932617,
+            "p95": 81.21154861450195,
+            "p99": 81.43067008972167
+          },
+          "pure_inference_ms": {
+            "mean": 80.786126255,
+            "p50": 80.9665595,
+            "p95": 81.24600745,
+            "p99": 81.46751579
+          }
+        },
+        "model_calls_per_second": 12.378363047678725
+      },
+      "memory": {
+        "cuda_peak_allocated_mib": 7071.34423828125,
+        "cuda_peak_reserved_mib": 8940.0,
+        "process_peak_rss_mib": 8353.296875,
+        "note": "RSS is process lifetime peak; on Thor CPU/GPU share physical memory, do not add these figures"
+      },
+      "runtime_before_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 4,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 2,
+          "loop_graphs": 2,
+          "schedules": 2,
+          "capture_count": 4
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 126
+          },
+          "scale_groups": {
+            "torch.float32:tensorwise": 126
+          },
+          "quantized_linears": 126
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 4
+      },
+      "runtime_after_measurement": {
+        "graphs": {
+          "enabled": true,
+          "capture_count": 4,
+          "engine_capture_count": 0,
+          "pi05_native": {
+            "prefix_graphs": 2,
+            "loop_graphs": 2,
+            "schedules": 2,
+            "capture_count": 4
+          },
+          "entries": []
+        },
+        "compile_backend": "inductor",
+        "native_inference": true,
+        "pi05_native": {
+          "prefix_graphs": 2,
+          "loop_graphs": 2,
+          "schedules": 2,
+          "capture_count": 4
+        },
+        "quantization": {
+          "linear_groups": {
+            "FP8Linear:native:native": 126
+          },
+          "scale_groups": {
+            "torch.float32:tensorwise": 126
+          },
+          "quantized_linears": 126
+        },
+        "compiled_image_encoders": 1,
+        "compiled_prefix_encoders": 0,
+        "compiled_inference_helpers": 4
+      }
+    }
+  },
+  "validation": {
+    "measurement": "two independent GPU processes after common warmup barrier; no training or regression tests during measurement",
+    "quantization_accuracy": "lossy; physical action drift measured, task success not evaluated",
+    "multi_node_evaluated": false,
+    "tests": "602 regression tests passed; 21 FP8 tests passed (19 GPU), byte-exact fused conversion for BF16/FP16/FP32"
+  },
+  "checkpoint_identity": {
+    "path": "/mnt/zhouzhenyuan/models/pi05_libero_finetuned_v044_gitcode/model.safetensors",
+    "bytes": 7473096344,
+    "sha256": "877b3ec1130548b69af7f8aeef3ec9d3fc7738040f0b9beb490857ec970997ae"
+  }
+}

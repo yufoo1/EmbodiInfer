@@ -1,19 +1,26 @@
 # PI0.5 · 4090 · BF16
 
-仅 batch=1；[实验方法与环境](../../README.md)。本目录仅保留一份开启可用优化的 [config.json](config.json)。
+当前 [config.json](config.json) 为 B=4 配对基线：原生优化、Inductor、
+prefix/denoise CUDA Graph、Triton attention、低内存加载，四个 CPU 线程。
+400 次预热 batch 调用覆盖全部 1,600 条 LIBERO-10 观测；保留完整十步去噪。
+详见 [方法](../../README.md) 和 [FP8 对照](../fp8/README.md)。
 
-原生优化、Inductor、prefix/denoise CUDA Graph、Triton attention；预热 1,600 条。需使用包含 PI0.5 原生优化的独立源码运行时，见上级 README。
+2026-10-10 单卡完整回放，吞吐按实际观测数摊销，显存为 CUDA allocated 峰值：
 
-延迟 ms，吞吐 obs/s，内存为峰值 CUDA allocated GiB。
+| Batch | 观测数 | E2E ms/观测 | Forward ms/观测 | obs/s/卡 | 显存 GiB |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 1,600 | 42.83 | 38.41 | 23.35 | 10.80 |
+| 4 | 1,600 | 29.74 | 25.81 | 33.63 | 11.16 |
 
-| 数据集 | 观测数 | E2E | Forward | 吞吐 | 内存 |
-|---|---:|---:|---:|---:|---:|
-| LIBERO-10 | 1,600 | 39.77 | 36.74 | 25.145 | 10.80 |
+双卡同步复测中，两卡各测 1,600 条观测，GPU 0/1 分别为 33.54/33.64 obs/s，
+平均每卡 33.59 obs/s，E2E 29.77 ms/观测，显存仍为 11.16 GiB/卡。
+对应 FP8 平均每卡 41.59 obs/s、6.91 GiB；详细条件与量化误差见 FP8 对照。
 
-在本 benchmark 根目录运行；模型、数据路径按实际机器修改，新结果写入本目录的 `runs/`：
+旧版 B=1 历史记录为 E2E 39.77 ms、Forward 36.74 ms、25.145 obs/s、10.80 GiB；
+不能与本轮 FP8 直接组成配对比较。
+
+从 benchmark 根目录运行，修改模型和数据路径后新输出进入本目录 `runs/`：
 
 ```bash
-.venv/bin/python benchmark.py --config 4090/bf16/config.json
+python benchmark.py --config 4090/bf16/config.json
 ```
-
-原始全量结果：LIBERO-10 (`libero10.result.json`)（本地及 snapshot 提供，不提交 Git）。

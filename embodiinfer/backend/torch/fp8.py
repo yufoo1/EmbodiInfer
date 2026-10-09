@@ -49,6 +49,12 @@ def _quantize_activation_rows(rows: torch.Tensor) -> tuple[torch.Tensor, torch.T
 
 def _dynamic_fp8_activation(inputs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     """Quantize independent rows without materializing full-size FP32 temporaries."""
+    if inputs.is_cuda:
+        from ..triton.fp8_activation import quantize_activation_rows
+
+        fused = quantize_activation_rows(inputs)
+        if fused is not None:
+            return fused
     rows = inputs.reshape(-1, inputs.shape[-1])
     if rows.numel() <= _ACTIVATION_CHUNK_ELEMENTS:
         return _quantize_activation_rows(rows)
@@ -66,6 +72,12 @@ def _dynamic_fp8_activation(inputs: torch.Tensor) -> tuple[torch.Tensor, torch.T
 def _dynamic_fp8_activation_tensorwise(
     inputs: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor]:
+    if inputs.is_cuda:
+        from ..triton.fp8_activation import quantize_activation_tensor
+
+        fused = quantize_activation_tensor(inputs)
+        if fused is not None:
+            return fused
     rows = inputs.reshape(-1, inputs.shape[-1])
     maximum = rows.float().abs().amax()
     scale = torch.where(maximum > 0, maximum / 448.0, torch.ones_like(maximum))
@@ -139,12 +151,17 @@ def native_linear(
         if bias is not None:
             output = output + bias
         return output.reshape(*inputs.shape[:-1], weight.shape[0])
-    quantized, input_scale = _dynamic_fp8_activation(inputs)
+    if weight_scale.ndim == 0:
+        quantized, input_scale = _dynamic_fp8_activation_tensorwise(inputs)
+        output_scale = weight_scale
+    else:
+        quantized, input_scale = _dynamic_fp8_activation(inputs)
+        output_scale = weight_scale.reshape(1, -1)
     output = torch._scaled_mm(
         quantized,
         weight.t(),
         scale_a=input_scale,
-        scale_b=weight_scale.reshape(1, -1),
+        scale_b=output_scale,
         bias=bias,
         out_dtype=inputs.dtype,
     )

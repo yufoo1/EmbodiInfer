@@ -266,6 +266,7 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if not np.isfinite(latencies).all() or np.any(latencies <= 0):
         raise ValueError("latencies must be positive and finite")
     seconds = float(latencies.sum() / 1000)
+    observations = sum(row.get("observations", 1) for row in rows)
     metrics = {
         "calls": len(rows),
         "inference_seconds": seconds,
@@ -274,6 +275,9 @@ def summarize(rows: list[dict[str, Any]]) -> dict[str, Any]:
             **{f"p{p}": float(np.percentile(latencies, p)) for p in (50, 95, 99)},
         },
         "calls_per_second": len(rows) / seconds,
+        "observations": observations,
+        "observations_per_second": observations / seconds,
+        "amortized_e2e_ms_per_observation": 1000 * seconds / observations,
         "action_slots_per_second": sum(row["action_slots"] for row in rows) / seconds,
         "generated_tokens_per_second": sum(row["generated_tokens"] for row in rows) / seconds,
     }
@@ -361,7 +365,7 @@ def write_report(
         "report_created_utc": datetime.now(timezone.utc).isoformat(),
         "config": config,
         "environment": provenance(device),
-        "batch_size": 1,
+        "batch_size": config.get("batch_size", 1),
         "timing_boundary": "decoded_cpu_rgb_and_state_to_cpu_action_chunk_including_pre_and_postprocessing",
         "excluded": [
             "weights_loading",
@@ -397,7 +401,7 @@ def write_report(
     print(json.dumps({"report": str(output), "metrics": report["metrics"]}), flush=True)
 
 
-LiberoInference = Callable[[LiberoSample, dict[str, Any]], dict[str, Any]]
+LiberoInference = Callable[[list[LiberoSample], list[dict[str, Any]]], dict[str, Any]]
 
 
 RuntimeStats = Callable[[], dict[str, Any]]
@@ -421,10 +425,14 @@ def engine_graph_stats(core: Any, policy: Any) -> dict[str, Any]:
 
 def run(
     build: Callable[[dict[str, Any], torch.device], tuple[LiberoInference, dict[str, Any], RuntimeStats]],
+    *,
+    ready: Callable[[], None] | None = None,
 ) -> None:
     """Run one model on the selected public frames, keeping disk IO outside the timer."""
     config, _ = load_config()
+    size = positive(config.get("batch_size", 1), "batch_size")
     samples = load_libero(config["dataset"])
+    batches = [list(samples[start : start + size]) for start in range(0, len(samples), size)]
     identities = [sample.sample_id for sample in samples]
     details = {
         "sample_ids": identities,
@@ -445,30 +453,43 @@ def run(
     rows = []
     with torch.inference_mode():
         started = time.perf_counter()
-        warmup_indices = uniform_indices(len(samples), min(config["warmup_calls"], len(samples)))
+        warmup_indices = uniform_indices(len(batches), min(config["warmup_calls"], len(batches)))
         for index in range(config["warmup_calls"]):
-            sample = samples[warmup_indices[index % len(warmup_indices)]]
-            infer(sample, read_libero(sample))
+            selected = batches[warmup_indices[index % len(warmup_indices)]]
+            infer(selected, [read_libero(sample) for sample in selected])
         torch.cuda.synchronize(device)
         details["warmup_seconds_including_data_io"] = time.perf_counter() - started
-        details["warmup_sample_ids"] = [samples[index].sample_id for index in warmup_indices]
+        details["warmup_sample_ids"] = [
+            sample.sample_id for index in warmup_indices for sample in batches[index]
+        ]
         before = runtime_stats()
         details["runtime_before_measurement"] = before
         if config["cuda_graph"] and not before["graphs"]["capture_count"]:
             raise RuntimeError("CUDA Graph was requested but warmup captured no graph")
         torch.cuda.reset_peak_memory_stats(device)
         torch.manual_seed(config["seed"])
+        if ready is not None:
+            ready()
+        details["measurement_start_ns"] = time.perf_counter_ns()
         for repeat in range(config["repeats"]):
-            for index, sample in enumerate(samples):
-                raw = read_libero(sample)
-                row = timed_call(partial(infer, sample, raw), device)
-                rows.append({"sample_id": sample.sample_id, "repeat": repeat, **row})
+            for index, selected in enumerate(batches):
+                raw = [read_libero(sample) for sample in selected]
+                row = timed_call(partial(infer, selected, raw), device)
+                identity = (
+                    {"sample_id": selected[0].sample_id}
+                    if size == 1
+                    else {"sample_ids": [sample.sample_id for sample in selected]}
+                )
+                rows.append({**identity, "repeat": repeat, "observations": len(selected), **row})
                 if index % 25 == 0:
                     print(
-                        f"{config['model']}: {index + 1}/{len(samples)}, {row['latency_ms']:.1f} ms",
+                        f"{config['model']}: batch {index + 1}/{len(batches)}, {row['latency_ms']:.1f} ms",
                         flush=True,
                     )
+        details["measurement_end_ns"] = time.perf_counter_ns()
     after = runtime_stats()
+    if sum(row["observations"] for row in rows) != len(samples) * config["repeats"]:
+        raise RuntimeError("incomplete observation coverage")
     details["runtime_after_measurement"] = after
     if after["graphs"]["capture_count"] != before["graphs"]["capture_count"]:
         raise RuntimeError("CUDA Graph capture occurred during measurement; extend warmup")
@@ -530,19 +551,20 @@ def build(
         **({"quantization": config["quantization"]} if config.get("quantization") else {}),
     )
     processor = make_processor(policy, config["checkpoint"])
+    size = positive(config.get("batch_size", 1), "batch_size")
     core = EngineCore(
         policy,
         EngineConfig(
             device=str(device),
             dtype=config["dtype"],
-            max_batch_size=1,
-            batch_buckets=(1,),
+            max_batch_size=size,
+            batch_buckets=(size,),
             use_cuda_graph=config["cuda_graph"],
             capture_full_loop=config["cuda_graph"],
         ),
     )
 
-    def infer(sample: LiberoSample, raw: dict[str, Any]) -> dict[str, Any]:
+    def prepare(sample: LiberoSample, raw: dict[str, Any]) -> tuple[Any, torch.Tensor]:
         state = processor.prepare_state(
             torch.from_numpy(
                 np.concatenate((raw["ee_pos"], raw["ee_ori"], raw["gripper_states"])).astype(np.float32)
@@ -559,19 +581,42 @@ def build(
             images[feature] = torch.from_numpy(processor.resize_image(image, 224, 224))
         batch = processor.prepare(state, images, sample.instruction)
         batch.request_ids = [sample.sample_id]
-        generator = torch.Generator(device=device).manual_seed(
-            config["seed"] + int(hashlib.sha256(sample.sample_id.encode()).hexdigest()[:8], 16)
+        return batch, state
+
+    def infer(selected: list[LiberoSample], raw: list[dict[str, Any]]) -> dict[str, Any]:
+        from embodiinfer.policies.pi05.processor_pi05 import Pi05Batch
+
+        if not 1 <= len(selected) <= size or len(selected) != len(raw):
+            raise ValueError("invalid observation batch")
+        inputs, states = zip(
+            *(prepare(sample, value) for sample, value in zip(selected, raw, strict=True)), strict=True
         )
-        batch = policy.pad(batch, 1).to(device, core.dtype)
+        padded = [*inputs, *([inputs[-1]] * (size - len(inputs)))]
+        batch = Pi05Batch.concatenate(padded).to(device, core.dtype)
+        generators = [
+            torch.Generator(device=device).manual_seed(
+                config["seed"] + int(hashlib.sha256(sample.sample_id.encode()).hexdigest()[:8], 16)
+            )
+            for sample in selected
+        ]
+
+        def decode(prefix):
+            noises = [policy.decoder.init_state(1, generator) for generator in generators]
+            noises += [noises[-1]] * (size - len(noises))
+            return policy.decoder.integrate(
+                torch.cat(noises), prefix, config["num_steps"], size, core._graphs
+            )
+
         prefix, normalized, timing = timed_model(
             lambda: policy.encode_prefix(batch),
-            lambda prefix: policy.decoder.produce_chunk(
-                policy.decoder.init_state(1, generator), prefix, config["num_steps"], 1, core._graphs
-            ),
+            decode,
             device,
         )
-        actions = policy.finalize_actions(normalized, prefix)[0].float().cpu()
-        return {**output_record(processor.restore_actions(actions, state)), "model_timing_ms": timing}
+        actions = policy.finalize_actions(normalized, prefix).float().cpu()
+        physical = torch.cat(
+            [processor.restore_actions(actions[row], state) for row, state in enumerate(states)]
+        )
+        return {**output_record(physical), "model_timing_ms": timing}
 
     def runtime_stats() -> dict[str, Any]:
         from embodiinfer.policies.pi05 import modeling_pi05

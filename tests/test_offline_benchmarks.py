@@ -26,6 +26,19 @@ def load_benchmark(profile: str):
     return module
 
 
+def test_quantized_pi05_batch_metrics_exclude_padded_observations():
+    module = load_benchmark("pi05-quant")
+    rows = [
+        {"latency_ms": 100.0, "observations": 4, "action_slots": 200, "generated_tokens": 0},
+        {"latency_ms": 80.0, "observations": 1, "action_slots": 50, "generated_tokens": 0},
+    ]
+    metrics = module.summarize(rows)
+    assert metrics["observations"] == 5
+    assert metrics["observations_per_second"] == pytest.approx(5 / 0.18)
+    assert metrics["amortized_e2e_ms_per_observation"] == 36
+    assert metrics["calls_per_second"] == pytest.approx(2 / 0.18)
+
+
 stream = load_benchmark("streamvln")
 active = load_benchmark("activevln")
 measurement = libero_run = load_benchmark("pi05")

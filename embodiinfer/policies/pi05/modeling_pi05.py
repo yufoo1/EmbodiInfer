@@ -43,7 +43,7 @@ import torch.nn.functional as F
 
 from ...engine.parallel import TensorParallelContext
 from ...layers import get_attention_backend, get_split_kv_attention_backend
-from ...layers.linear import QuantizationConfig, parse_quantization_config
+from ...layers.linear import FP8Config, QuantizationConfig, parse_quantization_config
 from ...models.linear import QuantizedLinear, pack_quantized_linears, quantize_linear
 from ...types import Observation
 from ..base import FlowVLAPolicy, VLAPolicy
@@ -503,10 +503,13 @@ class Pi05Policy(FlowVLAPolicy):
 
             parallelize_pi05_towers(self, self.tensor_parallel)
         quantization_config = parse_quantization_config(quantization)
+        self.quantized_layers: tuple[str, ...] = ()
         if quantization_config is not None:
             if self.tensor_parallel.enabled:
                 raise NotImplementedError("PI0.5 quantization currently supports tensor_parallel_size=1")
-            if self.compile_backend != "none":
+            if self.compile_backend != "none" and not (
+                native_inference and isinstance(quantization_config, FP8Config)
+            ):
                 raise NotImplementedError(
                     "PI0.5 quantization has not been validated with compile_backend='inductor'"
                 )
@@ -836,7 +839,9 @@ class Pi05Policy(FlowVLAPolicy):
             length = prefix_pad_masks.shape[1]
             key_mask = prefix_pad_masks[:, None, :].expand(-1, length, -1)
             mask4d = self._attention_mask_4d(key_mask)
-        if self.compile_backend == "inductor":
+        if self.compile_backend == "inductor" and not any(
+            name.startswith("prefix.") for name in self.quantized_layers
+        ):
             policy_key = (id(self), native_prefix)
             prefix_encoder = _COMPILED_PREFIX_ENCODERS.get(policy_key)
             if prefix_encoder is None:

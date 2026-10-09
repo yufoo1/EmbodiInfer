@@ -5,7 +5,7 @@
   "device": "cuda:0",
   "dtype": "bfloat16",
   "seed": 42,
-  "warmup_calls": 1600,
+  "warmup_calls": 400,
   "repeats": 1,
   "compile_backend": "inductor",
   "quantization": null,
@@ -21,9 +21,12 @@
     "frames_per_demo": 16,
     "sample_limit": null
   },
-  "output": "runs/libero10.result.json",
+  "output": "runs/libero10-b4.result.json",
   "native_inference": true,
   "prefix_cuda_graph": true,
   "denoise_attention": "triton",
-  "prefix_attention": "triton"
+  "prefix_attention": "triton",
+  "cpu_threads": 4,
+  "low_cpu_mem_usage": true,
+  "batch_size": 4
 }

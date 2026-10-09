@@ -1,6 +1,6 @@
 # PI0.5 Quantization Benchmark
 
-仅展示 **batch=1** 下完整跑完的最终配置与结果。按 `设备/精度/` 查看结果，例如 `agx-orin/int8/`。
+按 `设备/精度/` 查看完整回放结果，例如 `agx-orin/int8/`。早期配置为 batch=1；4090 新配置支持 batch，吞吐按实际观测数计算，尾 batch 的 padding 不计入样本数。
 
 | 设备 | BF16 | FP8 | INT8 | NVFP4 |
 |---|---|---|---|---|
@@ -19,11 +19,13 @@
 
 E2E 是已解码 CPU 观测到 CPU 动作的完整耗时；Forward 是 GPU 输入就绪后的完整模型调用。两者均包含全部去噪或生成步骤，E2E 额外包含预处理、传输和后处理。加载、预热、磁盘读取及图像解码不计入。吞吐为观测数除以总 E2E 时间，内存为峰值 CUDA allocated。
 
-4090 FP8 使用 Triton 权重量化后端；Thor FP8 使用 native W8A8、tensorwise scale。其余量化精度使用 native 后端。
+4090 当前 FP8 配置对前缀投影使用 native W8A8、tensorwise scale，保留动作专家 BF16；早期 Triton 权重量化结果保留作对照。Thor FP8 使用 native W8A8、tensorwise scale。其余量化精度使用 native 后端。
 
 Orin 为当时系统环境下的测量，尚未证明资源独占；后期资源监控记录到系统换页。
 
-BF16 保留原生优化、Inductor、prefix/denoise CUDA Graph 和 Triton attention。量化开启 CUDA Graph、关闭 Inductor 编译。FP8/NVFP4 使用 FP32 scale，Orin 开启低内存加载。
+BF16 保留原生优化、Inductor、prefix/denoise CUDA Graph 和 Triton attention。原生 FP8 可对未量化的视觉编码与辅助计算保留 Inductor；量化前缀通过注册的 GEMM 后端在 CUDA Graph 内执行。其他量化配置关闭 Inductor。FP8/NVFP4 使用 FP32 scale，Orin 与新 4090 配置开启低内存加载。
+
+设置 `batch_size` 可调整每卡 batch；`warmup_calls` 是 batch 调用次数。4090 B=4 配置用 400 次预热覆盖全部 1,600 条观测。每条观测独立由 seed 和 sample ID 生成噪声，保持十步去噪与 50×7 动作块。比较量化误差必须使用相同 batch、样本、种子和去噪步数；禁止拿不同 batch 的结果作为量化精度基线。
 
 每个模型使用独立虚拟环境。先从对应机器已验证的环境复制 CUDA/PyTorch 依赖，再选择设备/精度配置：
 
