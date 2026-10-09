@@ -17,6 +17,7 @@ from embodiinfer.policies.activevln.modeling_activevln import (
     ActiveVLNPrefix,
     _ActiveVLNDecoder,
 )
+from embodiinfer.policies.activevln.prompt_activevln import parse_r2r_actions
 from embodiinfer.policies.base import MemoryState
 from embodiinfer.types import ActionChunk, Observation, SessionKey
 
@@ -113,6 +114,8 @@ def _logits(token: int):
 
 
 class _FakeARPolicy:
+    action_space = "r2r"
+    parse_actions = staticmethod(parse_r2r_actions)
     repetition_penalty = 1.0
     do_sample = False
     temperature = 1.0
