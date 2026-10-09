@@ -408,3 +408,102 @@ def generate_batched_tree_tokens(
             next_logits.append(node_logits[row, accepted[-1]])
         logits = torch.stack(next_logits)
     return runtime._finish_generation(prefix, tokens, scores, lengths, coordinates, reasons)
+
+
+def generate_batched_draft_tokens(
+    runtime: ActiveVLNBatchedRuntime,
+    prefix: ActiveVLNBatchPrefix,
+    *,
+    cancelled: Callable[[], bool] | None = None,
+) -> tuple[ActiveVLNGeneration, ...]:
+    """Verify learned linear blocks and retain only accepted per-row KV prefixes."""
+    if prefix.last_hidden is None:
+        raise ValueError("learned drafting requires target prefix features")
+    policy, device = runtime.policy, runtime.device
+    count, batch = len(prefix.prepared.turns), runtime.batch_size
+    lengths, coordinates = list(prefix.lengths), list(prefix.positions)
+    logits, features = prefix.logits, prefix.last_hidden
+    seen = torch.zeros_like(logits, dtype=torch.bool)
+    for row, history in enumerate(prefix.token_history):
+        seen[row].scatter_(0, history, True)
+    first_ids = torch.stack([history[0] for history in prefix.token_history])
+    tokens: list[list[torch.Tensor]] = [[] for _ in range(count)]
+    scores: list[list[torch.Tensor]] = [[] for _ in range(count)]
+    ids: list[list[int]] = [[] for _ in range(count)]
+    reasons, active = ["max_tokens"] * count, [True] * count
+
+    def check_cancel() -> None:
+        if cancelled is not None and cancelled():
+            raise SessionCancelledError("batched ActiveVLN draft generation was cancelled")
+
+    while any(active):
+        check_cancel()
+        remaining = min(
+            min(policy.max_context, runtime._row_capacities[row]) - lengths[row]
+            for row in range(count)
+            if active[row]
+        )
+        if remaining < 1:
+            raise ValueError("batched generation exceeds the model context limit")
+        query = runtime.draft.block_size if remaining >= runtime.draft.block_size else 1
+        penalty = policy.repetition_penalty
+        effective = torch.where(seen, torch.where(logits < 0, logits * penalty, logits / penalty), logits)
+        roots = effective.argmax(-1)
+        root_scores = torch.log_softmax(effective, -1).gather(1, roots[:, None])[:, 0]
+        proposed = runtime._propose_tokens(features, roots)[:, :query] if query > 1 else roots[:, None]
+        proposed_ids = proposed.tolist()
+        input_ids = torch.zeros(batch, query, device=device, dtype=torch.long)
+        input_ids[:count] = proposed
+        positions = torch.zeros(3, batch, query, device=device, dtype=torch.long)
+        offsets, writes = [0] * batch, [0] * batch
+        for row in range(count):
+            if active[row]:
+                offsets[row], writes[row] = lengths[row], query
+                positions[:, row] = coordinates[row] + torch.arange(query, device=device)
+        causal = torch.ones(query, query, device=device, dtype=torch.bool).tril()
+        hidden = runtime._forward(
+            policy._text.embed_tokens(input_ids),
+            positions,
+            offsets,
+            ancestors=causal[None].expand(batch, -1, -1) if query > 1 else None,
+            write_lengths=writes,
+        )
+        node_logits = policy._lm_head(hidden[:count])
+        chosen, node_scores = batched_tree_greedy_scores(
+            node_logits,
+            seen,
+            proposed[:, None].expand(-1, query, -1),
+            causal[None].expand(count, -1, -1),
+            first_ids,
+            penalty,
+        )
+        choices = chosen.tolist()
+        runtime.counters["draft_verification_calls"] += 1
+        runtime.counters["draft_proposed_tokens"] += sum(active) * (query - 1)
+        next_logits, next_features = [], []
+        for row in range(count):
+            if not active[row]:
+                next_logits.append(logits[row])
+                next_features.append(features[row])
+                continue
+            accepted = 0
+            for node in range(query):
+                check_cancel()
+                if node and choices[row][node - 1] != proposed_ids[row][node]:
+                    break
+                accepted += 1
+                tokens[row].append(proposed[row, node])
+                scores[row].append(root_scores[row] if node == 0 else node_scores[row, node - 1])
+                ids[row].append(proposed_ids[row][node])
+                reason = _stop_reason(policy, ids[row])
+                if reason is not None or len(ids[row]) >= policy.max_new_tokens:
+                    reasons[row], active[row] = reason or "max_tokens", False
+                    break
+            runtime.counters["draft_accepted_tokens"] += accepted - 1
+            lengths[row] += accepted
+            coordinates[row] += accepted
+            seen[row].scatter_(0, proposed[row, :accepted], True)
+            next_logits.append(node_logits[row, accepted - 1])
+            next_features.append(hidden[row, accepted - 1])
+        logits, features = torch.stack(next_logits), torch.stack(next_features)
+    return runtime._finish_generation(prefix, tokens, scores, lengths, coordinates, reasons)

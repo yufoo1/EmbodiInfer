@@ -36,6 +36,92 @@ OUTPUT_FIELDS = (
 EXPECTED_CALLS = {"R2R": 2997, "RxR": 3879}
 
 
+def compare_batches(reference: dict[str, Any], candidate: dict[str, Any]) -> dict[str, Any]:
+    """Audit complete tensor-batch replays with identical occupancy and episode order.
+
+    Rate uses actual observations divided by summed batch E2E time. Padding and
+    the number of generated action slots never increase the observation count.
+    """
+    for key in (
+        "schema",
+        "dataset",
+        "batch_size",
+        "selection",
+        "selection_sha256",
+        "global_episode_ids",
+        "timing_boundary",
+        "slot_refill",
+    ):
+        if reference[key] != candidate[key]:
+            raise ValueError(f"experimental condition changed: {key}")
+    for key in (*CONDITIONS, "action_space", "query_bucket_size"):
+        if reference["config"].get(key) != candidate["config"].get(key):
+            raise ValueError(f"experimental condition changed: {key}")
+    indexed, latencies, schedules = [], [], []
+    for report in (reference, candidate):
+        if (
+            report["schema"] != "activevln.tensor_batch_benchmark.v2"
+            or report["status"] != "complete"
+            or report["config"]["max_steps_per_episode"] is not None
+            or report["config"]["repeats"] != 1
+        ):
+            raise ValueError("comparison requires complete tensor-batch replays")
+        selected = report["selection"]
+        if len(selected) != 48 or len({row["episode_id"] for row in selected}) != 48:
+            raise ValueError("comparison requires all 48 distinct selected episodes")
+        expected = {(ep["episode_id"], step) for ep in selected for step in range(ep["frames"])}
+        if len(expected) != EXPECTED_CALLS.get(report["dataset"]):
+            raise ValueError("unexpected complete-workload observation count")
+        rows = {(row["episode_id"], row["step"]): row for row in report["rows"]}
+        if len(rows) != len(report["rows"]) or rows.keys() != expected:
+            raise ValueError("each selected frame must occur exactly once")
+        batches = report["batches"]
+        schedule = [[] for _ in batches]
+        for key, row in rows.items():
+            index = row["batch_index"]
+            if type(index) is not int or not 0 <= index < len(batches):
+                raise ValueError("invalid row batch index")
+            schedule[index].append(key)
+        for index, (batch, members) in enumerate(zip(batches, schedule, strict=True)):
+            if (
+                batch["batch_index"] != index
+                or batch["observations"] != len(members)
+                or not 1 <= len(members) <= report["batch_size"]
+                or not math.isfinite(batch["latency_ms"])
+                or batch["latency_ms"] <= 0
+            ):
+                raise ValueError("invalid batch occupancy or latency")
+        indexed.append(rows)
+        latencies.append(sum(batch["latency_ms"] for batch in batches) / len(rows))
+        schedules.append(schedule)
+    if schedules[0] != schedules[1]:
+        raise ValueError("batch membership/order changed")
+    fields = (*OUTPUT_FIELDS[:6], "actions", "text")
+    counts = dict.fromkeys(fields, 0)
+    differences = []
+    for key, row in indexed[0].items():
+        changed = [field for field in fields if row[field] != indexed[1][key][field]]
+        for field in changed:
+            counts[field] += 1
+        if changed:
+            differences.append({"episode_id": key[0], "step": key[1], "fields": changed})
+    return {
+        "dataset": reference["dataset"],
+        "observations": len(indexed[0]),
+        "batch_size": reference["batch_size"],
+        "exact_behavior_parity": not differences,
+        "matching_observations": len(indexed[0]) - len(differences),
+        "mismatches_by_field": counts,
+        "first_mismatches": differences[:100],
+        "baseline_amortized_e2e_ms": latencies[0],
+        "candidate_amortized_e2e_ms": latencies[1],
+        "candidate_observations_per_second": 1000 / latencies[1],
+        "speedup": latencies[0] / latencies[1],
+        "navigation_success_evaluated": False,
+        "admitted": not differences and latencies[1] <= 40.0,
+    }
+
+
 def indexed_rows(report: dict[str, Any]) -> dict[tuple[str, int], dict[str, Any]]:
     """Reject duplicate identities instead of silently dropping repeated rows."""
     rows = {}
@@ -60,6 +146,10 @@ def compare(
     """
     if accuracy_contract not in ("exact", "task-success"):
         raise ValueError("accuracy_contract must be exact or task-success")
+    if reference.get("schema") == "activevln.tensor_batch_benchmark.v2":
+        if accuracy_contract != "exact":
+            raise ValueError("tensor-batch comparison currently supports only the exact contract")
+        return compare_batches(reference, candidate)
     name = reference["dataset"]["name"]
     if name not in EXPECTED_CALLS or candidate["dataset"]["name"] != name:
         raise ValueError("reports must describe the same supported navigation dataset")

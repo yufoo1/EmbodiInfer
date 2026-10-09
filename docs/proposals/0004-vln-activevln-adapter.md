@@ -758,3 +758,52 @@ partial execution has no admitted aggregate rate. Per-request batch wait,
 aggregate amortized cost, per-instance memory and actual graph counters remain
 separate metrics. See the canonical ActiveVLN benchmark README for invocation and
 the timing boundary.
+
+## Learned multi-token draft (October 2026)
+
+Train an optional small feature-conditioned draft under the ActiveVLN policy.
+The input is the target's final hidden vector and its already selected next
+token; independent learned heads propose the following tokens. A causal target
+forward verifies the proposed block against full-vocabulary greedy scores with
+the original repetition penalty. Only the longest accepted prefix enters the
+private KV history. EOS, parsed STOP, cancellation and token/context budgets are
+checked at each accepted token. The static phrase-tree path remains available.
+
+Training and measurement tooling lives in the ActiveVLN benchmark. Collect
+teacher hidden vectors on recorded RxR observations using the R2R checkpoint,
+split training/validation by complete episode, and exclude any episode containing
+an RGB file identical to an R2R evaluation frame. Keep the original 48 R2R
+evaluation trajectories out of draft training and validation. Teacher collection
+uses serial greedy token steps inside tensor batches and preserves complete
+histories. Save cohort identities, source/checkpoint pins and training seeds with
+the learned weights. Model weights and hidden-vector shards remain artifacts.
+
+This follows the feature-plus-known-token conditioning idea rather than using a
+table of benchmark answers. An alternative small autoregressive language model
+would be cheaper to train from text, but would lack the visual target features
+needed to predict action parameters reliably. The draft is a proposer: an unknown
+draft token, low acceptance or a rejected suffix cannot constrain target output.
+
+The new path must compare complete generated token sequences, parsed actions,
+stopping reasons and cache lengths with the existing target path at the same
+batch size and precision. Causal verification is mathematically equivalent to
+greedy decoding, but changed GEMM shapes can affect BF16 decisions, so measured
+parity is required before a lossless performance claim. CPU tests cover rejection,
+terminal tokens, budget limits, row isolation and invalid checkpoints. Real-weight
+reports include acceptance, verifier calls, full E2E time and graph fallbacks.
+Target 25 observations/s per GPU after actual batch occupancy, with no credit
+from another GPU's concurrent execution. Training itself is outside the runtime.
+
+The optional `preprocess_workers` setting parallelizes CPU turn construction.
+Each worker owns a copied processor/tokenizer, preserving mutable tokenizer
+settings and row order. Device transfer and rotary positions stay on the caller
+thread. Warmup initializes workers before timing; runtime `close()` releases them.
+Default execution remains serial. Complete replay must show exact token/action
+parity between the serial and parallel preprocessing paths.
+
+Initial real-weight draft verification changes some BF16 greedy decisions, even
+when both paths start from identical cached prefixes. Full replay therefore does
+not satisfy exact behavior admission against the old static-tree path. Keep the
+learned draft opt-in and experimental; report its speed separately from accuracy
+admission. A numerical tolerance on hidden states does not certify navigation
+success or permit silently changing the exact output comparison.

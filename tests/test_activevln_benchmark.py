@@ -70,6 +70,76 @@ def test_admission_requires_behavior_parity_even_when_actions_match():
     assert result["mismatches_by_field"]["output_sha256"] == 0
 
 
+def batch_report():
+    """Complete synthetic counts with a short final batch, without a model run."""
+    source = report()
+    selected = [{"episode_id": i + 1, "frames": 63 if i < 21 else 62} for i in range(48)]
+    rows = []
+    for episode in selected:
+        for step in range(episode["frames"]):
+            row = dict(source["rows"][len(rows)])
+            row.update(
+                episode_id=episode["episode_id"],
+                step=step,
+                batch_index=len(rows) // 4,
+                actions=[[1.0, 0.0]],
+                text="move forward 25cm",
+            )
+            rows.append(row)
+    batches = [
+        {
+            "batch_index": index // 4,
+            "observations": len(rows[index : index + 4]),
+            "latency_ms": 30.0 * len(rows[index : index + 4]),
+        }
+        for index in range(0, len(rows), 4)
+    ]
+    return dict(
+        source,
+        schema="activevln.tensor_batch_benchmark.v2",
+        status="complete",
+        dataset="R2R",
+        batch_size=4,
+        selection=selected,
+        global_episode_ids=list(range(1, 49)),
+        slot_refill="ordered",
+        rows=rows,
+        batches=batches,
+    )
+
+
+def test_tensor_batch_comparison_counts_real_observations_and_checks_tokens():
+    baseline = batch_report()
+    candidate = copy.deepcopy(baseline)
+    result = _compare(baseline, candidate)
+    assert result["observations"] == 2997
+    assert result["candidate_amortized_e2e_ms"] == 30
+    assert result["candidate_observations_per_second"] == pytest.approx(1000 / 30)
+    assert result["admitted"]
+    candidate["rows"][3]["token_ids"] = [9]
+    result = _compare(baseline, candidate)
+    assert not result["admitted"]
+    assert result["mismatches_by_field"]["token_ids"] == 1
+
+
+@pytest.mark.parametrize("failure", ["duplicate", "occupancy", "schedule", "partial", "latency"])
+def test_tensor_batch_comparison_rejects_incomparable_reports(failure):
+    baseline = batch_report()
+    candidate = copy.deepcopy(baseline)
+    if failure == "duplicate":
+        candidate["rows"][0] = candidate["rows"][1]
+    elif failure == "occupancy":
+        candidate["batches"][-1]["observations"] = 4
+    elif failure == "schedule":
+        candidate["rows"][0], candidate["rows"][1] = candidate["rows"][1], candidate["rows"][0]
+    elif failure == "partial":
+        candidate["status"] = "partial_probe"
+    else:
+        candidate["batches"][0]["latency_ms"] = float("nan")
+    with pytest.raises(ValueError):
+        _compare(baseline, candidate)
+
+
 def test_admission_checks_raw_latency_and_strict_target():
     baseline = report()
     candidate = copy.deepcopy(baseline)

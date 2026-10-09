@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from dataclasses import dataclass
-from threading import RLock
+from threading import RLock, local
 from typing import TYPE_CHECKING
-from weakref import ref
+from weakref import finalize, ref
 
 import torch
 
@@ -18,6 +20,7 @@ from .modeling_activevln import ActiveVLNGeneration, PreparedActiveVLNTurn
 from .processor_activevln import ProcessedTurn
 
 if TYPE_CHECKING:
+    from .draft_activevln import ActiveVLNDraft
     from .modeling_activevln import ActiveVLNPolicy
 
 
@@ -40,6 +43,7 @@ class ActiveVLNBatchPrefix:
     position_history: list[torch.Tensor]
     generation: int
     owner: object
+    last_hidden: torch.Tensor | None = None
 
 
 @dataclass
@@ -74,9 +78,13 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         tree_fp32_projection: bool = False,
         tree_repeat_actions: int = 1,
         kv_pool_tokens: int | None = None,
+        draft: ActiveVLNDraft | None = None,
+        preprocess_workers: int = 1,
     ) -> None:
         if type(batch_size) is not int or batch_size < 1:
             raise ValueError("batch_size must be a positive Python integer")
+        if type(preprocess_workers) is not int or not 1 <= preprocess_workers <= batch_size:
+            raise ValueError("preprocess_workers must be a positive integer no larger than batch_size")
         if type(query_bucket_size) is not int or query_bucket_size < 1:
             raise ValueError("query_bucket_size must be a positive Python integer")
         if type(workspace_tokens) is not int or not 1 <= workspace_tokens <= policy.max_context:
@@ -86,6 +94,17 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         if policy._inference_runtime is not None:
             raise ValueError("clear the single-row graph runtime before creating a batched runtime")
         parameter = next(policy.parameters())
+        if draft is not None and tree_decode:
+            raise ValueError("select learned draft or static action trees, not both")
+        if draft is not None and (
+            draft.hidden_size != policy._lm_head.weight.shape[1]
+            or int(draft.token_ids.max()) >= policy._lm_head.weight.shape[0]
+        ):
+            raise ValueError("draft dimensions/vocabulary do not fit the target policy")
+        self.draft = (
+            None if draft is None else draft.to(device=parameter.device, dtype=parameter.dtype).eval()
+        )
+        self._draft_graph = None
         if kv_pool_tokens is not None and (
             type(kv_pool_tokens) is not int
             or not workspace_tokens <= kv_pool_tokens <= batch_size * policy.max_context
@@ -167,6 +186,34 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             )
         self._resident_rows = [None] * batch_size
         self._owned_rows: list[tuple[torch.Tensor, object] | None] = [None] * batch_size
+        self.preprocess_workers = preprocess_workers
+        self._preprocess_local = local()
+        self._preprocess_pool = (
+            ThreadPoolExecutor(max_workers=preprocess_workers, thread_name_prefix="activevln-preprocess")
+            if preprocess_workers > 1
+            else None
+        )
+        self._preprocess_finalizer = (
+            finalize(self, self._preprocess_pool.shutdown, wait=False)
+            if self._preprocess_pool is not None
+            else None
+        )
+        self._closed = False
+
+    def close(self) -> None:
+        """Release CPU workers; already prepared prefixes remain valid for generation."""
+        self._closed = True
+        if self._preprocess_pool is not None:
+            self._preprocess_pool.shutdown(wait=True)
+            self._preprocess_finalizer.detach()
+
+    def _process_turn_cpu(self, observation: Observation, initial: bool) -> ProcessedTurn:
+        # Each worker owns its tokenizer, including mutable padding/truncation
+        # settings. CUDA transfer and position construction stay on the caller.
+        if not hasattr(self._preprocess_local, "processor"):
+            self._preprocess_local.processor = deepcopy(self.policy._processor)
+        with torch.inference_mode():
+            return self._preprocess_local.processor.process_turn(observation, initial=initial)
 
     def reset_stats(self) -> None:
         """Reset graph/tree and cache reuse counts without dropping prepared graphs."""
@@ -181,6 +228,9 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             tree_padding_nodes=0,
             prefill_actual_tokens=0,
             prefill_padding_tokens=0,
+            draft_verification_calls=0,
+            draft_proposed_tokens=0,
+            draft_accepted_tokens=0,
         )
 
     def _validate(self) -> None:
@@ -201,6 +251,10 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             "cuda_graph_requested": self.use_cuda_graph,
             "capacity_growths": self.capacity_growths,
             "tree_decode": bool(self.action_trees),
+            "learned_draft": self.draft is not None,
+            "draft_block_size": None if self.draft is None else self.draft.block_size,
+            "draft_graph": self._draft_graph is not None,
+            "preprocess_workers": self.preprocess_workers,
             "workspace_tokens": self.workspace_limit if self.pooled_kv else self.storage.shape[-2],
             "kv_pool_tokens": self.storage.shape[-2] if self.pooled_kv else None,
             "shared_graph_buffers": True,
@@ -215,17 +269,33 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     ) -> PreparedActiveVLNBatch:
         """Preprocess/H2D each observation without invoking the model or mutating KV."""
         self._validate()
+        if self._closed:
+            raise RuntimeError("batched runtime preprocessing is closed")
         if not 1 <= len(observations) <= self.batch_size:
             raise ValueError("observation count must fit the configured batch size")
         memories = [None] * len(observations) if memories is None else list(memories)
         if len(memories) != len(observations):
             raise ValueError("memories must align with observations")
+        processed = None
+        if self._preprocess_pool is not None:
+            if any(observation.images.device.type != "cpu" for observation in observations):
+                raise ValueError("parallel preprocessing requires CPU observations")
+            futures = [
+                self._preprocess_pool.submit(self._process_turn_cpu, observation, memory is None)
+                for observation, memory in zip(observations, memories, strict=True)
+            ]
+            # Preserve row order even when workers finish in a different order.
+            processed = [future.result() for future in futures]
         turns = []
         for row, (observation, memory) in enumerate(zip(observations, memories, strict=True)):
             if memory is not None and memory.token_ids_buffer.device != self.device:
                 raise ValueError("batch memories must already be on the model device")
             batch = self.policy.collate([observation], [f"batch-row-{row}"])
-            turn = self.policy.prepare_prefix(batch, memory)
+            turn = (
+                self.policy.prepare_prefix(batch, memory)
+                if processed is None
+                else self.policy._prepare_processed_prefix(processed[row], memory)
+            )
             past = 0 if memory is None else memory.seq_len
             if past + turn.turn.input_ids.shape[1] > self.policy.max_context:
                 raise ValueError("batched turn exceeds the model context limit")
@@ -265,6 +335,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
 
     def _plan_rows(self, past: Sequence[int], query: int, count: int) -> None:
         tree_size = max((t.token_ids.shape[1] for t in self.action_trees), default=0)
+        if self.draft is not None:
+            tree_size = max(tree_size, self.draft.block_size)
         required = [
             min(self.policy.max_context, n + query + self.policy.max_new_tokens + tree_size)
             if row < count
@@ -372,6 +444,16 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                     self._capture_contexts(query, context_buckets)
                 for query in sorted({t.token_ids.shape[1] for t in self.action_trees}):
                     self._capture_contexts(query, context_buckets, tree=True)
+                if self.draft is not None:
+                    self._capture_contexts(self.draft.block_size, context_buckets, tree=True)
+                    features = next(self.draft.parameters()).new_zeros(
+                        self.batch_size, self.draft.hidden_size
+                    )
+                    roots = torch.zeros(self.batch_size, device=self.device, dtype=torch.long)
+                    graph, output = self._capture(
+                        lambda: self.draft.propose(features, roots), self.device, self.pool
+                    )
+                    self._draft_graph = graph, features, roots, output
             finally:
                 self.capture_enabled = False
                 self._pending_generation = None
@@ -521,7 +603,19 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                 position_histories,
                 self._generation,
                 self._owner,
+                last_hidden=selected,
             )
+
+    def _propose_tokens(self, hidden: torch.Tensor, roots: torch.Tensor) -> torch.Tensor:
+        """Keep proposal outputs private across subsequent graph replays."""
+        count = roots.shape[0]
+        if self._draft_graph is None:
+            return self.draft.propose(hidden, roots)
+        graph, static_hidden, static_roots, output = self._draft_graph
+        static_hidden[:count].copy_(hidden)
+        static_roots[:count].copy_(roots)
+        graph.replay()
+        return output[:count].clone()
 
     def generate(
         self, prefix: ActiveVLNBatchPrefix, *, cancelled: Callable[[], bool] | None = None
@@ -532,6 +626,10 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             if prefix.owner is not self._owner or self._pending_generation != prefix.generation:
                 raise RuntimeError("batched prefix is stale or already consumed")
             try:
+                if self.draft is not None:
+                    from .speculation_activevln import generate_batched_draft_tokens
+
+                    return generate_batched_draft_tokens(self, prefix, cancelled=cancelled)
                 if self.action_trees:
                     from .speculation_activevln import generate_batched_tree_tokens
 

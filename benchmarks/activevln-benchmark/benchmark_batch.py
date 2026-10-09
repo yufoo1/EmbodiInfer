@@ -163,6 +163,15 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
         report["phase"] = "workspace"
         save_report(output, report)
         with torch.inference_mode():
+            draft = None
+            if config.get("draft_checkpoint"):
+                from embodiinfer.policies.activevln.draft_activevln import ActiveVLNDraft
+
+                draft, metadata = ActiveVLNDraft.load(config["draft_checkpoint"])
+                report["draft_metadata"] = metadata
+                report["draft_sha256"] = hashlib.sha256(
+                    Path(config["draft_checkpoint"]).read_bytes()
+                ).hexdigest()
             runtime = policy.create_batched_runtime(
                 batch_size=batch_size,
                 workspace_tokens=config["graph_workspace_tokens"],
@@ -174,6 +183,8 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
                 tree_fp32_projection=config.get("tree_fp32_projection", False),
                 tree_repeat_actions=config.get("tree_repeat_actions", 1),
                 kv_pool_tokens=config.get("kv_pool_tokens"),
+                draft=draft,
+                preprocess_workers=config.get("preprocess_workers", 1),
             )
             report["phase"] = "graph_capture"
             save_report(output, report)
@@ -326,6 +337,7 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
         }
         if runtime is not None:
             report["runtime"] = runtime.stats()
+            runtime.close()
         save_report(output, report)
         print(
             json.dumps(

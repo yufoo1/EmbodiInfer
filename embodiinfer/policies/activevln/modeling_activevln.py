@@ -29,6 +29,7 @@ from .prompt_activevln import (
 if TYPE_CHECKING:
     from .batching_activevln import ActiveVLNBatchedRuntime
     from .cuda_graph import ActiveVLNGraphRuntime
+    from .draft_activevln import ActiveVLNDraft
 
 
 ACTIVEVLN_REPO = "https://github.com/arvillion/ActiveVLN"
@@ -575,6 +576,8 @@ class ActiveVLNPolicy(VLAPolicy):
         tree_fp32_projection: bool = False,
         tree_repeat_actions: int = 1,
         kv_pool_tokens: int | None = None,
+        draft: ActiveVLNDraft | None = None,
+        preprocess_workers: int = 1,
     ) -> ActiveVLNBatchedRuntime:
         """Create true greedy tensor batching with explicit per-row memory inputs.
 
@@ -596,6 +599,8 @@ class ActiveVLNPolicy(VLAPolicy):
             tree_fp32_projection=tree_fp32_projection,
             tree_repeat_actions=tree_repeat_actions,
             kv_pool_tokens=kv_pool_tokens,
+            draft=draft,
+            preprocess_workers=preprocess_workers,
         )
 
     @contextmanager
@@ -796,9 +801,14 @@ class ActiveVLNPolicy(VLAPolicy):
     ) -> PreparedActiveVLNTurn:
         """Process the observation and transfer inputs before the model-only interval."""
         observation = batch.observations[0]
+        turn = self._processor.process_turn(observation, initial=memory is None)
+        return self._prepare_processed_prefix(turn, memory)
+
+    def _prepare_processed_prefix(
+        self, turn: ProcessedTurn, memory: ActiveVLNMemory | None
+    ) -> PreparedActiveVLNTurn:
         device = next(self.parameters()).device
         dtype = next(self.parameters()).dtype
-        turn = self._processor.process_turn(observation, initial=memory is None)
         offset = 0 if memory is None else memory.next_position
         positions, next_position = build_mrope_position_ids(
             turn.input_ids,

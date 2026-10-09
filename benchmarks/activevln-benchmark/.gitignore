@@ -8,3 +8,6 @@ reports/
 !results/4090-multi-instance-20261010/
 !results/4090-multi-instance-20261010/*.csv
 !results/4090-multi-instance-20261010/*.json
+!results/4090-learned-draft-20261010/
+!results/4090-learned-draft-20261010/*.csv
+!results/4090-learned-draft-20261010/*.json

@@ -1,5 +1,6 @@
 """Real tensor batching, independent episode history and transactional failures."""
 
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -58,6 +59,54 @@ def _policy():
 
 def _observation(text):
     return Observation(torch.zeros(1, 3, 2, 2), torch.zeros(0), torch.zeros(0, dtype=torch.long), text)
+
+
+class _ParallelProcessor(_Processor):
+    busy = False
+
+    def process_turn(self, observation, *, initial):
+        assert not self.busy, "processor/tokenizer instance shared across workers"
+        assert not torch.is_grad_enabled()
+        self.busy = True
+        try:
+            time.sleep(0.005 if observation.instruction.startswith("3") else 0.001)
+            return super().process_turn(observation, initial=initial)
+        finally:
+            self.busy = False
+
+
+@torch.inference_mode()
+def test_parallel_preprocessing_preserves_order_and_recovers_after_failure():
+    policy = _policy()
+    policy._processor = _ParallelProcessor()
+    runtime = policy.create_batched_runtime(batch_size=4, workspace_tokens=64, preprocess_workers=4)
+    observations = [_observation("3 4"), _observation("6"), _observation("7 8 9")]
+    memory = policy.encode_prefix(policy.collate([observations[0]], ["first"])).memory
+    memories = [None, memory, None]
+    try:
+        prepared = runtime.prepare(observations, memories)
+        for actual, observation, previous in zip(prepared.turns, observations, memories, strict=True):
+            expected = policy.prepare_prefix(policy.collate([observation], ["reference"]), previous)
+            for key in ("input_ids", "attention_mask", "pixel_values", "image_grid_thw"):
+                torch.testing.assert_close(
+                    getattr(actual.turn, key), getattr(expected.turn, key), rtol=0, atol=0
+                )
+            torch.testing.assert_close(actual.positions, expected.positions, rtol=0, atol=0)
+            assert actual.memory is previous
+        with pytest.raises(ValueError):
+            runtime.prepare([_observation("invalid"), observations[0]])
+        assert len(runtime.prepare(observations).turns) == 3
+    finally:
+        runtime.close()
+    with pytest.raises(RuntimeError, match="closed"):
+        runtime.prepare(observations)
+
+
+@pytest.mark.parametrize("workers", [0, 5, True])
+@torch.inference_mode()
+def test_parallel_preprocessing_rejects_invalid_worker_counts(workers):
+    with pytest.raises(ValueError, match="preprocess_workers"):
+        _policy().create_batched_runtime(batch_size=4, workspace_tokens=64, preprocess_workers=workers)
 
 
 @pytest.mark.parametrize(("batch_size", "padded_query"), [(2, 8), (4, 8), (8, 16)])

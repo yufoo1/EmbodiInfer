@@ -10,6 +10,85 @@ The September 25 reference profile below uses `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` 
 
 ## Independent GPU instances
 
+### Learned draft and parallel preprocessing (experimental, October 10)
+
+The new optional `draft_checkpoint` selects a trained feature-conditioned model
+instead of the static phrase tree (`tree_decode=false`). It proposes 15 tokens
+after the target's known next token; the full target vocabulary verifies every
+accepted suffix. `preprocess_workers=4` gives each CPU worker its own processor
+and tokenizer, with ordered results and H2D on the caller thread. The runtime's
+`close()` releases workers. Both options are off by default.
+
+Full R2R replay, BF16, B=4, 33 warmup batch calls, the same checkpoint/data pins
+and complete histories as below:
+
+| Configuration | GPUs | E2E ms/observation per GPU | Observations/s per GPU | Peak allocated GiB |
+| --- | ---: | ---: | ---: | ---: |
+| Static tree, serial preprocessing, new control | 1 | 50.81 | 19.68 | 15.52 |
+| Learned draft, serial preprocessing | 1 | 44.46 | 22.49 | 15.49 |
+| Learned draft, four preprocessing workers | 1 | 39.12 | 25.56 | 15.37 |
+| Learned draft, four preprocessing workers per instance | 2 | 39.70 | **25.19** | 15.21 |
+| Same dual configuration, isolated repeat | 2 | 39.68 | **25.20** | 15.21 |
+
+The dual run completed all 2,997 observations once, with no graph fallbacks or
+capacity growth. Replica rates were **24.82 and 25.56/s**; 25.19/s is the pooled
+per-GPU efficiency, not a guarantee that each replica exceeds 25/s. Aggregate
+wall throughput, including auditing and the slower tail, was 49.06/s. Training
+had finished; the CPU regression suite overlapped the beginning of this run.
+The small margin warrants an isolated repeat and broader trajectories. These
+measurements do not demonstrate multi-node or HTTP throughput.
+
+The isolated repeat ran after all other tests and model workloads ended. It
+completed the same 2,997 observations with **zero output-field differences** from
+the first dual run. Replica rates were 24.87/25.55/s; pooled E2E efficiency was
+25.20/s per GPU. Aggregate wall throughput was 48.99/s, or **24.49/s per allocated
+GPU** when report/audit overhead and the slower tail are included. Thus the
+batch-amortized inference E2E target is reached, but an allocation-normalized
+wall-throughput target of 25/s is not yet reached.
+
+**Accuracy admission remains failed.** Serial versus parallel preprocessing
+produced identical tokens, actions, stopping reasons and cache lengths on all
+2,997 observations. Learned versus static-tree decoding changed actions/tokens
+on 855 observations; 1,241 differed in at least one audited field. A separate
+80-observation probe retaining canonical serial histories found seven token
+differences from identical input prefixes. Changed BF16 verification shapes are
+numerically different; full-vocabulary verification does not establish bit-exact
+serial greedy equivalence. No SR/SPL was measured for this draft. Treat its speed
+as an experimental result, not an admitted lossless replacement.
+
+Training used the R2R teacher on 3,879 RxR observations (73,684 generated tokens).
+Forty whole episodes trained the draft and eight supplied validation. No R2R
+evaluation episode was used for either split; episodes containing an identical
+R2R RGB file were excluded (zero overlaps found). The 1,488,187-parameter model
+uses width 512, block size 16, AdamW, seed 42 and 40 epochs; validation selected
+epoch 4. The first suffix token's validation accuracy was 97.57%. Training and
+validation contain 57,776 and 12,029 feature/root examples. This is a holdout from
+draft training, not a claim about the target checkpoint's original training data.
+
+Reproducible configs, metrics, artifact hashes and failed accuracy checks are in
+[`results/4090-learned-draft-20261010`](results/4090-learned-draft-20261010).
+The trained artifact is
+`/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt`
+on the experiment host; SHA256
+`204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048`.
+Weights and teacher shards are not committed to the source repository.
+
+```bash
+python benchmarks/activevln-benchmark/train_draft.py collect \
+  --config benchmarks/activevln-benchmark/results/4090-learned-draft-20261010/collection-config.json \
+  --output /absolute/path/new-teacher-directory
+python benchmarks/activevln-benchmark/train_draft.py train \
+  --source /absolute/path/new-teacher-directory --output /absolute/path/new-draft-directory
+python benchmarks/activevln-benchmark/compare.py baseline-b4.json candidate-b4.json \
+  --output comparison.json
+```
+
+Update machine paths and `draft_checkpoint` before replay. The comparison command
+checks the exact batch membership/order, complete episode coverage and raw batch
+latencies; a fast result with changed actions is rejected.
+
+### Launching isolated replicas
+
 `benchmark_multi_instance.py` starts a fresh Python process per physical GPU,
 with one model and private recurrent histories in each process. It uses the
 policy-local tensor batch runtime; it does not implement the engine's placeholder
