@@ -2,7 +2,7 @@
   "schema": "activevln.fp8_navigation_evidence.v1",
   "date": "2026-10-10",
   "implementation_commit": "a99bd039e1274fd0122e769ee78d72ac058662e9",
-  "status": "R2R pilot audited; full R2R running; corrected RxR replay/pilot/eligible-set validation queued",
+  "status": "Historical pilot snapshot; current user-requested 500-episode results are in validation-500-evidence.json",
   "r2r_pilot": {
     "status": "audited",
     "dataset": "r2r",
@@ -614,5 +614,6 @@
   "remote_job_state_files": [
     "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-full-state.json",
     "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-corrected-state.json"
-  ]
+  ],
+  "current_evidence": "validation-500-evidence.json"
 }

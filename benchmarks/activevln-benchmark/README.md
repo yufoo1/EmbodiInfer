@@ -98,13 +98,34 @@ initial images, travelled distances, predicted STOP and final geodesic distances
 were independently audited. Success requires a model-predicted STOP within
 strictly 3 m; step/turn limits do not force a successful STOP.
 
-Full R2R validation is running on all 1,839 episodes. Corrected RxR replay,
-a paired pilot and all 3,570 geometrically evaluable English episodes are queued
-after it. The original RxR English set has 3,669 episodes; 99 have no finite
-start-to-goal geodesic on the unchanged deployed navmesh. Their IDs and mesh
-hashes are preserved, and this exclusion must accompany any RxR SR/SPL claim.
-No start pose or goal was moved. The earlier RxR pilot failed before completion
-and is not a valid SR result.
+<!-- activevln-fp8-500-results:start -->
+At the user's request, validation is limited to **500 episodes per precision
+and dataset**, with identical fixed episode IDs in each paired comparison.
+
+| Dataset | Precision | Episodes | Successes | SR | SPL |
+| --- | --- | ---: | ---: | ---: | ---: |
+| R2R | BF16 | 500 | 230 | 46.00% | 41.42% |
+| R2R | FP8 | 500 | 242 | 48.40% | 42.69% |
+
+R2R is complete and audited. Corrected RxR replay and its 500-episode
+closed-loop comparison are still running or queued.
+
+Selection uses the first 500 entries of the pre-existing manifests. These
+begin with a scene-balanced pilot then use scene order for loading locality;
+**the 500-episode prefix is not a uniform random sample of the full split**.
+R2R reuses already-completed trajectories from the larger run. That run was
+interrupted only after every selected episode finished; raw interruption
+reports and the independently audited complete subset are both retained.
+
+The RxR selection comes from 3,570 geometrically evaluable English episodes
+out of 3,669; 99 have no finite start-to-goal geodesic on the unchanged
+deployed navmesh. Their IDs and mesh hashes are preserved. No pose or goal
+was moved. Scores apply to the fixed 500 episodes, not the full validation
+split. The earlier failed 30-degree-prompt RxR pilot is not a valid SR result.
+
+Paired results, fixed episode IDs, scene counts, provenance and raw archive
+hashes are in [validation-500-evidence.json](results/4090-fp8-20261010/validation-500-evidence.json).
+<!-- activevln-fp8-500-results:end -->
 
 This is a declared deployment evaluation, not exact paper reproduction:
 Habitat-Sim 0.2.4, greedy decoding, 640×480 RGB, 90-degree HFOV, 1.25 m camera,
