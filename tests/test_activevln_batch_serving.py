@@ -66,7 +66,9 @@ def adapter(tmp_path, monkeypatch):
         make_observation=lambda image, text: text,
         timed_model=lambda prefill, decode, device: (None, decode(prefill()), {}),
     )
-    policy = SimpleNamespace(decoder=SimpleNamespace(finalize_generation=lambda generation: generation))
+    policy = SimpleNamespace(
+        action_space="rxr", decoder=SimpleNamespace(finalize_generation=lambda generation: generation)
+    )
     return functions["TensorBatchAdapter"](
         policy, Runtime(), benchmark, torch.device("cpu"), tmp_path / "batches.jsonl"
     )
@@ -90,6 +92,8 @@ def test_http_arrival_order_restored_and_sessions_committed_independently(adapte
     old = SimpleNamespace(seq_len=42)
     adapter.memories["b"] = old
     results = adapter.infer_batch([request(1, "b", 8), request(0, "a", 3)])
+    assert adapter.capabilities()["action_space"] == "activevln.rxr.discrete.v1"
+    assert all(result.action_space == "activevln.rxr.discrete.v1" for result in results)
     assert adapter.runtime.inputs == (["3", "8"], [None, old])
     assert [result.actions[0].values["rows"] for result in results] == [[[8.0, 0.0]], [[3.0, 0.0]]]
     assert adapter.memories["a"].seq_len == 3 and adapter.memories["b"].seq_len == 8

@@ -10,6 +10,42 @@ The September 25 reference profile below uses `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` 
 
 ## Independent GPU instances
 
+### Optional ActiveVLN FP8
+
+`make_policy("activevln", ..., quantization=...)` accepts the shared FP8
+configuration. Only Qwen text attention/MLP projections are candidates; the
+vision encoder, embeddings, normalization and language head retain their original
+precision. Exclusions use names such as `text.layers.0.mlp.down_proj`.
+
+The initial Ada profile quantizes all 108 MLP projections and retains attention
+projections in BF16:
+
+```json
+{
+  "quantization": {
+    "backend": "native",
+    "scaling_scheme": "tensorwise",
+    "ignored_layers": ["text.layers.*.self_attn.*"]
+  },
+  "serial_draft": false,
+  "tree_fp32_projection": false
+}
+```
+
+Weights use E4M3 storage; activations are dynamically converted for native FP8
+matrix multiplication. This is lossy inference, with no promise of BF16 token or
+action parity. The BF16-only `serial_draft` verifier and FP32 static-tree projection
+explicitly reject quantized policies. An ordinary learned draft may be used but
+does not acquire the serial-reference guarantee below. The default remains BF16.
+`quantization_stats()` and benchmark reports list each converted layer, scale
+shape and resolved backend; explicit native CUDA requests fail if unsupported.
+
+`benchmark_batch.py` and `serve_batch.py` consume the same quantization, action
+space, text cache, learned draft and preprocessing options. The HTTP adapter
+advertises the configured R2R or RxR action contract. Closed-loop SR/SPL is
+measured by the downstream evaluator through HTTP, separately from replay
+throughput and token agreement.
+
 ### Serial-reference draft verification (opt-in)
 
 Complete R2R replay on **2 × RTX 4090, B=4 per GPU** now passes the strict

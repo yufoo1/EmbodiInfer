@@ -160,8 +160,10 @@ def run(config: dict[str, Any], output: Path, *, ready: Callable[[], None] | Non
             repetition_penalty=config["repetition_penalty"],
             action_space=config.get("action_space", "r2r"),
             text_cache_size=config.get("text_cache_size", 0),
+            quantization=config.get("quantization"),
         )
         policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
+        report["quantization"] = policy.quantization_stats()
         report["model_load_seconds"] = time.perf_counter() - start
         report["phase"] = "workspace"
         save_report(output, report)

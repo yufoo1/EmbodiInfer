@@ -30,6 +30,8 @@ def validate_serial_draft_profile(
     policy: ActiveVLNPolicy, draft: ActiveVLNDraft | None, batch_size: int
 ) -> None:
     """Reject unvalidated numerical profiles before allocating a batched workspace."""
+    if policy.quantized_layers:
+        raise ValueError("serial_draft requires BF16 text projections; FP8 is a lossy profile")
     parameter = next(policy.parameters())
     shapes = ((2048, 2048), (256, 2048), (11008, 2048), (2048, 11008))
     if (

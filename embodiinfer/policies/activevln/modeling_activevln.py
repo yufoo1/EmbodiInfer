@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from ...exceptions import SessionCancelledError, UnsupportedRecurrentModeError
 from ...layers import get_attention_backend
+from ...layers.linear import FP8Config, parse_fp8_config
+from ...models.linear import FP8Linear
 from ...types import DecodeTrace, Observation
 from ..base import PrefixState, VLAPolicy
 from ..config import VLAPolicyConfig
@@ -512,6 +514,7 @@ class ActiveVLNPolicy(VLAPolicy):
         repetition_penalty: float = 1.05,
         do_sample: bool = True,
         action_space: str = "r2r",
+        quantization: str | Mapping[str, Any] | FP8Config | None = None,
     ) -> None:
         if action_space not in SYSTEM_PROMPTS:
             raise ValueError(f"unknown ActiveVLN action space: {action_space!r}")
@@ -545,6 +548,40 @@ class ActiveVLNPolicy(VLAPolicy):
         )
         self._decoder = _ActiveVLNDecoder(self)
         self._inference_runtime: ActiveVLNGraphRuntime | None = None
+        self.quantization_config = parse_fp8_config(quantization)
+        self.quantized_layers: tuple[str, ...] = ()
+        if self.quantization_config is not None:
+            self._quantize_text(self.quantization_config)
+
+    def _quantize_text(self, config: FP8Config) -> None:
+        quantized = []
+        for index, layer in enumerate(self._text.layers):
+            for owner_name, attributes in (
+                ("self_attn", ("q_proj", "k_proj", "v_proj", "o_proj")),
+                ("mlp", ("gate_proj", "up_proj", "down_proj")),
+            ):
+                owner = getattr(layer, owner_name)
+                for attribute in attributes:
+                    name = f"text.layers.{index}.{owner_name}.{attribute}"
+                    if not config.is_ignored(name):
+                        setattr(owner, attribute, FP8Linear.from_linear(getattr(owner, attribute), config))
+                        quantized.append(name)
+        self.quantized_layers = tuple(quantized)
+
+    def quantization_stats(self) -> dict[str, object]:
+        """Describe actual FP8 storage and resolved kernels on the current device."""
+        layers = {}
+        for name, module in self._text.named_modules():
+            if isinstance(module, FP8Linear):
+                probe = torch.empty(
+                    (1, module.in_features), device=module.weight.device, dtype=module.compute_dtype
+                )
+                layers[f"text.{name}"] = {
+                    "backend": module._resolved_backend(probe),
+                    "weight_dtype": str(module.quantized_weight.dtype),
+                    "scale_shape": list(module.weight_scale.shape),
+                }
+        return {"method": "fp8" if layers else None, "layers": layers}
 
     @property
     def default_turn_angle(self) -> int:
@@ -937,6 +974,7 @@ def _build_activevln(
     do_sample: bool = True,
     action_space: str = "r2r",
     text_cache_size: int = 0,
+    quantization: str | Mapping[str, Any] | FP8Config | None = None,
     **overrides,
 ) -> VLAPolicy:
     if checkpoint is None:
@@ -947,6 +985,7 @@ def _build_activevln(
         raise ValueError(f"unknown ActiveVLN overrides: {sorted(overrides)}")
     if action_space not in SYSTEM_PROMPTS:
         raise ValueError(f"unknown ActiveVLN action space: {action_space!r}")
+    quantization_config = parse_fp8_config(quantization)
     path = Path(checkpoint)
     if not path.exists() and not allow_download:
         raise ValueError("activevln checkpoint must be a local snapshot unless allow_download=True")
@@ -981,4 +1020,5 @@ def _build_activevln(
         repetition_penalty=repetition_penalty,
         do_sample=do_sample,
         action_space=action_space,
+        quantization=quantization_config,
     )

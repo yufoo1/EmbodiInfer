@@ -104,6 +104,8 @@ class ActiveVLNGraphRuntime:
         workspace_tokens: int | None = None,
         batch_size: int = 1,
     ) -> None:
+        if tree_fp32_projection and policy.quantized_layers:
+            raise ValueError("tree_fp32_projection is incompatible with FP8 text projections")
         if type(batch_size) is not int or batch_size < 1:
             raise ValueError("batch_size must be a positive Python integer")
         if query_bucket_size < 1:

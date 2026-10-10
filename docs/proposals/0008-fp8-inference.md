@@ -89,3 +89,28 @@ Small GEMMs may spend more time converting activations than they save. Quantizin
 the action expert may amplify output drift over ten steps. Graph capture retains
 workspace and can offset weight-memory savings. CUDA/Torch versions can support
 different scale layouts, so runtime validation and explicit errors remain needed.
+
+## 11. ActiveVLN extension
+
+Expose the same optional `quantization` configuration on ActiveVLN. Quantize only
+the seven named text projections in each Qwen decoder layer; leave vision,
+embeddings, norms and the language head in their checkpoint precision. Policy-local
+names `text.layers.<index>.{self_attn,mlp}.<projection>` support exclusions. The
+initial Ada candidate excludes attention projections and uses tensorwise native
+W8A8 for the 108 MLP projections. Small K/V GEMMs and row-scaled large GEMMs were
+slower in a Torch 2.10/cu128 shape probe. Backend registration and generic linear
+storage stay unchanged.
+
+FP8 is an explicitly lossy inference option. Reject the BF16-only serial-reference
+draft verifier and FP32 static-tree projection when quantized layers are present.
+Ordinary draft verification can execute the quantized target, but does not inherit
+the BF16 serial-reference parity claim. Record every quantized layer and its
+resolved backend in replay and HTTP startup evidence.
+
+Measure complete R2R/RxR replay on independent 4090 instances with actual batch
+occupancy, retaining vision, preprocessing, full histories and CPU action transfer.
+Evaluate navigation quality separately in downstream EmbodiRun/Habitat through
+the versioned HTTP API, using paired BF16/FP8 manifests, dataset-specific prompts
+and actions, and explicit STOP/geodesic success rules. Report SR and SPL; token
+agreement is not a substitute. Simulator execution and task metrics remain outside
+EmbodiInfer.

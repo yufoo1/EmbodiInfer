@@ -41,6 +41,7 @@ class TensorBatchAdapter:
         self, policy: Any, runtime: Any, benchmark: Any, device: torch.device, evidence: Path
     ) -> None:
         self.policy, self.runtime, self.benchmark, self.device = policy, runtime, benchmark, device
+        self.action_space = f"activevln.{policy.action_space}.discrete.v1"
         self.evidence = evidence
         self.memories: dict[str, Any] = {}
         self.lock = threading.RLock()
@@ -201,6 +202,7 @@ def main() -> None:
     config = json.loads(args.config.read_text())
     device = benchmark.cuda_device(config)
     torch.set_num_threads(config["cpu_threads"])
+    torch.manual_seed(config["seed"])
     started = time.monotonic()
     policy = make_policy(
         "activevln",
@@ -211,10 +213,18 @@ def main() -> None:
         max_context=config["max_context"],
         do_sample=config["do_sample"],
         repetition_penalty=config["repetition_penalty"],
+        action_space=config.get("action_space", "r2r"),
+        text_cache_size=config.get("text_cache_size", 0),
+        quantization=config.get("quantization"),
     )
     policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
     episodes = [ep for entry in config["datasets"] for ep in benchmark.load_navigation(entry)]
     with torch.inference_mode():
+        draft = None
+        if config.get("draft_checkpoint"):
+            from embodiinfer.policies.activevln.draft_activevln import ActiveVLNDraft
+
+            draft, _ = ActiveVLNDraft.load(config["draft_checkpoint"])
         runtime = policy.create_batched_runtime(
             batch_size=config["batch_size"],
             workspace_tokens=config["graph_workspace_tokens"],
@@ -226,6 +236,9 @@ def main() -> None:
             tree_fp32_projection=config["tree_fp32_projection"],
             tree_repeat_actions=config["tree_repeat_actions"],
             kv_pool_tokens=config["kv_pool_tokens"],
+            draft=draft,
+            serial_draft=config.get("serial_draft", False),
+            preprocess_workers=config.get("preprocess_workers", 1),
         )
         probes = [
             benchmark.make_observation(benchmark.read_rgb(ep.frames[0]), ep.instruction) for ep in episodes
@@ -269,6 +282,12 @@ def main() -> None:
         "startup_seconds": time.monotonic() - started,
         "scheduler": scheduler.capabilities(),
         "runtime": runtime.stats(),
+        "quantization": policy.quantization_stats(),
+        "draft_sha256": (
+            hashlib.sha256(Path(config["draft_checkpoint"]).read_bytes()).hexdigest()
+            if config.get("draft_checkpoint")
+            else None
+        ),
     }
     temporary = args.ready_file.with_suffix(".tmp")
     temporary.write_text(json.dumps(ready, indent=2) + "\n")
