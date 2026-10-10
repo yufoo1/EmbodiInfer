@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "model": "activevln",
+  "checkpoint": "/mnt/zhouzhenyuan/checkpoints/activevln-complete",
+  "checkpoint_revision": "160987313e3e869705f42400d1b8f28177044518",
+  "device": "cuda:0",
+  "dtype": "bfloat16",
+  "seed": 42,
+  "warmup_calls": 5,
+  "repeats": 1,
+  "attention": "sdpa",
+  "cuda_graph": true,
+  "fused_ops": true,
+  "split_attention": true,
+  "tree_decode": false,
+  "tree_fp32_projection": false,
+  "tree_repeat_actions": 1,
+  "query_bucket_size": 32,
+  "prewarm_context_buckets": [
+    512,
+    1024,
+    2048,
+    4096,
+    8192,
+    16384,
+    32768,
+    65536
+  ],
+  "graph_workspace_tokens": 65536,
+  "max_new_tokens": 512,
+  "max_context": 128000,
+  "do_sample": false,
+  "repetition_penalty": 1.05,
+  "cpu_threads": 4,
+  "max_steps_per_episode": null,
+  "datasets": [
+    {
+      "name": "R2R",
+      "root": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R",
+      "annotations": "/mnt/zhouzhenyuan/RLinf-inference-benchmark-data/navigation/R2R/annotations_v1-3.json",
+      "episode_limit": 48,
+      "repository": "cywan/StreamVLN-Trajectory-Data",
+      "revision": "dc61ee9b4e90aa7ba63c1163b2134df5610dccb9",
+      "split": "published_training_trajectories"
+    }
+  ],
+  "batch_size": 4,
+  "kv_pool_tokens": 128000,
+  "output_dir": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft",
+  "source_base_revision": "9c1f08078ae44b5e7864e7f01a8782a84da1e553",
+  "preload_rgb": true,
+  "draft_checkpoint": "/mnt/zhouzhenyuan/embodiinfer-optimization-20261010/draft/model-v1/draft.pt",
+  "preprocess_workers": 4,
+  "text_cache_size": 256,
+  "serial_draft": false,
+  "action_space": "r2r",
+  "quantization": {
+    "backend": "native",
+    "scaling_scheme": "tensorwise",
+    "ignored_layers": [
+      "text.layers.*.self_attn.*"
+    ]
+  }
+}
