@@ -111,6 +111,20 @@ and dataset**, with identical fixed episode IDs in each paired comparison.
 
 Both 500-episode comparisons completed and passed the primitive-trajectory audit.
 
+Relative to BF16, FP8 gained 57 successes and lost 45 on R2R; it gained 75
+and lost 68 on RxR. These sample differences do not establish noninferiority
+or lossless decoding.
+
+The initial RxR BF16 run exhausted GPU memory while growing persistent KV,
+after 65 episodes completed with inference and Habitat rendering on one GPU.
+The final BF16 result reruns all 500 episodes with inference on GPU0 and
+rendering on GPU1, preserving the model, configuration and full histories.
+All 65 earlier complete trajectories match the rerun exactly apart from timing;
+none were merged into the rerun. FP8 completed with inference and rendering
+together on GPU1. This device separation applies to navigation validation;
+the replay throughput below still uses two independent inference replicas.
+Failed-attempt evidence and the trajectory comparison are retained.
+
 Selection uses the first 500 entries of the pre-existing manifests. These
 begin with a scene-balanced pilot then use scene order for loading locality;
 **the 500-episode prefix is not a uniform random sample of the full split**.
