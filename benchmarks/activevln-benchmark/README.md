@@ -106,9 +106,10 @@ and dataset**, with identical fixed episode IDs in each paired comparison.
 | --- | --- | ---: | ---: | ---: | ---: |
 | R2R | BF16 | 500 | 230 | 46.00% | 41.42% |
 | R2R | FP8 | 500 | 242 | 48.40% | 42.69% |
+| RXR | BF16 | 500 | 204 | 40.80% | 33.24% |
+| RXR | FP8 | 500 | 211 | 42.20% | 34.18% |
 
-R2R is complete and audited. Corrected RxR replay and its 500-episode
-closed-loop comparison are still running or queued.
+Both 500-episode comparisons completed and passed the primitive-trajectory audit.
 
 Selection uses the first 500 entries of the pre-existing manifests. These
 begin with a scene-balanced pilot then use scene order for loading locality;
@@ -122,6 +123,13 @@ out of 3,669; 99 have no finite start-to-goal geodesic on the unchanged
 deployed navmesh. Their IDs and mesh hashes are preserved. No pose or goal
 was moved. Scores apply to the fixed 500 episodes, not the full validation
 split. The earlier failed 30-degree-prompt RxR pilot is not a valid SR result.
+
+Corrected RxR replay uses the official launcher's R2R prompt/15-degree profile:
+
+| Precision | Batch/GPU | Common-wall observations/s/GPU | Peak allocated GiB |
+| --- | ---: | ---: | ---: |
+| BF16 | 2 | 11.0211 | 19.243 |
+| FP8 | 2 | 12.1753 | 16.975 |
 
 Paired results, fixed episode IDs, scene counts, provenance and raw archive
 hashes are in [validation-500-evidence.json](results/4090-fp8-20261010/validation-500-evidence.json).
