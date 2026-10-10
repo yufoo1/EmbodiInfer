@@ -465,7 +465,9 @@ def generate_batched_draft_tokens(
             policy._text.embed_tokens(input_ids),
             positions,
             offsets,
-            ancestors=causal[None].expand(batch, -1, -1) if query > 1 else None,
+            # The split-attention fallback requires contiguous masks. A shared
+            # 2-D causal mask also broadcasts into captured per-row buffers.
+            ancestors=causal if query > 1 else None,
             write_lengths=writes,
         )
         node_logits = policy._lm_head(hidden[:count])

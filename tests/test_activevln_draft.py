@@ -28,7 +28,7 @@ def test_draft_checkpoint_preserves_logits_and_unknown_roots(tmp_path):
 
 @pytest.mark.parametrize("pooled", [False, True])
 @torch.inference_mode()
-def test_untrained_draft_preserves_greedy_tokens_scores_and_private_histories(pooled):
+def test_untrained_draft_preserves_greedy_tokens_scores_and_private_histories(pooled, monkeypatch):
     policy = _policy()
     policy.max_new_tokens = 9
     policy.repetition_penalty = 1.05
@@ -40,6 +40,17 @@ def test_untrained_draft_preserves_greedy_tokens_scores_and_private_histories(po
         kv_pool_tokens=256 if pooled else None,
         draft=model,
     )
+    original = runtime._text_forward
+
+    def checked_fallback(hidden, positions, offsets, bucket, ancestors=None):
+        # No graphs are captured here: this is also the path taken after KV
+        # pool growth invalidates graph executables on long GPU trajectories.
+        if ancestors is not None:
+            assert ancestors.is_contiguous()
+            assert ancestors.shape == (hidden.shape[1], hidden.shape[1])
+        return original(hidden, positions, offsets, bucket, ancestors)
+
+    monkeypatch.setattr(runtime, "_text_forward", checked_fallback)
     observations = [_observation("3 4"), _observation("6"), _observation("7 8 9")]
     references = [
         policy.decoder.generate_tokens(policy.encode_prefix(policy.collate([obs], [str(i)])))
