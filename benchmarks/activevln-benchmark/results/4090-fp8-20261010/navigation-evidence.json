@@ -1,0 +1,618 @@
+{
+  "schema": "activevln.fp8_navigation_evidence.v1",
+  "date": "2026-10-10",
+  "implementation_commit": "a99bd039e1274fd0122e769ee78d72ac058662e9",
+  "status": "R2R pilot audited; full R2R running; corrected RxR replay/pilot/eligible-set validation queued",
+  "r2r_pilot": {
+    "status": "audited",
+    "dataset": "r2r",
+    "protocol": {
+      "split": "val_unseen",
+      "languages": [
+        "English"
+      ],
+      "success": "predicted STOP and finite geodesic distance strictly below 3 m",
+      "max_primitive_steps": 500,
+      "max_model_turns": 120,
+      "forced_stop": false,
+      "forward_m": 0.25,
+      "turn_degrees": 15,
+      "rgb": [
+        640,
+        480
+      ],
+      "hfov": 90,
+      "camera_height_m": 1.25,
+      "agent_height_m": 1.5,
+      "agent_radius_m": 0.1,
+      "allow_sliding": true,
+      "seed": 42,
+      "invalid_action": "episode failure",
+      "history": "complete own generated history; reset only at episode boundary",
+      "controller": "barrier tensor batches with stable slots; refill on episode completion",
+      "deviations_from_upstream": "greedy; Habitat 0.2.4; no rotation/step forced STOP; RxR turns execute the requested physical degrees"
+    },
+    "baseline": {
+      "episodes": 48,
+      "successes": 22,
+      "sr": 0.4583333333333333,
+      "sr_wilson95": [
+        0.32575242292867446,
+        0.5970892545435019
+      ],
+      "spl": 0.40655550720309647
+    },
+    "candidate": {
+      "episodes": 48,
+      "successes": 22,
+      "sr": 0.4583333333333333,
+      "sr_wilson95": [
+        0.32575242292867446,
+        0.5970892545435019
+      ],
+      "spl": 0.37538885950692813
+    },
+    "gained": [
+      "1465",
+      "685",
+      "1381",
+      "822"
+    ],
+    "lost": [
+      "1104",
+      "346",
+      "291",
+      "1112"
+    ],
+    "sr_difference": 0.0,
+    "baseline_report_sha256": "2c7e948aed5665606d8dbf25201bc7887cbcf45dd3f9f429333d14e0f9d6955a",
+    "candidate_report_sha256": "cc35fda5a959ca5b16e8343b66e971c4959249188f6a023ff3a3f9835a8d2ebe",
+    "checks": [
+      "episode identities",
+      "paired initial images",
+      "physical action expansion",
+      "primitive-step count",
+      "travelled path length",
+      "STOP and final geodesic SR",
+      "SPL"
+    ],
+    "audit_sha256": "7e641ff81805e1305839e963ff29b1c68f223ac94e6c1716e7415883e9d0149e"
+  },
+  "rxr_correction": {
+    "official_commit": "3a0c63b00e4f42c828cc74c3554afce17641da60",
+    "official_launcher": "https://github.com/arvillion/ActiveVLN/blob/3a0c63b00e4f42c828cc74c3554afce17641da60/examples/vlnce/eval_rxr.sh",
+    "old_profile": "RxR checkpoint, rxr prompt, 30-degree strict actions",
+    "corrected_profile": "Same RxR checkpoint, r2r prompt and 15-degree strict actions as selected by upstream launcher; no upstream random action fallback or forced STOP",
+    "inference_source": "/mnt/zhouzhenyuan/activevln-fp8-20261010/source-v3",
+    "evaluation_source": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-evaluator-v3",
+    "original_english_episodes": 3669,
+    "eligible": 3570,
+    "excluded": 99,
+    "excluded_episode_ids": [
+      "10035",
+      "10039",
+      "10040",
+      "10554",
+      "10555",
+      "10556",
+      "10983",
+      "10984",
+      "10988",
+      "1207",
+      "1208",
+      "1209",
+      "1567",
+      "1568",
+      "1575",
+      "1723",
+      "1724",
+      "1725",
+      "1753",
+      "1754",
+      "1755",
+      "2359",
+      "2360",
+      "2367",
+      "2836",
+      "2837",
+      "2841",
+      "3154",
+      "3158",
+      "3159",
+      "4051",
+      "4052",
+      "4053",
+      "4351",
+      "4352",
+      "4353",
+      "5269",
+      "5273",
+      "5274",
+      "5356",
+      "5357",
+      "5361",
+      "5734",
+      "5741",
+      "5742",
+      "5800",
+      "5804",
+      "5805",
+      "6202",
+      "6203",
+      "6204",
+      "6718",
+      "6722",
+      "6723",
+      "6787",
+      "6794",
+      "6795",
+      "6892",
+      "6893",
+      "6894",
+      "7060",
+      "7061",
+      "7062",
+      "739",
+      "740",
+      "741",
+      "7654",
+      "7655",
+      "7656",
+      "7870",
+      "7871",
+      "7872",
+      "7948",
+      "7955",
+      "7956",
+      "8056",
+      "8057",
+      "8064",
+      "8131",
+      "8135",
+      "8136",
+      "8281",
+      "8282",
+      "8289",
+      "8356",
+      "8357",
+      "8358",
+      "928",
+      "929",
+      "930",
+      "9585",
+      "9592",
+      "9593",
+      "9936",
+      "9937",
+      "9944",
+      "9966",
+      "9967",
+      "9971"
+    ],
+    "manifest": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-eligible-manifest.json",
+    "manifest_sha256": "91ca4c6389210411968eee17a1776241363ab63ad2f60d7aff30c6d14b5a75fa",
+    "previous_attempt": "final-rxr-*-navigation-pilot-v2 failed on unreachable reset after 28/29 invalid-action episodes; not an SR measurement"
+  },
+  "dataset_normalization": {
+    "original": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-manifest.json",
+    "original_sha256": "e3a3eaab23101616db20aaffa283ba4fb74c0c45c0e4dc202a2e07261833ab30",
+    "normalized": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-manifest-jsonsafe.json",
+    "normalized_sha256": "3839620a6452bf7386e93dba81665b8e9bfc0d8e69c8ff9491384a3682f37a01",
+    "episodes": 3669,
+    "replaced_values": 5790,
+    "fields": [
+      "instruction.timed_instruction[].start_time",
+      "instruction.timed_instruction[].end_time"
+    ],
+    "operation": "Nonfinite unused audio timestamps become null; no episode, ordering, navigation input or metric change."
+  },
+  "connectivity": {
+    "r2r": {
+      "total": 1839,
+      "unreachable": 0,
+      "excluded_episode_ids": [],
+      "meshes": [
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.navmesh",
+          "sha256": "7f64fd59beee93adb11772256ebc0894ebb91024cd8504559f7ee904b80b4f49"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/8194nk5LbLH/8194nk5LbLH.navmesh",
+          "sha256": "888bbdf1f17cab353c06a143f753fec7ce1ce3dfae5919c0fafb4cbbfd5b0f06"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/EU6Fwq7SyZv/EU6Fwq7SyZv.navmesh",
+          "sha256": "1be0a640e0cfa0af6c01f633191b33a7e1fc58616d33c80b24830a7f0a054a6f"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/QUCTc6BB5sX/QUCTc6BB5sX.navmesh",
+          "sha256": "5550366a4b7ce8817c3ce4aa69ba21b2e0b30dce7e4075911f57f0528a2395cc"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/TbHJrupSAjP/TbHJrupSAjP.navmesh",
+          "sha256": "e02496af9408e4f04c88ac4bcb6f4cedf40651d14002b10fb34447b1d14332f0"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/X7HyMhZNoso/X7HyMhZNoso.navmesh",
+          "sha256": "3c41054a76a7a2de05ebf95fe73beb3b47b1e46ac0dfa84014d599aba67c5d40"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/Z6MFQCViBuw/Z6MFQCViBuw.navmesh",
+          "sha256": "aef479b2a94c230108e247d3b74e471df9cb7740da108bc7433c2feec0c5abaf"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/oLBMNvg9in8/oLBMNvg9in8.navmesh",
+          "sha256": "686e5c40f85d18d1035d130b401816913a4be251e719d8affded82b39a0ce7d5"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/pLe4wQe7qrG/pLe4wQe7qrG.navmesh",
+          "sha256": "f1965baab7a21fcf01d48e20279c04449503526419015750edf501678361d1e3"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/x8F5xyUWy9e/x8F5xyUWy9e.navmesh",
+          "sha256": "e1e8e8d367b2e722479189f49134b25d92a5b9352afc49b08f9d74f212dea75b"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/zsNo4HB9uLZ/zsNo4HB9uLZ.navmesh",
+          "sha256": "495495066a57c1eb662d7a3daa3c73f3889460695db148bd991044eef9b06c42"
+        }
+      ]
+    },
+    "rxr": {
+      "total": 3669,
+      "unreachable": 99,
+      "excluded_episode_ids": [
+        "5734",
+        "739",
+        "740",
+        "741",
+        "928",
+        "929",
+        "930",
+        "1207",
+        "1208",
+        "1209",
+        "1567",
+        "1568",
+        "1575",
+        "1723",
+        "1724",
+        "1725",
+        "1753",
+        "1754",
+        "1755",
+        "2359",
+        "2360",
+        "2367",
+        "2836",
+        "2837",
+        "2841",
+        "3154",
+        "3158",
+        "3159",
+        "4051",
+        "4052",
+        "4053",
+        "4351",
+        "4352",
+        "4353",
+        "5269",
+        "5273",
+        "5274",
+        "5356",
+        "5357",
+        "5361",
+        "5741",
+        "5742",
+        "5800",
+        "5804",
+        "5805",
+        "6202",
+        "6203",
+        "6204",
+        "6718",
+        "6722",
+        "6723",
+        "6787",
+        "6794",
+        "6795",
+        "6892",
+        "6893",
+        "6894",
+        "7060",
+        "7061",
+        "7062",
+        "7654",
+        "7655",
+        "7656",
+        "7870",
+        "7871",
+        "7872",
+        "7948",
+        "7955",
+        "7956",
+        "8056",
+        "8057",
+        "8064",
+        "8131",
+        "8135",
+        "8136",
+        "8281",
+        "8282",
+        "8289",
+        "8356",
+        "8357",
+        "8358",
+        "9585",
+        "9592",
+        "9593",
+        "9936",
+        "9937",
+        "9944",
+        "9966",
+        "9967",
+        "9971",
+        "10035",
+        "10039",
+        "10040",
+        "10554",
+        "10555",
+        "10556",
+        "10983",
+        "10984",
+        "10988"
+      ],
+      "meshes": [
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/2azQ1b91cZZ/2azQ1b91cZZ.navmesh",
+          "sha256": "7f64fd59beee93adb11772256ebc0894ebb91024cd8504559f7ee904b80b4f49"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/8194nk5LbLH/8194nk5LbLH.navmesh",
+          "sha256": "888bbdf1f17cab353c06a143f753fec7ce1ce3dfae5919c0fafb4cbbfd5b0f06"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/EU6Fwq7SyZv/EU6Fwq7SyZv.navmesh",
+          "sha256": "1be0a640e0cfa0af6c01f633191b33a7e1fc58616d33c80b24830a7f0a054a6f"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/QUCTc6BB5sX/QUCTc6BB5sX.navmesh",
+          "sha256": "5550366a4b7ce8817c3ce4aa69ba21b2e0b30dce7e4075911f57f0528a2395cc"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/TbHJrupSAjP/TbHJrupSAjP.navmesh",
+          "sha256": "e02496af9408e4f04c88ac4bcb6f4cedf40651d14002b10fb34447b1d14332f0"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/X7HyMhZNoso/X7HyMhZNoso.navmesh",
+          "sha256": "3c41054a76a7a2de05ebf95fe73beb3b47b1e46ac0dfa84014d599aba67c5d40"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/Z6MFQCViBuw/Z6MFQCViBuw.navmesh",
+          "sha256": "aef479b2a94c230108e247d3b74e471df9cb7740da108bc7433c2feec0c5abaf"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/oLBMNvg9in8/oLBMNvg9in8.navmesh",
+          "sha256": "686e5c40f85d18d1035d130b401816913a4be251e719d8affded82b39a0ce7d5"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/pLe4wQe7qrG/pLe4wQe7qrG.navmesh",
+          "sha256": "f1965baab7a21fcf01d48e20279c04449503526419015750edf501678361d1e3"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/x8F5xyUWy9e/x8F5xyUWy9e.navmesh",
+          "sha256": "e1e8e8d367b2e722479189f49134b25d92a5b9352afc49b08f9d74f212dea75b"
+        },
+        {
+          "path": "/mnt/zhouzhenyuan/datasets/scene_datasets/mp3d/zsNo4HB9uLZ/zsNo4HB9uLZ.navmesh",
+          "sha256": "495495066a57c1eb662d7a3daa3c73f3889460695db148bd991044eef9b06c42"
+        }
+      ]
+    }
+  },
+  "archive": {
+    "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/preliminary-evidence-20261010.tar.gz",
+    "bytes": 62375976,
+    "sha256": "a5a9936c97080c4304e92521ea846d6d343ae42886960d64ff0bbea6dc726a2c",
+    "files": [
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/audit.py",
+        "sha256": "7e641ff81805e1305839e963ff29b1c68f223ac94e6c1716e7415883e9d0149e",
+        "bytes": 5324
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/check_navmesh.py",
+        "sha256": "1b3e04ca60542b6d1265a459e93005a4ed61519dc0cb69d303bd8410d50f24c2",
+        "bytes": 2135
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/corrected-rxr-bf16-navigation-config.json",
+        "sha256": "12e1ae8a0ab436c3bb82770ee7de22106e7c227fab1adaeb2448c51c5103f321",
+        "bytes": 1811
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/corrected-rxr-bf16-replay-config.json",
+        "sha256": "1a255a5fefbaa69454bce5f9a76846011b3a07812f8b986f607d1a3aa6193ba0",
+        "bytes": 1811
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/corrected-rxr-fp8-navigation-config.json",
+        "sha256": "30124d6b1d32451b602a93dc4fdc31d5b4910acf2d392c27a3515ce0daf37667",
+        "bytes": 1961
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/corrected-rxr-fp8-replay-config.json",
+        "sha256": "1a97480366f86f4948a0fbbb09ff6292077492333fb161bcf0fbf5452c25c564",
+        "bytes": 1961
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/evaluate.py",
+        "sha256": "febab078eb24357093feb2ee299d27daf49bb09a72203e9a3b1c81d1fc26c89d",
+        "bytes": 14822
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-bf16-full-config.json",
+        "sha256": "e4f6941250e7e9e3fdedbe935a4f55c33c537b00c898e513dd352c595a9b0341",
+        "bytes": 1653
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-bf16-navigation-config.json",
+        "sha256": "cda210ff52795b80381abba2444faaf8a72734bf4397df9447309980f526ffca",
+        "bytes": 1653
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-fp8-full-config.json",
+        "sha256": "5f33b187da31a0c4918fb8e643295495da1b55f3e34cb3b4a1318774090342bf",
+        "bytes": 1803
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-fp8-navigation-config.json",
+        "sha256": "5f595808a79919320de14897191f5056988feb95b5c446af54406c3987953a22",
+        "bytes": 1803
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-bf16-full-config.json",
+        "sha256": "3aa27e0fae66ee802a87632603c5da48035f70fe1b6fa6cacc5f218fa627051a",
+        "bytes": 1651
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-bf16-navigation-config.json",
+        "sha256": "3aa187a577ab295e1480c0fc5f1cece2ec484dafea858189bfb836f74213f523",
+        "bytes": 1651
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-fp8-full-config.json",
+        "sha256": "bf922955bc0c3a887824571c249809a5c6071e5117dd26be15db79ddb9733aab",
+        "bytes": 1801
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-fp8-navigation-config.json",
+        "sha256": "01cf66b9b78c3eb648cfd7587d1f523f0612ebfe217ab29ed2d65431c883c680",
+        "bytes": 1801
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/habitat_worker.py",
+        "sha256": "3af11abca497867f02560707d5a1aaf450ef53fcfbdf7c6666a3b59362e16197",
+        "bytes": 6112
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/navmesh-connectivity.json",
+        "sha256": "b73759b2c6703534d51512b1e8802466b2ba8ac037db02c27ce38b099cd8461c",
+        "bytes": 77761
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/prepare_rxr_corrected.py",
+        "sha256": "981077be3360b1c14abaebd85546d2d9ef1a53b2eab60e81ffcfef76c641db30",
+        "bytes": 3121
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-bf16-full-config.json",
+        "sha256": "3c66b4e2d1bfee1d9fd6cde3065a18d484f130e71e5bbb53ba0fd3589c99dca1",
+        "bytes": 1620
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-bf16-navigation-config.json",
+        "sha256": "5e498b90e9f1776139f3c525f913a4c5e1843694cb481159d8a812d48920df40",
+        "bytes": 1620
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-bf16-smoke-config.json",
+        "sha256": "e5be44687cc71fbb421ed611f8d98489e9f7ab0ad21f7753def6016a7cc3dc0f",
+        "bytes": 1557
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-fp8-full-config.json",
+        "sha256": "3efe3de36b1cf9244e1a47a30f035a75b766422adeadb15c9d5222805aa23a69",
+        "bytes": 1770
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-fp8-navigation-config.json",
+        "sha256": "a46f0a4b7b52cddac361e2d803341e6a0a9d7a54659ffe36a5135deeac28138a",
+        "bytes": 1770
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-fp8-smoke-config.json",
+        "sha256": "233bea9c63af22da2263cca466b3dcb86601ed73a5669e419cb75ab17233d602",
+        "bytes": 1707
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-manifest.json",
+        "sha256": "c32e752c543decef3489d075577592214361b9911b5b8758a61874aeac53fbcc",
+        "bytes": 7775650
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-pilot-audit.json",
+        "sha256": "a56a44fe4d82811f3d168296471534c45ed3678b42d69df4d6b07440f3459dfc",
+        "bytes": 1926
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r_full.py",
+        "sha256": "480134703a44342236fea6ca70680d4641dc601319c65dfa3b10316818cde338",
+        "bytes": 2584
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-bf16-full-config.json",
+        "sha256": "60e53a4f9f97688e6e5ae5c965c1f2b73d32e3721b5591d06b4e323f3f86a666",
+        "bytes": 1618
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-bf16-navigation-config.json",
+        "sha256": "c99df74858d861622b709201ee32cd9ee5533394605dca0bbe4bc7566bcde0f0",
+        "bytes": 1618
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-correction.json",
+        "sha256": "ddbaa95e1613fbf4167764ea07dc5e0d72ffc102610fb36201926307a3c5d6b6",
+        "bytes": 2225
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-eligible-manifest.json",
+        "sha256": "91ca4c6389210411968eee17a1776241363ab63ad2f60d7aff30c6d14b5a75fa",
+        "bytes": 21671390
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-fp8-full-config.json",
+        "sha256": "14a118862829bfb7f06856356332a948735141661aa9c223e2ba25e1902f6a9c",
+        "bytes": 1768
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-fp8-navigation-config.json",
+        "sha256": "e367e4e40fa0ffe98fcfecb0db72c609775c7950e1d8c5886288ae43b3d50f42",
+        "bytes": 1768
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-manifest-jsonsafe.json",
+        "sha256": "3839620a6452bf7386e93dba81665b8e9bfc0d8e69c8ff9491384a3682f37a01",
+        "bytes": 22149151
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-manifest-normalization.json",
+        "sha256": "fe2c0be4036555f7d27cf6560e0f7305f3e0d0e2af77bf01b5d96d62fae30dca",
+        "bytes": 630
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr_corrected.py",
+        "sha256": "f79f0556b8a6163c634277de22389c36fbc0b900b6a1bf17108182982cdaf1f7",
+        "bytes": 4088
+      },
+      {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/validation.json",
+        "sha256": "a20af63779eaf5a03f58835b83700466412b52ca95589a2fbd2d2545ad7e7407",
+        "bytes": 512
+      }
+    ],
+    "scope": "Completed replay and pilot evidence, frozen source/configs/evaluator/draft, and explicit RxR rejected pilot diagnostics. Full validations are not included."
+  },
+  "numerical_scope": "Both arms use ordinary learned draft, not strict serial-reference BF16 verification; no claim that the draft preserves original BF16 SR.",
+  "evaluation_scope": "Separate closed-loop HTTP run with each model retaining its own observation/action history. Throughput claims exclude this HTTP/simulator execution.",
+  "limitations": [
+    "48-episode pilot does not establish noninferiority; SR equality masks four gained/four lost successes and lower FP8 SPL.",
+    "Greedy decoding, Habitat-Sim 0.2.4, strict action validation, and no forced STOP differ from the original evaluator.",
+    "Navigation query buckets=32/warmup=5; throughput query buckets=1/warmup=33.",
+    "RxR full eligible-set SR must report 3570/3669 coverage and 99 pre-inference geometry exclusions; these are not silently counted as model failures."
+  ],
+  "remote_job_state_files": [
+    "/mnt/zhouzhenyuan/activevln-fp8-20261010/r2r-full-state.json",
+    "/mnt/zhouzhenyuan/activevln-fp8-20261010/rxr-corrected-state.json"
+  ]
+}

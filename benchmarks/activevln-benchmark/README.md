@@ -46,6 +46,81 @@ advertises the configured R2R or RxR action contract. Closed-loop SR/SPL is
 measured by the downstream evaluator through HTTP, separately from replay
 throughput and token agreement.
 
+#### Measured FP8 replay and navigation validation (October 10)
+
+The final replay uses implementation `a99bd03`, two independent RTX 4090
+instances, Torch 2.10.0+cu128, Transformers 4.51.3 and the 16-token learned
+draft. Both precision profiles use ordinary draft verification
+(`serial_draft=false`), graphs, fused operators, split attention, parallel CPU
+preprocessing and text caching. Only the 108 text MLP projections change to
+native tensorwise FP8. All runs retained complete generated histories and
+completed without graph fallbacks or KV capacity growth.
+
+| Replay profile | Batch/GPU | Observations | BF16 wall observations/s/GPU | FP8 wall observations/s/GPU | BF16 peak allocated GiB | FP8 peak allocated GiB |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| R2R target, R2R prompt | 4 | 2,997 | 25.1244 | **28.5203** | 15.210 | 12.942 |
+| RxR target, experimental 30-degree prompt | 2 | 3,879 | 10.5024 | 11.5864 | 19.243 | 16.975 |
+
+Rates divide actual observations by the common wall interval and **two allocated
+GPUs**. They include CPU preprocessing, inference, action parsing, output
+audits/reporting and the slower shard tail; loading, capture, 33 warmup calls,
+disk image decoding, HTTP and simulation are excluded. R2R inference-interval
+rates alone were 25.6401 versus 29.0596/s/GPU. Each final profile is one short
+replay, not a sustained or multi-node throughput guarantee. The measured R2R
+common-wall gain is 13.52%; allocated peak savings are 2.268 GiB/GPU.
+
+These are lossy results: BF16 versus FP8 changed actions on 1,708/2,997 R2R
+observations and 2,613/3,879 experimental RxR observations. Each precision run
+retains its own generated history, so these counts are not comparisons from
+identical cached prefixes and do not measure navigation success.
+
+**RxR profile correction:** the pinned official
+[`eval_rxr.sh`](https://github.com/arvillion/ActiveVLN/blob/3a0c63b00e4f42c828cc74c3554afce17641da60/examples/vlnce/eval_rxr.sh)
+does not pass `--action-space`; its evaluator therefore uses the default **R2R
+prompt and 15-degree turns**, including with the RxR checkpoint. The 30-degree
+RxR replay above and earlier explicitly labelled RxR-action-space tables are
+retained as experimental profiles, not measurements of that official launcher.
+Corrected RxR replay and navigation runs select `action_space: "r2r"` with the
+RxR checkpoint. Dataset identity and model action profile are independent.
+
+Separate downstream Habitat evaluation, through the versioned HTTP API,
+completed a fixed scene-balanced R2R `val_unseen` pilot:
+
+| Precision (ordinary draft in both) | Episodes | Successes | SR | SPL |
+| --- | ---: | ---: | ---: | ---: |
+| BF16 | 48 | 22 | 45.83% | 40.66% |
+| FP8 | 48 | 22 | 45.83% | 37.54% |
+
+Four BF16 successes became FP8 failures and four failures became successes.
+The individual Wilson 95% SR interval is 32.58–59.71% in both arms. Equal pilot
+SR is not evidence of noninferiority or lossless decoding. Primitive actions,
+initial images, travelled distances, predicted STOP and final geodesic distances
+were independently audited. Success requires a model-predicted STOP within
+strictly 3 m; step/turn limits do not force a successful STOP.
+
+Full R2R validation is running on all 1,839 episodes. Corrected RxR replay,
+a paired pilot and all 3,570 geometrically evaluable English episodes are queued
+after it. The original RxR English set has 3,669 episodes; 99 have no finite
+start-to-goal geodesic on the unchanged deployed navmesh. Their IDs and mesh
+hashes are preserved, and this exclusion must accompany any RxR SR/SPL claim.
+No start pose or goal was moved. The earlier RxR pilot failed before completion
+and is not a valid SR result.
+
+This is a declared deployment evaluation, not exact paper reproduction:
+Habitat-Sim 0.2.4, greedy decoding, 640×480 RGB, 90-degree HFOV, 1.25 m camera,
+0.25 m forward steps, sliding enabled, 500 primitive-step/120 model-turn limits,
+and strict action validation without upstream random fallback or forced STOP.
+Navigation uses query buckets of 32 and five warmup calls; replay uses buckets
+of one and 33 warmup calls. BF16 and FP8 share settings within each comparison.
+
+The source passed 616 CPU tests (54 skipped, 80 deselected) and 44 targeted
+tests including CUDA FP8 checks; Ruff passed. See
+[`performance-evidence.json`](results/4090-fp8-20261010/performance-evidence.json)
+for complete configs, per-replica timings, memory, backend selection, output
+differences and report hashes, and
+[`navigation-evidence.json`](results/4090-fp8-20261010/navigation-evidence.json)
+for the pilot audit, evaluator provenance, exclusions and immutable raw archive.
+
 ### Serial-reference draft verification (opt-in)
 
 Complete R2R replay on **2 × RTX 4090, B=4 per GPU** now passes the strict
@@ -345,7 +420,10 @@ python benchmarks/activevln-benchmark/benchmark_multi_instance.py \
 ```
 
 For the RxR-trained checkpoint, select
-`Arvil/Qwen2.5-VL-3B_rl_rxr_4000_step350` and `action_space: "rxr"`.
+`Arvil/Qwen2.5-VL-3B_rl_rxr_4000_step350`. To match the pinned official RxR
+evaluation launcher's prompt/turn profile, use `action_space: "r2r"`.
+`action_space: "rxr"` explicitly selects the alternative 30-degree prompt;
+earlier measurements below identify when that alternative was used.
 Record the checkpoint revision independently from the dataset revision.
 
 The first 48 numeric episodes are assigned round-robin to instances, preserving

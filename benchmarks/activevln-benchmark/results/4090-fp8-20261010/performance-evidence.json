@@ -1,0 +1,1794 @@
+{
+  "schema": "activevln.fp8_evidence.v1",
+  "date": "2026-10-10",
+  "implementation_commit": "a99bd039e1274fd0122e769ee78d72ac058662e9",
+  "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+  "source": "/mnt/zhouzhenyuan/activevln-fp8-20261010/source-v3",
+  "hardware": {
+    "gpus": 2,
+    "model": "NVIDIA GeForce RTX 4090",
+    "vram_gib": 24,
+    "power_limit_watts": 450,
+    "driver": "580.82.07"
+  },
+  "profile": {
+    "torch": "2.10.0+cu128",
+    "transformers": "4.51.3",
+    "triton": "3.6.0",
+    "cublas": "12.8.4.1",
+    "base_dtype": "bfloat16",
+    "fp8_weight_dtype": "float8_e4m3fn",
+    "scaling": "dynamic activation tensorwise; stored tensorwise weight scale",
+    "backend": "native",
+    "quantized_projections": 108,
+    "quantized_modules": "text MLP gate/up/down only",
+    "unquantized_modules": "vision, attention projections, embeddings, normalization, lm_head",
+    "serial_draft": false,
+    "seed": 42,
+    "warmup_batch_calls": 33,
+    "repeats_per_run": 1
+  },
+  "timing": {
+    "inference": "Decoded CPU RGB through CPU action parsing; includes vision, text prefill/decode and private KV state.",
+    "common_wall": "Same concurrent replay plus output audits, periodic reporting and slower replica tail.",
+    "exclusions": [
+      "disk image decode",
+      "model load",
+      "graph capture",
+      "warmup",
+      "HTTP",
+      "simulator"
+    ],
+    "per_gpu_formula": "actual unique observations / common wall seconds / 2 allocated GPUs"
+  },
+  "limitations": [
+    "FP8 is lossy. Ordinary learned verification is not admitted as serial-greedy numerical equivalence.",
+    "Each final profile is one short full replay, not a sustained, network or multi-node SLO.",
+    "RxR uses its own checkpoint and an experimental 30-degree prompt. The pinned official eval_rxr.sh actually uses the default R2R prompt/15-degree turns; corrected replay is queued separately. This historical profile is not the official launcher configuration.",
+    "Both BF16 and FP8 baselines use the same learned draft trained with the R2R BF16 target; no RxR- or FP8-specific draft retraining.",
+    "SR/SPL comes from separate closed-loop evaluation; token agreement does not certify task accuracy.",
+    "B4 RxR previously failed on a noncontiguous draft mask after KV growth, not OOM. Fix a99bd03 is used here; B2 retains long-history/simulator memory headroom."
+  ],
+  "validation": {
+    "source": "/mnt/zhouzhenyuan/activevln-fp8-20261010/source-v3",
+    "cpu": {
+      "passed": 616,
+      "skipped": 54,
+      "deselected": 80,
+      "seconds": 105.76
+    },
+    "targeted_including_cuda": {
+      "passed": 44,
+      "seconds": 6.89,
+      "files": [
+        "test_fp8_activation.py",
+        "test_activevln_fp8.py",
+        "test_activevln_batch_serving.py",
+        "test_activevln_draft.py",
+        "test_activevln_serial_draft.py"
+      ]
+    },
+    "ruff_check": "passed",
+    "ruff_format": "236 files already formatted"
+  },
+  "runs": [
+    {
+      "name": "final-r2r-bf16-dual",
+      "dataset": "r2r",
+      "precision": "bf16",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-bf16-dual/summary.json",
+        "bytes": 3110,
+        "sha256": "53b6c14cc1ad2084267a478fb534313b6fdc3de72bf651de61253e9390900800"
+      },
+      "config_file": "r2r-bf16-replay-config.json",
+      "batch_per_gpu": 4,
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 59.643148604,
+        "observations_per_second": 50.24885624162043,
+        "aggregate_amortized_ms_per_observation": 19.900950485151817,
+        "per_instance_amortized_ms_per_observation": 39.00140945278612,
+        "per_instance_observations_per_second": 25.640099012590007,
+        "request_latency_ms": {
+          "mean": 149.76013625658993,
+          "p50": 148.221331,
+          "p95": 179.96708039999996,
+          "p99": 198.900584
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 0.764336,
+        "replica_inference_rates_sum": 51.28407414365799,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_allocated_gpu": 25.124428120810215,
+      "peak_allocated_gib": 15.20963716506958,
+      "parsed_invalid_rows": 0,
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-bf16-dual/replica-0.json",
+            "bytes": 722053,
+            "sha256": "b5ca82c7afe157fe182de253835cf7ace65cbb7c569cde526e720859bc79ab8c"
+          },
+          "observations": 1485,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 1,
+              "frames": 40
+            },
+            {
+              "episode_id": 3,
+              "frames": 40
+            },
+            {
+              "episode_id": 5,
+              "frames": 48
+            },
+            {
+              "episode_id": 7,
+              "frames": 53
+            },
+            {
+              "episode_id": 9,
+              "frames": 53
+            },
+            {
+              "episode_id": 11,
+              "frames": 100
+            },
+            {
+              "episode_id": 13,
+              "frames": 72
+            },
+            {
+              "episode_id": 15,
+              "frames": 72
+            },
+            {
+              "episode_id": 17,
+              "frames": 59
+            },
+            {
+              "episode_id": 19,
+              "frames": 58
+            },
+            {
+              "episode_id": 21,
+              "frames": 58
+            },
+            {
+              "episode_id": 23,
+              "frames": 53
+            },
+            {
+              "episode_id": 25,
+              "frames": 70
+            },
+            {
+              "episode_id": 27,
+              "frames": 70
+            },
+            {
+              "episode_id": 29,
+              "frames": 46
+            },
+            {
+              "episode_id": 31,
+              "frames": 52
+            },
+            {
+              "episode_id": 33,
+              "frames": 52
+            },
+            {
+              "episode_id": 35,
+              "frames": 67
+            },
+            {
+              "episode_id": 37,
+              "frames": 36
+            },
+            {
+              "episode_id": 39,
+              "frames": 36
+            },
+            {
+              "episode_id": 41,
+              "frames": 68
+            },
+            {
+              "episode_id": 43,
+              "frames": 105
+            },
+            {
+              "episode_id": 45,
+              "frames": 105
+            },
+            {
+              "episode_id": 47,
+              "frames": 72
+            }
+          ],
+          "selection_sha256": "b217e1416df91b37cb74aeedf6bc2b3fae40696f4097dfd18c78c6fcf82f5e74",
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 151.0349850899743,
+              "p50": 150.68713,
+              "p95": 180.02920519999998,
+              "p99": 193.82018736000003
+            },
+            "batch_forward_ms": {
+              "mean": 130.46105233676093,
+              "p50": 129.774086,
+              "p95": 159.26490619999998,
+              "p99": 171.01102808
+            },
+            "batch_prefill_ms": {
+              "mean": 89.33222197505687
+            },
+            "batch_decode_ms": {
+              "mean": 41.088414042651806
+            },
+            "amortized_e2e_ms_per_observation": 39.5640465993266,
+            "amortized_forward_ms_per_observation": 34.174646032996634,
+            "observations_per_second": 25.27547321251564
+          },
+          "memory": {
+            "peak_allocated_bytes": 16331223552,
+            "peak_reserved_bytes": 17645436928,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 132,
+            "episode_id": 1
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 1161,
+            "draft_proposed_tokens": 49065,
+            "draft_accepted_tokens": 22494,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000
+          },
+          "quantization": {
+            "method": null,
+            "converted_layers": 0,
+            "resolved_backends": []
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-bf16-dual/replica-1.json",
+            "bytes": 731970,
+            "sha256": "a898b3c99c1694515ead77da187e94f5f3029c0f65c4506830ce8f564aa7d8f9"
+          },
+          "observations": 1512,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 2,
+              "frames": 40
+            },
+            {
+              "episode_id": 4,
+              "frames": 48
+            },
+            {
+              "episode_id": 6,
+              "frames": 48
+            },
+            {
+              "episode_id": 8,
+              "frames": 53
+            },
+            {
+              "episode_id": 10,
+              "frames": 100
+            },
+            {
+              "episode_id": 12,
+              "frames": 100
+            },
+            {
+              "episode_id": 14,
+              "frames": 72
+            },
+            {
+              "episode_id": 16,
+              "frames": 59
+            },
+            {
+              "episode_id": 18,
+              "frames": 59
+            },
+            {
+              "episode_id": 20,
+              "frames": 58
+            },
+            {
+              "episode_id": 22,
+              "frames": 53
+            },
+            {
+              "episode_id": 24,
+              "frames": 53
+            },
+            {
+              "episode_id": 26,
+              "frames": 70
+            },
+            {
+              "episode_id": 28,
+              "frames": 46
+            },
+            {
+              "episode_id": 30,
+              "frames": 46
+            },
+            {
+              "episode_id": 32,
+              "frames": 52
+            },
+            {
+              "episode_id": 34,
+              "frames": 67
+            },
+            {
+              "episode_id": 36,
+              "frames": 67
+            },
+            {
+              "episode_id": 38,
+              "frames": 36
+            },
+            {
+              "episode_id": 40,
+              "frames": 68
+            },
+            {
+              "episode_id": 42,
+              "frames": 68
+            },
+            {
+              "episode_id": 44,
+              "frames": 105
+            },
+            {
+              "episode_id": 46,
+              "frames": 72
+            },
+            {
+              "episode_id": 48,
+              "frames": 72
+            }
+          ],
+          "selection_sha256": "165a64b29ced23e8958d9b9afa6b0a733bd2d2300d2d56eefb7a5a05eadb70bc",
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 146.80458315656566,
+              "p50": 145.3769,
+              "p95": 178.539696,
+              "p99": 193.90295320000007
+            },
+            "batch_forward_ms": {
+              "mean": 126.5713457020202,
+              "p50": 124.9058615,
+              "p95": 157.40712374999998,
+              "p99": 173.69119990000007
+            },
+            "batch_prefill_ms": {
+              "mean": 86.09562945125079
+            },
+            "batch_decode_ms": {
+              "mean": 40.43529465704253
+            },
+            "amortized_e2e_ms_per_observation": 38.448819398148146,
+            "amortized_forward_ms_per_observation": 33.14963816005291,
+            "observations_per_second": 26.008600931142354
+          },
+          "memory": {
+            "peak_allocated_bytes": 16204398080,
+            "peak_reserved_bytes": 17205035008,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 132,
+            "episode_id": 2
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 1156,
+            "draft_proposed_tokens": 48630,
+            "draft_accepted_tokens": 22596,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000
+          },
+          "quantization": {
+            "method": null,
+            "converted_layers": 0,
+            "resolved_backends": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "final-r2r-fp8-dual",
+      "dataset": "r2r",
+      "precision": "fp8",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-fp8-dual/summary.json",
+        "bytes": 3264,
+        "sha256": "92ae976b77e0590f59496704d37cabec849e29ff4768c0e95be1f2f3388f5a96"
+      },
+      "config_file": "r2r-fp8-replay-config.json",
+      "batch_per_gpu": 4,
+      "metrics": {
+        "status": "complete",
+        "observations": 2997,
+        "episodes": 48,
+        "wall_seconds": 52.541524228,
+        "observations_per_second": 57.04059872710855,
+        "aggregate_amortized_ms_per_observation": 17.53137278211545,
+        "per_instance_amortized_ms_per_observation": 34.41201136269603,
+        "per_instance_observations_per_second": 29.05962076613863,
+        "request_latency_ms": {
+          "mean": 132.02309976810145,
+          "p50": 130.828567,
+          "p95": 158.197092,
+          "p99": 168.15508
+        },
+        "mean_batch_occupancy": 3.8178343949044584,
+        "start_skew_ms": 6.966477,
+        "replica_inference_rates_sum": 58.118160869105694,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_allocated_gpu": 28.520299363554276,
+      "peak_allocated_gib": 12.942110538482666,
+      "parsed_invalid_rows": 0,
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-fp8-dual/replica-0.json",
+            "bytes": 734620,
+            "sha256": "19efa9cdcc2207a94e1a155ef8147f1ffbc32756c0e444f7122d2eeb420023c0"
+          },
+          "observations": 1485,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 1,
+              "frames": 40
+            },
+            {
+              "episode_id": 3,
+              "frames": 40
+            },
+            {
+              "episode_id": 5,
+              "frames": 48
+            },
+            {
+              "episode_id": 7,
+              "frames": 53
+            },
+            {
+              "episode_id": 9,
+              "frames": 53
+            },
+            {
+              "episode_id": 11,
+              "frames": 100
+            },
+            {
+              "episode_id": 13,
+              "frames": 72
+            },
+            {
+              "episode_id": 15,
+              "frames": 72
+            },
+            {
+              "episode_id": 17,
+              "frames": 59
+            },
+            {
+              "episode_id": 19,
+              "frames": 58
+            },
+            {
+              "episode_id": 21,
+              "frames": 58
+            },
+            {
+              "episode_id": 23,
+              "frames": 53
+            },
+            {
+              "episode_id": 25,
+              "frames": 70
+            },
+            {
+              "episode_id": 27,
+              "frames": 70
+            },
+            {
+              "episode_id": 29,
+              "frames": 46
+            },
+            {
+              "episode_id": 31,
+              "frames": 52
+            },
+            {
+              "episode_id": 33,
+              "frames": 52
+            },
+            {
+              "episode_id": 35,
+              "frames": 67
+            },
+            {
+              "episode_id": 37,
+              "frames": 36
+            },
+            {
+              "episode_id": 39,
+              "frames": 36
+            },
+            {
+              "episode_id": 41,
+              "frames": 68
+            },
+            {
+              "episode_id": 43,
+              "frames": 105
+            },
+            {
+              "episode_id": 45,
+              "frames": 105
+            },
+            {
+              "episode_id": 47,
+              "frames": 72
+            }
+          ],
+          "selection_sha256": "b217e1416df91b37cb74aeedf6bc2b3fae40696f4097dfd18c78c6fcf82f5e74",
+          "metrics": {
+            "batches": 389,
+            "observations": 1485,
+            "mean_batch_occupancy": 3.8174807197943443,
+            "batch_e2e_ms": {
+              "mean": 132.13699250385605,
+              "p50": 132.040548,
+              "p95": 158.71277560000001,
+              "p99": 167.29964868000002
+            },
+            "batch_forward_ms": {
+              "mean": 112.0110913933162,
+              "p50": 111.472589,
+              "p95": 137.6874494,
+              "p99": 146.44452056
+            },
+            "batch_prefill_ms": {
+              "mean": 77.2394219327402
+            },
+            "batch_decode_ms": {
+              "mean": 34.73078357039503
+            },
+            "amortized_e2e_ms_per_observation": 34.613663356228955,
+            "amortized_forward_ms_per_observation": 29.341625960942764,
+            "observations_per_second": 28.890325467964182
+          },
+          "memory": {
+            "peak_allocated_bytes": 13896485376,
+            "peak_reserved_bytes": 15212740608,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 132,
+            "episode_id": 1
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 1192,
+            "draft_proposed_tokens": 50325,
+            "draft_accepted_tokens": 22543,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000
+          },
+          "quantization": {
+            "method": "fp8",
+            "converted_layers": 108,
+            "resolved_backends": [
+              "native"
+            ]
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-r2r-fp8-dual/replica-1.json",
+            "bytes": 745388,
+            "sha256": "e9d861708ff0747d6e539ad86865765ab96c184179912550c248d34d37abe7c2"
+          },
+          "observations": 1512,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 2,
+              "frames": 40
+            },
+            {
+              "episode_id": 4,
+              "frames": 48
+            },
+            {
+              "episode_id": 6,
+              "frames": 48
+            },
+            {
+              "episode_id": 8,
+              "frames": 53
+            },
+            {
+              "episode_id": 10,
+              "frames": 100
+            },
+            {
+              "episode_id": 12,
+              "frames": 100
+            },
+            {
+              "episode_id": 14,
+              "frames": 72
+            },
+            {
+              "episode_id": 16,
+              "frames": 59
+            },
+            {
+              "episode_id": 18,
+              "frames": 59
+            },
+            {
+              "episode_id": 20,
+              "frames": 58
+            },
+            {
+              "episode_id": 22,
+              "frames": 53
+            },
+            {
+              "episode_id": 24,
+              "frames": 53
+            },
+            {
+              "episode_id": 26,
+              "frames": 70
+            },
+            {
+              "episode_id": 28,
+              "frames": 46
+            },
+            {
+              "episode_id": 30,
+              "frames": 46
+            },
+            {
+              "episode_id": 32,
+              "frames": 52
+            },
+            {
+              "episode_id": 34,
+              "frames": 67
+            },
+            {
+              "episode_id": 36,
+              "frames": 67
+            },
+            {
+              "episode_id": 38,
+              "frames": 36
+            },
+            {
+              "episode_id": 40,
+              "frames": 68
+            },
+            {
+              "episode_id": 42,
+              "frames": 68
+            },
+            {
+              "episode_id": 44,
+              "frames": 105
+            },
+            {
+              "episode_id": 46,
+              "frames": 72
+            },
+            {
+              "episode_id": 48,
+              "frames": 72
+            }
+          ],
+          "selection_sha256": "165a64b29ced23e8958d9b9afa6b0a733bd2d2300d2d56eefb7a5a05eadb70bc",
+          "metrics": {
+            "batches": 396,
+            "observations": 1512,
+            "mean_batch_occupancy": 3.8181818181818183,
+            "batch_e2e_ms": {
+              "mean": 130.63512113636364,
+              "p50": 129.3318995,
+              "p95": 156.96809525,
+              "p99": 168.35471350000003
+            },
+            "batch_forward_ms": {
+              "mean": 110.03054049242425,
+              "p50": 108.64175,
+              "p95": 136.364103,
+              "p99": 148.86872245000006
+            },
+            "batch_prefill_ms": {
+              "mean": 74.92938801736543
+            },
+            "batch_decode_ms": {
+              "mean": 35.060537865667634
+            },
+            "amortized_e2e_ms_per_observation": 34.213960297619046,
+            "amortized_forward_ms_per_observation": 28.817522509920636,
+            "observations_per_second": 29.22783540114151
+          },
+          "memory": {
+            "peak_allocated_bytes": 13769668096,
+            "peak_reserved_bytes": 15504244736,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 132,
+            "episode_id": 2
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 1218,
+            "draft_proposed_tokens": 50550,
+            "draft_accepted_tokens": 22723,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 4,
+            "kv_pool_tokens": 128000
+          },
+          "quantization": {
+            "method": "fp8",
+            "converted_layers": 108,
+            "resolved_backends": [
+              "native"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "final-rxr-bf16-dual",
+      "dataset": "rxr",
+      "precision": "bf16",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-bf16-dual/summary.json",
+        "bytes": 3100,
+        "sha256": "518af9a8f7aa9ce8edd2689d17c9eb9bc17259980a554c7412fe3e40123f8ca6"
+      },
+      "config_file": "rxr-bf16-replay-config.json",
+      "batch_per_gpu": 2,
+      "metrics": {
+        "status": "complete",
+        "observations": 3879,
+        "episodes": 48,
+        "wall_seconds": 184.672137808,
+        "observations_per_second": 21.0047928509547,
+        "aggregate_amortized_ms_per_observation": 47.60818195617427,
+        "per_instance_amortized_ms_per_observation": 80.80657996261924,
+        "per_instance_observations_per_second": 12.375229844680911,
+        "request_latency_ms": {
+          "mean": 161.17258382959525,
+          "p50": 149.56726,
+          "p95": 259.0165538,
+          "p99": 297.832618
+        },
+        "mean_batch_occupancy": 1.9902514109799898,
+        "start_skew_ms": 7.389235,
+        "replica_inference_rates_sum": 25.101756743969414,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_allocated_gpu": 10.50239642547735,
+      "peak_allocated_gib": 19.24256658554077,
+      "parsed_invalid_rows": 0,
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-bf16-dual/replica-0.json",
+            "bytes": 1136662,
+            "sha256": "7fc15f30875e013bd4b7bcb5f525d63d7f92bde64c4015adb9f2c4a8bdd1031a"
+          },
+          "observations": 2091,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 1,
+              "frames": 22
+            },
+            {
+              "episode_id": 6,
+              "frames": 22
+            },
+            {
+              "episode_id": 14,
+              "frames": 50
+            },
+            {
+              "episode_id": 19,
+              "frames": 126
+            },
+            {
+              "episode_id": 27,
+              "frames": 126
+            },
+            {
+              "episode_id": 35,
+              "frames": 101
+            },
+            {
+              "episode_id": 37,
+              "frames": 73
+            },
+            {
+              "episode_id": 39,
+              "frames": 73
+            },
+            {
+              "episode_id": 53,
+              "frames": 63
+            },
+            {
+              "episode_id": 55,
+              "frames": 75
+            },
+            {
+              "episode_id": 57,
+              "frames": 75
+            },
+            {
+              "episode_id": 71,
+              "frames": 20
+            },
+            {
+              "episode_id": 73,
+              "frames": 147
+            },
+            {
+              "episode_id": 75,
+              "frames": 147
+            },
+            {
+              "episode_id": 86,
+              "frames": 88
+            },
+            {
+              "episode_id": 91,
+              "frames": 136
+            },
+            {
+              "episode_id": 93,
+              "frames": 136
+            },
+            {
+              "episode_id": 101,
+              "frames": 65
+            },
+            {
+              "episode_id": 112,
+              "frames": 89
+            },
+            {
+              "episode_id": 117,
+              "frames": 89
+            },
+            {
+              "episode_id": 122,
+              "frames": 65
+            },
+            {
+              "episode_id": 127,
+              "frames": 130
+            },
+            {
+              "episode_id": 129,
+              "frames": 130
+            },
+            {
+              "episode_id": 137,
+              "frames": 43
+            }
+          ],
+          "selection_sha256": "eeab930989a80cafc7e5c195b2121c7ff00549e071d896283b8a1db3c32089d9",
+          "metrics": {
+            "batches": 1049,
+            "observations": 2091,
+            "mean_batch_occupancy": 1.9933269780743565,
+            "batch_e2e_ms": {
+              "mean": 173.74444682173495,
+              "p50": 169.389573,
+              "p95": 259.66495299999997,
+              "p99": 286.47661412
+            },
+            "batch_forward_ms": {
+              "mean": 159.8521585376549,
+              "p50": 156.085313,
+              "p95": 245.8537201999999,
+              "p99": 272.67970784
+            },
+            "batch_prefill_ms": {
+              "mean": 110.8437052636742
+            },
+            "batch_decode_ms": {
+              "mean": 48.97049483943827
+            },
+            "amortized_e2e_ms_per_observation": 87.16304386226685,
+            "amortized_forward_ms_per_observation": 80.19364624868484,
+            "observations_per_second": 11.472752162948535
+          },
+          "memory": {
+            "peak_allocated_bytes": 20355114496,
+            "peak_reserved_bytes": 22005415936,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 66,
+            "episode_id": 14
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 3810,
+            "draft_proposed_tokens": 91875,
+            "draft_accepted_tokens": 33288,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 2,
+            "kv_pool_tokens": 192000
+          },
+          "quantization": {
+            "method": null,
+            "converted_layers": 0,
+            "resolved_backends": []
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-bf16-dual/replica-1.json",
+            "bytes": 971938,
+            "sha256": "07ac922c3470c598d0e0d524c668c7d75ed4cd28412d9cc7c035f88c5baec83b"
+          },
+          "observations": 1788,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 5,
+              "frames": 22
+            },
+            {
+              "episode_id": 13,
+              "frames": 50
+            },
+            {
+              "episode_id": 18,
+              "frames": 50
+            },
+            {
+              "episode_id": 20,
+              "frames": 126
+            },
+            {
+              "episode_id": 31,
+              "frames": 101
+            },
+            {
+              "episode_id": 36,
+              "frames": 101
+            },
+            {
+              "episode_id": 38,
+              "frames": 73
+            },
+            {
+              "episode_id": 52,
+              "frames": 63
+            },
+            {
+              "episode_id": 54,
+              "frames": 63
+            },
+            {
+              "episode_id": 56,
+              "frames": 75
+            },
+            {
+              "episode_id": 64,
+              "frames": 20
+            },
+            {
+              "episode_id": 72,
+              "frames": 20
+            },
+            {
+              "episode_id": 74,
+              "frames": 147
+            },
+            {
+              "episode_id": 85,
+              "frames": 88
+            },
+            {
+              "episode_id": 87,
+              "frames": 88
+            },
+            {
+              "episode_id": 92,
+              "frames": 136
+            },
+            {
+              "episode_id": 100,
+              "frames": 65
+            },
+            {
+              "episode_id": 102,
+              "frames": 65
+            },
+            {
+              "episode_id": 113,
+              "frames": 89
+            },
+            {
+              "episode_id": 121,
+              "frames": 65
+            },
+            {
+              "episode_id": 123,
+              "frames": 65
+            },
+            {
+              "episode_id": 128,
+              "frames": 130
+            },
+            {
+              "episode_id": 136,
+              "frames": 43
+            },
+            {
+              "episode_id": 138,
+              "frames": 43
+            }
+          ],
+          "selection_sha256": "736b472ab6764c5f74d574a4c22ef2c37aed46cbcb39d4562247fafaf88941a0",
+          "metrics": {
+            "batches": 900,
+            "observations": 1788,
+            "mean_batch_occupancy": 1.9866666666666666,
+            "batch_e2e_ms": {
+              "mean": 145.76755439888888,
+              "p50": 133.9294365,
+              "p95": 254.18798464999998,
+              "p99": 316.79002127
+            },
+            "batch_forward_ms": {
+              "mean": 131.8040446388889,
+              "p50": 119.7804615,
+              "p95": 239.69454215,
+              "p99": 302.41573136999995
+            },
+            "batch_prefill_ms": {
+              "mean": 83.7125809733073
+            },
+            "batch_decode_ms": {
+              "mean": 48.05319387859768
+            },
+            "amortized_e2e_ms_per_observation": 73.3729300665548,
+            "amortized_forward_ms_per_observation": 66.3443177712528,
+            "observations_per_second": 13.62900458102088
+          },
+          "memory": {
+            "peak_allocated_bytes": 20661548544,
+            "peak_reserved_bytes": 22613590016,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 66,
+            "episode_id": 13
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 3393,
+            "draft_proposed_tokens": 79260,
+            "draft_accepted_tokens": 27799,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 2,
+            "kv_pool_tokens": 192000
+          },
+          "quantization": {
+            "method": null,
+            "converted_layers": 0,
+            "resolved_backends": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "final-rxr-fp8-dual",
+      "dataset": "rxr",
+      "precision": "fp8",
+      "summary": {
+        "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-fp8-dual/summary.json",
+        "bytes": 3275,
+        "sha256": "e5a9e23a5ba05027c82299b8f4a98ce1b79b151217b70873a4f7cdb0ba8138f9"
+      },
+      "config_file": "rxr-fp8-replay-config.json",
+      "batch_per_gpu": 2,
+      "metrics": {
+        "status": "complete",
+        "observations": 3879,
+        "episodes": 48,
+        "wall_seconds": 167.394129375,
+        "observations_per_second": 23.172855669927223,
+        "aggregate_amortized_ms_per_observation": 43.153938998453214,
+        "per_instance_amortized_ms_per_observation": 72.19494124207269,
+        "per_instance_observations_per_second": 13.851386022283164,
+        "request_latency_ms": {
+          "mean": 143.98308412193865,
+          "p50": 129.953927,
+          "p95": 241.08663099999998,
+          "p99": 285.332703
+        },
+        "mean_batch_occupancy": 1.9902514109799898,
+        "start_skew_ms": 3.258259,
+        "replica_inference_rates_sum": 28.208755375822864,
+        "timing_boundary": "Concurrent preloaded-RGB replay, after barrier and warmup, including CPU dispatch, inference, action parsing, output auditing, periodic reporting and the slower replica tail. Excludes loading, capture, disk image decoding, HTTP and simulator time."
+      },
+      "wall_observations_per_second_per_allocated_gpu": 11.586427834963612,
+      "peak_allocated_gib": 16.975038528442383,
+      "parsed_invalid_rows": 0,
+      "replicas": [
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-fp8-dual/replica-0.json",
+            "bytes": 1154267,
+            "sha256": "4ecb67fcfeec2d9d581f1b5385d623d12fb168b8c93761ee16d9c40b522f4159"
+          },
+          "observations": 2091,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 1,
+              "frames": 22
+            },
+            {
+              "episode_id": 6,
+              "frames": 22
+            },
+            {
+              "episode_id": 14,
+              "frames": 50
+            },
+            {
+              "episode_id": 19,
+              "frames": 126
+            },
+            {
+              "episode_id": 27,
+              "frames": 126
+            },
+            {
+              "episode_id": 35,
+              "frames": 101
+            },
+            {
+              "episode_id": 37,
+              "frames": 73
+            },
+            {
+              "episode_id": 39,
+              "frames": 73
+            },
+            {
+              "episode_id": 53,
+              "frames": 63
+            },
+            {
+              "episode_id": 55,
+              "frames": 75
+            },
+            {
+              "episode_id": 57,
+              "frames": 75
+            },
+            {
+              "episode_id": 71,
+              "frames": 20
+            },
+            {
+              "episode_id": 73,
+              "frames": 147
+            },
+            {
+              "episode_id": 75,
+              "frames": 147
+            },
+            {
+              "episode_id": 86,
+              "frames": 88
+            },
+            {
+              "episode_id": 91,
+              "frames": 136
+            },
+            {
+              "episode_id": 93,
+              "frames": 136
+            },
+            {
+              "episode_id": 101,
+              "frames": 65
+            },
+            {
+              "episode_id": 112,
+              "frames": 89
+            },
+            {
+              "episode_id": 117,
+              "frames": 89
+            },
+            {
+              "episode_id": 122,
+              "frames": 65
+            },
+            {
+              "episode_id": 127,
+              "frames": 130
+            },
+            {
+              "episode_id": 129,
+              "frames": 130
+            },
+            {
+              "episode_id": 137,
+              "frames": 43
+            }
+          ],
+          "selection_sha256": "eeab930989a80cafc7e5c195b2121c7ff00549e071d896283b8a1db3c32089d9",
+          "metrics": {
+            "batches": 1049,
+            "observations": 2091,
+            "mean_batch_occupancy": 1.9933269780743565,
+            "batch_e2e_ms": {
+              "mean": 157.19708463584365,
+              "p50": 149.507689,
+              "p95": 242.8065901999999,
+              "p99": 275.70517431999997
+            },
+            "batch_forward_ms": {
+              "mean": 143.08808536892278,
+              "p50": 135.163488,
+              "p95": 229.31781859999984,
+              "p99": 262.22758727999997
+            },
+            "batch_prefill_ms": {
+              "mean": 101.20547999917495
+            },
+            "batch_decode_ms": {
+              "mean": 41.842541087344216
+            },
+            "amortized_e2e_ms_per_observation": 78.86166512816834,
+            "amortized_forward_ms_per_observation": 71.78354928359636,
+            "observations_per_second": 12.680432227429765
+          },
+          "memory": {
+            "peak_allocated_bytes": 17920380416,
+            "peak_reserved_bytes": 19425918976,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 66,
+            "episode_id": 14
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 3900,
+            "draft_proposed_tokens": 94425,
+            "draft_accepted_tokens": 33966,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 2,
+            "kv_pool_tokens": 192000
+          },
+          "quantization": {
+            "method": "fp8",
+            "converted_layers": 108,
+            "resolved_backends": [
+              "native"
+            ]
+          }
+        },
+        {
+          "report": {
+            "path": "/mnt/zhouzhenyuan/activevln-fp8-20261010/final-rxr-fp8-dual/replica-1.json",
+            "bytes": 982521,
+            "sha256": "4a6efa277e74da9a84ed3b6f1a0838a7df2df290b39394151e59d7780cddb6ee"
+          },
+          "observations": 1788,
+          "environment": {
+            "gpu": "NVIDIA GeForce RTX 4090",
+            "capability": [
+              8,
+              9
+            ],
+            "cuda": "12.8",
+            "platform": "Linux-5.15.0-94-generic-x86_64-with-glibc2.39",
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/root/activevln-venv/bin/python",
+            "virtual_environment": "/root/activevln-venv",
+            "packages": {
+              "torch": "2.10.0",
+              "torchvision": "0.25.0",
+              "transformers": "4.51.3",
+              "triton": "3.6.0",
+              "lerobot": null,
+              "numpy": "2.5.2",
+              "Pillow": "12.3.0",
+              "h5py": null
+            },
+            "source_revision": null,
+            "source_python_sha256": "8152d7eb3f27df41b18f60bac9da9e4809e7c77938c0e205a6078bd3e1c868f6",
+            "dependency_check": null,
+            "driver_version": "580.82.07\n580.82.07"
+          },
+          "selection": [
+            {
+              "episode_id": 5,
+              "frames": 22
+            },
+            {
+              "episode_id": 13,
+              "frames": 50
+            },
+            {
+              "episode_id": 18,
+              "frames": 50
+            },
+            {
+              "episode_id": 20,
+              "frames": 126
+            },
+            {
+              "episode_id": 31,
+              "frames": 101
+            },
+            {
+              "episode_id": 36,
+              "frames": 101
+            },
+            {
+              "episode_id": 38,
+              "frames": 73
+            },
+            {
+              "episode_id": 52,
+              "frames": 63
+            },
+            {
+              "episode_id": 54,
+              "frames": 63
+            },
+            {
+              "episode_id": 56,
+              "frames": 75
+            },
+            {
+              "episode_id": 64,
+              "frames": 20
+            },
+            {
+              "episode_id": 72,
+              "frames": 20
+            },
+            {
+              "episode_id": 74,
+              "frames": 147
+            },
+            {
+              "episode_id": 85,
+              "frames": 88
+            },
+            {
+              "episode_id": 87,
+              "frames": 88
+            },
+            {
+              "episode_id": 92,
+              "frames": 136
+            },
+            {
+              "episode_id": 100,
+              "frames": 65
+            },
+            {
+              "episode_id": 102,
+              "frames": 65
+            },
+            {
+              "episode_id": 113,
+              "frames": 89
+            },
+            {
+              "episode_id": 121,
+              "frames": 65
+            },
+            {
+              "episode_id": 123,
+              "frames": 65
+            },
+            {
+              "episode_id": 128,
+              "frames": 130
+            },
+            {
+              "episode_id": 136,
+              "frames": 43
+            },
+            {
+              "episode_id": 138,
+              "frames": 43
+            }
+          ],
+          "selection_sha256": "736b472ab6764c5f74d574a4c22ef2c37aed46cbcb39d4562247fafaf88941a0",
+          "metrics": {
+            "batches": 900,
+            "observations": 1788,
+            "mean_batch_occupancy": 1.9866666666666666,
+            "batch_e2e_ms": {
+              "mean": 127.93826143888889,
+              "p50": 115.196973,
+              "p95": 230.06353319999997,
+              "p99": 296.85986374
+            },
+            "batch_forward_ms": {
+              "mean": 113.82414173222222,
+              "p50": 101.096948,
+              "p95": 215.84729479999996,
+              "p99": 282.10260554999996
+            },
+            "batch_prefill_ms": {
+              "mean": 75.6777987437778
+            },
+            "batch_decode_ms": {
+              "mean": 38.107520727581445
+            },
+            "amortized_e2e_ms_per_observation": 64.39845374440716,
+            "amortized_forward_ms_per_observation": 57.29403107326621,
+            "observations_per_second": 15.528323148393099
+          },
+          "memory": {
+            "peak_allocated_bytes": 18226808832,
+            "peak_reserved_bytes": 19572719616,
+            "device_total_bytes": 25250627584,
+            "peak_scope": "measurement"
+          },
+          "warmup": {
+            "batch_calls": 33,
+            "observations": 66,
+            "episode_id": 13
+          },
+          "draft_sha256": "204484e289b8c9a1266e3637dafbeb7b674efb0f247761ed0d7cc806a1d16048",
+          "runtime": {
+            "vision_fallbacks": 0,
+            "prefill_fallbacks": 0,
+            "decode_fallbacks": 0,
+            "tree_fallbacks": 0,
+            "tree_fallback_tokens": 0,
+            "draft_verification_calls": 3335,
+            "draft_proposed_tokens": 78645,
+            "draft_accepted_tokens": 27674,
+            "capacity_growths": 0,
+            "draft_block_size": 16,
+            "draft_graph": true,
+            "preprocess_workers": 2,
+            "kv_pool_tokens": 192000
+          },
+          "quantization": {
+            "method": "fp8",
+            "converted_layers": 108,
+            "resolved_backends": [
+              "native"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "dataset": "r2r",
+      "unique_observations": 2997,
+      "differing_observations_by_field": {
+        "token_ids": 1708,
+        "text": 1708,
+        "stop_reason": 116,
+        "action_mask": 284,
+        "actions": 1708,
+        "output_sha256": 1708,
+        "parsed_valid": 0,
+        "cache_length": 1005
+      },
+      "differing_batch_indices": 0,
+      "scope": "Independent own-history replay; neither canonical-prefix parity nor navigation accuracy."
+    },
+    {
+      "dataset": "rxr",
+      "unique_observations": 3879,
+      "differing_observations_by_field": {
+        "token_ids": 2614,
+        "text": 2614,
+        "stop_reason": 252,
+        "action_mask": 315,
+        "actions": 2613,
+        "output_sha256": 2613,
+        "parsed_valid": 0,
+        "cache_length": 1737
+      },
+      "differing_batch_indices": 0,
+      "scope": "Independent own-history replay; neither canonical-prefix parity nor navigation accuracy."
+    }
+  ]
+}
