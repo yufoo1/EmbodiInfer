@@ -894,9 +894,47 @@ source commit inside remains fixed even as this branch's documentation changes.
 
 ### Historical baselines
 
-The earlier tree-disabled EmbodiInfer batch experiment is retained under
-`runs/batch-full/`; it does not provide a feature-matched comparison to the
-selected B=1 profile. Native vLLM 0.8.5.post1 uses eager vision and piecewise
+The September 25 `runs/batch-full/` profile enables **CUDA Graph, rounded
+operator fusion and split-KV attention**, with ordinary autoregressive decoding
+(`tree_decode=false`). An October 10 B=1 supplement uses the same frozen source,
+dependency versions, selected frames and configuration as the archived B=2
+reference, changing only batch size and output path. It excludes learned draft,
+FP8 and the later owned-KV reuse fix (`18587ad`); this historical profile still
+clones committed histories. Its source Python SHA256 is
+`a747f0213bc113c3bb949d5ede764610918b12e7908bf0714cb3aaff59a2a977`.
+
+| Recorded dataset | Batch | Whole-batch E2E ms | Amortized E2E ms/observation | Observations/s | Coverage |
+| --- | ---: | ---: | ---: | ---: | --- |
+| R2R | 1 | 192.21 | 192.21 | 5.2025 | 2,997 / 2,997 |
+| R2R | 2 | 295.38 | 149.02 | 6.7105 | 2,997 / 2,997 |
+| R2R | 4 | 377.84 | 98.59 | 10.1432 | 2,997 / 2,997 |
+| RxR | 1 | 250.86 | 250.86 | 3.9863 | 3,879 / 3,879 |
+| RxR | 2 | 391.92 | 196.11 | 5.0991 | 3,879 / 3,879 |
+| RxR | 4 | — | — | — | OOM after 384 / 3,879 |
+
+Each measurement uses one RTX 4090, BF16, 48 published training trajectories,
+33 warmup batch calls and full generated histories. **Both datasets use the
+same R2R checkpoint** (`160987313e3e869705f42400d1b8f28177044518`).
+Query buckets are 32; graph workspace is 32,768 tokens for R2R and 65,536 for
+RxR, with the model context limit unchanged at 128,000. The B=1 runs executed
+sequentially on one GPU. All complete profiles have zero graph fallbacks and
+zero action-tree replays. Each profile is one complete replay, not a sustained
+throughput guarantee or an estimate of run-to-run variability.
+
+E2E covers decoded CPU RGB through preprocessing, full model execution and CPU
+actions. Disk decoding, initialization, capture, warmup, HTTP, simulation and
+report hashing are excluded. Amortization divides total batch time by actual
+observations, including partial tail batches; it is not individual request
+latency. This table compares batch sizes within the historical three-option
+profile, does not isolate each option's contribution and makes no navigation
+quality or cross-batch output-equivalence claim. The archived RxR B=4 OOM does
+not characterize the current owned-KV runtime.
+
+Configurations, measured versions, coverage audits, report hashes and the raw
+source/evidence archive are recorded in
+[`evidence.json`](results/4090-graph-fusion-b1-20261010/evidence.json).
+
+Native vLLM 0.8.5.post1 uses eager vision and piecewise
 language graphs. Its optional duplicate-placeholder-rule correction preserves
 input/model semantics and reproduces every R2R output while reducing mean E2E
 from 420.17 to 293.19 ms; complete forward remains 215.75 ms. Corrected RxR
