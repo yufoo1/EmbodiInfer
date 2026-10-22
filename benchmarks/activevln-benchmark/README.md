@@ -8,6 +8,11 @@ This is an offline latency workload, without Habitat or SR/SPL measurement.
 Both datasets use `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` at revision
 `160987313e3e869705f42400d1b8f28177044518` and its R2R action grammar.
 
+## Orin NX batch-one experiment
+
+See [Orin NX](orin-nx/README.md) for reproduction commands and the R2R result summary;
+configurations and scripts are in the same directory.
+
 ## Tensor batches
 
 `benchmark_batch.py` measures true tensor batches with independent episode
