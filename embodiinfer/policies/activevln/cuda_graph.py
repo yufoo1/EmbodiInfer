@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 
 import torch
 
+from ...models.linear import QuantizedLinear
+
 if TYPE_CHECKING:
     from .cache_activevln import ActiveVLNMemory
     from .modeling_activevln import ActiveVLNPolicy
@@ -125,6 +127,8 @@ class ActiveVLNGraphRuntime:
             raise ValueError("ActiveVLN graphs require eval() and inference_mode()/no_grad()")
         if tree_decode and policy.do_sample:
             raise ValueError("ActiveVLN tree_decode requires greedy decoding")
+        if tree_fp32_projection and policy._quantization_config is not None:
+            raise ValueError("tree_fp32_projection does not support INT8 projections")
         self.policy = policy
         self.lock = RLock()
         self.query_bucket_size = query_bucket_size
@@ -429,18 +433,25 @@ class ActiveVLNGraphRuntime:
             from ...backend.triton.decode_linear import decode_linear, decode_qkv, decode_swiglu
 
             def project(module: torch.nn.Module, x: torch.Tensor) -> torch.Tensor:
+                if isinstance(module, QuantizedLinear):
+                    return module(x)
                 return decode_linear(x, module.weight, module.bias)
 
             def project_qkv(attention: torch.nn.Module, x: torch.Tensor) -> list[torch.Tensor]:
                 projections = (attention.q_proj, attention.k_proj, attention.v_proj)
+                if any(isinstance(projection, QuantizedLinear) for projection in projections):
+                    return [project(projection, x) for projection in projections]
                 weights = [projection.weight for projection in projections]
                 return decode_qkv(x, weights, [projection.bias for projection in projections])
 
             def mlp(module: torch.nn.Module, x: torch.Tensor) -> torch.Tensor:
-                if self.fused_ops:
+                if self.fused_ops and not any(
+                    isinstance(p, QuantizedLinear) for p in (module.gate_proj, module.up_proj)
+                ):
                     activated = decode_swiglu(x, module.gate_proj.weight, module.up_proj.weight)
                 else:
-                    activated = module.act_fn(project(module.gate_proj, x)) * project(module.up_proj, x)
+                    gate, up = project(module.gate_proj, x), project(module.up_proj, x)
+                    activated = rounded_swiglu(gate, up) if self.fused_ops else module.act_fn(gate) * up
                 return project(module.down_proj, activated)
 
         batch, query_length = hidden.shape[:2]

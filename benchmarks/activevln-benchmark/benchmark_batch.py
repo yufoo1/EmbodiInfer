@@ -87,6 +87,57 @@ def summarize_batches(batches: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def load_policy(config: dict[str, Any], device: torch.device) -> Any:
+    """Load the configured policy identically for replay and HTTP evaluation."""
+    policy = make_policy(
+        "activevln",
+        checkpoint=config["checkpoint"],
+        revision=config["checkpoint_revision"],
+        attention=config["attention"],
+        max_new_tokens=config["max_new_tokens"],
+        max_context=config["max_context"],
+        do_sample=config.get("do_sample", False),
+        temperature=config.get("temperature", 0.2),
+        top_p=config.get("top_p", 0.8),
+        repetition_penalty=config["repetition_penalty"],
+        action_space=config.get("action_space", "r2r"),
+        quantization=config.get("quantization"),
+        vision_quantization=config.get("vision_quantization"),
+    )
+    policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
+    return policy
+
+
+def create_runtime(policy: Any, config: dict[str, Any]) -> Any:
+    """Preserve every execution switch when serving a measured replay profile."""
+    runtime = policy.create_batched_runtime(
+        batch_size=config["batch_size"],
+        workspace_tokens=config["graph_workspace_tokens"],
+        query_bucket_size=config["query_bucket_size"],
+        cuda_graph=config["cuda_graph"],
+        fused_ops=config["fused_ops"],
+        split_attention=config["split_attention"],
+        tree_decode=config.get("tree_decode", False),
+        tree_fp32_projection=config.get("tree_fp32_projection", False),
+        tree_repeat_actions=config.get("tree_repeat_actions", 1),
+        kv_pool_tokens=config.get("kv_pool_tokens"),
+        grammar_tree_budget=config.get("grammar_tree_budget", 0),
+        grammar_prefix_weight=config.get("grammar_prefix_weight", 1.0),
+        grammar_local_weight=config.get("grammar_local_weight", 1.0),
+        grammar_refresh=config.get("grammar_refresh", 64),
+        sampling_seed=config.get("sampling_seed", 0),
+        gpu_preprocess=config.get("gpu_preprocess", False),
+        attention_kernel=config.get("attention_kernel", "split"),
+        incremental_kv_commit=config.get("incremental_kv_commit", False),
+        vision_kernel=config.get("vision_kernel", "hf"),
+        skip_padded_queries=config.get("skip_padded_queries", False),
+        packed_prefill=config.get("packed_prefill", False),
+        packed_prefill_bucket=config.get("packed_prefill_bucket", 64),
+        decode_linear=config.get("decode_linear", False),
+    )
+    return runtime
+
+
 def run(config: dict[str, Any], output: Path) -> int:
     """Measure one split in one fresh process, retaining failure stage and batch identities."""
     if len(config["datasets"]) != 1:
@@ -133,49 +184,13 @@ def run(config: dict[str, Any], output: Path) -> int:
     measured = False
     try:
         start = time.perf_counter()
-        policy = make_policy(
-            "activevln",
-            checkpoint=config["checkpoint"],
-            revision=config["checkpoint_revision"],
-            attention=config["attention"],
-            max_new_tokens=config["max_new_tokens"],
-            max_context=config["max_context"],
-            do_sample=config.get("do_sample", False),
-            temperature=config.get("temperature", 0.2),
-            top_p=config.get("top_p", 0.8),
-            repetition_penalty=config["repetition_penalty"],
-            action_space=config.get("action_space", "r2r"),
-        )
-        policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
+        policy = load_policy(config, device)
+        report["quantization"] = policy.quantization_stats()
         report["model_load_seconds"] = time.perf_counter() - start
         report["phase"] = "workspace"
         save_report(output, report)
         with torch.inference_mode():
-            runtime = policy.create_batched_runtime(
-                batch_size=batch_size,
-                workspace_tokens=config["graph_workspace_tokens"],
-                query_bucket_size=config["query_bucket_size"],
-                cuda_graph=config["cuda_graph"],
-                fused_ops=config["fused_ops"],
-                split_attention=config["split_attention"],
-                tree_decode=config.get("tree_decode", False),
-                tree_fp32_projection=config.get("tree_fp32_projection", False),
-                tree_repeat_actions=config.get("tree_repeat_actions", 1),
-                kv_pool_tokens=config.get("kv_pool_tokens"),
-                grammar_tree_budget=config.get("grammar_tree_budget", 0),
-                grammar_prefix_weight=config.get("grammar_prefix_weight", 1.0),
-                grammar_local_weight=config.get("grammar_local_weight", 1.0),
-                grammar_refresh=config.get("grammar_refresh", 64),
-                sampling_seed=config.get("sampling_seed", 0),
-                gpu_preprocess=config.get("gpu_preprocess", False),
-                attention_kernel=config.get("attention_kernel", "split"),
-                incremental_kv_commit=config.get("incremental_kv_commit", False),
-                vision_kernel=config.get("vision_kernel", "hf"),
-                skip_padded_queries=config.get("skip_padded_queries", False),
-                packed_prefill=config.get("packed_prefill", False),
-                packed_prefill_bucket=config.get("packed_prefill_bucket", 64),
-                decode_linear=config.get("decode_linear", False),
-            )
+            runtime = create_runtime(policy, config)
             report["phase"] = "graph_capture"
             save_report(output, report)
             start = time.perf_counter()

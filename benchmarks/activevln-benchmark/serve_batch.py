@@ -19,6 +19,7 @@ import threading
 import time
 import traceback
 from collections.abc import Sequence
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,6 @@ from PIL import Image
 from embodiinfer.engine.serve.batching import BatchedServingAdapter
 from embodiinfer.engine.serve.contracts import ModelAction, ModelResult, RawPolicyRequest
 from embodiinfer.engine.serve.http_server import PolicyHttpService, create_http_server
-from embodiinfer.policies import make_policy
 
 
 class TensorBatchAdapter:
@@ -38,7 +38,14 @@ class TensorBatchAdapter:
     action_space = "activevln.r2r.discrete.v1"
 
     def __init__(
-        self, policy: Any, runtime: Any, benchmark: Any, device: torch.device, evidence: Path
+        self,
+        policy: Any,
+        runtime: Any,
+        benchmark: Any,
+        device: torch.device,
+        evidence: Path,
+        *,
+        uint8_observations: bool = False,
     ) -> None:
         self.policy, self.runtime, self.benchmark, self.device = policy, runtime, benchmark, device
         self.evidence = evidence
@@ -46,6 +53,7 @@ class TensorBatchAdapter:
         self.lock = threading.RLock()
         self.index = 0
         self.failed = False
+        self.uint8_observations = uint8_observations
 
     def capabilities(self) -> dict[str, Any]:
         """Advertise actual tensor capacity and independent recurrent sessions."""
@@ -107,6 +115,9 @@ class TensorBatchAdapter:
                         self.benchmark.make_observation(image, request.instruction)
                         for image, request in zip(images, ordered, strict=True)
                     ]
+                    if self.uint8_observations:
+                        for observation, image in zip(observations, images, strict=True):
+                            observation.metadata["rgb_uint8"] = image
                     prepared = self.runtime.prepare(
                         observations, [self.memories.get(r.session_id) for r in ordered]
                     )
@@ -191,7 +202,14 @@ def main() -> None:
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--ready-file", type=Path, required=True)
     parser.add_argument("--max-wait-ms", type=float, default=1000)
+    parser.add_argument("--port", type=int, default=0)
+    parser.add_argument("--streamed-loading", action="store_true")
+    parser.add_argument("--calibration", type=Path)
+    parser.add_argument("--variant", choices=("smooth_both", "smooth_text"), default="smooth_both")
     args = parser.parse_args()
+    sys.path.insert(0, str(args.source / "benchmarks/activevln-benchmark"))
+    import benchmark_batch
+
     spec = importlib.util.spec_from_file_location(
         "frozen_activevln_benchmark", args.source / "benchmarks/activevln-benchmark/benchmark.py"
     )
@@ -202,31 +220,45 @@ def main() -> None:
     device = benchmark.cuda_device(config)
     torch.set_num_threads(config["cpu_threads"])
     started = time.monotonic()
-    policy = make_policy(
-        "activevln",
-        checkpoint=config["checkpoint"],
-        revision=config["checkpoint_revision"],
-        attention=config["attention"],
-        max_new_tokens=config["max_new_tokens"],
-        max_context=config["max_context"],
-        do_sample=config["do_sample"],
-        repetition_penalty=config["repetition_penalty"],
-    )
-    policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
+    nx_benchmark = args.source / "benchmarks/activevln-benchmark/orin-nx"
+    if args.streamed_loading:
+        sys.path.insert(0, str(nx_benchmark / "bf16/scripts"))
+        from run_with_streamed_loading import streamed_loading
+    calibration = None
+    if args.calibration:
+        sys.path.insert(0, str(nx_benchmark / "int8/scripts"))
+        from precision import _convert
+
+        if config.get("quantization") or config.get("vision_quantization"):
+            raise ValueError("Calibration requires a BF16 base configuration")
+        calibration = torch.load(args.calibration, map_location="cpu", weights_only=True)
+        metadata = calibration.get("metadata", calibration)
+        if metadata["checkpoint_revision"] != config["checkpoint_revision"]:
+            raise ValueError("Calibration checkpoint revision differs")
+        manifest = Path(config["checkpoint"]) / "conversion-manifest.json"
+        expected = metadata.get("checkpoint_manifest_sha256")
+        if expected and hashlib.sha256(manifest.read_bytes()).hexdigest() != expected:
+            raise ValueError("Calibration checkpoint manifest differs")
+        config["precision_experiment"] = {
+            "variant": args.variant,
+            "calibration_sha256": hashlib.sha256(args.calibration.read_bytes()).hexdigest(),
+            "calibration_episode_ids": metadata["calibration_episode_ids"],
+            "fused_smoothing": True,
+            "script_sha256": hashlib.sha256(
+                Path(sys.modules[_convert.__module__].__file__).read_bytes()
+            ).hexdigest(),
+        }
+    with streamed_loading() if args.streamed_loading else nullcontext():
+        policy = benchmark_batch.load_policy(config, device)
+    if calibration is not None:
+        with torch.no_grad():
+            _convert(policy, calibration["maxima"], args.variant, fused=True)
+        del calibration
+        gc.collect()
+        torch.cuda.empty_cache()
     episodes = [ep for entry in config["datasets"] for ep in benchmark.load_navigation(entry)]
     with torch.inference_mode():
-        runtime = policy.create_batched_runtime(
-            batch_size=config["batch_size"],
-            workspace_tokens=config["graph_workspace_tokens"],
-            query_bucket_size=config["query_bucket_size"],
-            cuda_graph=config["cuda_graph"],
-            fused_ops=config["fused_ops"],
-            split_attention=config["split_attention"],
-            tree_decode=config["tree_decode"],
-            tree_fp32_projection=config["tree_fp32_projection"],
-            tree_repeat_actions=config["tree_repeat_actions"],
-            kv_pool_tokens=config["kv_pool_tokens"],
-        )
+        runtime = benchmark_batch.create_runtime(policy, config)
         probes = [
             benchmark.make_observation(benchmark.read_rgb(ep.frames[0]), ep.instruction) for ep in episodes
         ]
@@ -246,7 +278,12 @@ def main() -> None:
         torch.cuda.reset_peak_memory_stats(device)
         runtime.reset_stats()
     adapter = TensorBatchAdapter(
-        policy, runtime, benchmark, device, args.ready_file.with_name("tensor-batches.jsonl")
+        policy,
+        runtime,
+        benchmark,
+        device,
+        args.ready_file.with_name("tensor-batches.jsonl"),
+        uint8_observations=bool(config.get("uint8_observations", False)),
     )
     scheduler = BatchedServingAdapter(adapter, max_batch=config["batch_size"], max_wait_ms=args.max_wait_ms)
     service = PolicyHttpService(
@@ -257,7 +294,7 @@ def main() -> None:
         maximum_image_bytes=8 * 1024**2,
         max_body_bytes=10 * 1024**2,
     )
-    server = create_http_server(service, host="127.0.0.1", port=0)
+    server = create_http_server(service, host="127.0.0.1", port=args.port)
     ready = {
         "pid": os.getpid(),
         "port": server.server_address[1],
@@ -269,6 +306,7 @@ def main() -> None:
         "startup_seconds": time.monotonic() - started,
         "scheduler": scheduler.capabilities(),
         "runtime": runtime.stats(),
+        "quantization": policy.quantization_stats(),
     }
     temporary = args.ready_file.with_suffix(".tmp")
     temporary.write_text(json.dumps(ready, indent=2) + "\n")

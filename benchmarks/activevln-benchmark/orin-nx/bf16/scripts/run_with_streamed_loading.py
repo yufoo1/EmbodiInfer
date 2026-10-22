@@ -5,11 +5,15 @@ from __future__ import annotations
 import gc
 import os
 import runpy
+import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 
-def main() -> None:
-    """Stream BF16 shards to CUDA; leave model execution and benchmark timing intact."""
+@contextmanager
+def streamed_loading() -> Iterator[None]:
+    """Temporarily stream BF16 shards to CUDA without changing execution settings."""
     import torch
     from transformers import Qwen2_5_VLForConditionalGeneration
 
@@ -39,11 +43,18 @@ def main() -> None:
         return model
 
     Qwen2_5_VLForConditionalGeneration.from_pretrained = load_to_cuda
-    benchmark = Path(__file__).resolve().parents[2] / "benchmark_batch.py"
     try:
-        runpy.run_path(str(benchmark), run_name="__main__")
+        yield
     finally:
         Qwen2_5_VLForConditionalGeneration.from_pretrained = classmethod(original)
+
+
+def main() -> None:
+    """Run the replay benchmark with the measured loading adaptation."""
+    benchmark = Path(__file__).resolve().parents[3] / "benchmark_batch.py"
+    sys.path.insert(0, str(benchmark.parent))
+    with streamed_loading():
+        runpy.run_path(str(benchmark), run_name="__main__")
 
 
 if __name__ == "__main__":

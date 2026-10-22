@@ -740,3 +740,70 @@ remains faster in all five completed paired conditions. Neither engine achieves
 40 ms E2E; near-40 ms R2R B=4 numbers describe amortized forward only. No native
 vLLM closed-loop SR/SPL claim follows. The canonical benchmark README retains
 the exact conditions, comparative tables, validation limits and evidence paths.
+
+## Orin NX INT8 latency experiment
+
+The next opt-in precision profile targets lower batch-one E2E latency on Orin NX,
+using the existing optimized BF16 replay as its reference. The user explicitly
+requested INT8 quantization; this profile is lossy and does not inherit the
+lossless claims above. No acceptable navigation regression has yet been specified.
+
+- First measure the actual projection shapes with CUDA Graphs, including activation
+  quantization and output rescaling. Weight storage savings alone are not an
+  acceptance criterion. Compare the existing native INT8 path, fused Triton W8A8,
+  and the current BF16 cuBLAS/decode kernels before selecting an implementation.
+- Keep projection selection and quantization under the ActiveVLN policy. Reuse
+  `INT8Config`, `QuantizedLinear`, and the linear backend registry; any new integer
+  kernel belongs under `backend/` and must not import policy or engine code.
+  Preserve the default BF16 path and existing graph, grammar-tree, KV ownership,
+  GPU preprocessing and packed-prefill semantics. Embeddings, LM head, norms and
+  KV remain BF16 initially; quantize text MLPs before broadening layer coverage.
+  The independent `vision_quantization` option selects visual projections using
+  `visual.*` exclusion names; the NX candidate selects block MLPs and preserves
+  visual attention and the merger. Text-only and vision-only profiles remain
+  independently measurable. Calibration and validation episodes must be disjoint;
+  compare complete generated action chunks with fixed BF16 pre-frame history
+  before measuring independent-history replay. Calibration diagnostics use eager
+  SDPA and do not substitute for the optimized runtime comparison. The calibration
+  benchmark balances channels with per-input maxima and alpha=0.5, preserving
+  FP32 division followed by a BF16 cast. An optional backend scale vector fuses
+  that operation into activation quantization; exact integer-reference and graph
+  replay tests must match the separate-operator implementation.
+- Direct `weight` access in the current fused decode path must recognize quantized
+  modules. Dispatch those modules through their registered backend; do not send
+  INT8 storage to a BF16 GEMM or silently disable all existing optimizations.
+  Full weight dequantization before every GEMM is only a correctness reference,
+  not the proposed acceleration path.
+- Kernel correctness uses the specified per-row activation/per-channel weight
+  quantization, integer matrix multiplication and FP32 scale/bias epilogue as its
+  reference. Check zero inputs, non-aligned shapes, bias, graph replay and explicit
+  unsupported-device errors. Test BF16 behavior with quantization disabled.
+- During optimization, use projection/MLP microbenchmarks and a fixed short R2R
+  replay to select kernels and examine output differences. Defer the full
+  48-episode run until the optimization and precision choices have converged.
+- Final evaluation uses matching pinned R2R weights and all 48 episodes / 2,997 recorded frames,
+  batch 1, 33 warmup calls, seed 42, matmul precision `highest`, the same attention
+  and decode limits, and no history truncation. Record actual backend/graph use,
+  mean/P50/P95 E2E, stage timings, memory and token/action disagreement separately.
+  Short probes select candidates; they do not replace complete-workload results.
+  Teacher-forced comparisons and independently generated histories have different
+  scopes and must be identified. Offline agreement does not establish SR/SPL.
+- The requested closed-loop comparison runs Habitat and its task metrics in
+  EmbodiRun, with the same 48 R2R manifests and two sequential batch-one services
+  on NX. HTTP serving and replay share policy/runtime configuration builders;
+  transport losslessly carries RGB and is excluded from model E2E timing.
+  Compare SR, SPL, navigation error and paired lost/gained successes. Report any
+  calibration overlap explicitly and also summarize the disjoint subset; the
+  full selection must not be described as held out when calibration used episode 1.
+  Record source/config/calibration hashes, initial observations and executed paths.
+  Neither a threshold nor a claim of unchanged navigation accuracy follows from
+  a short replay or from an incomplete closed-loop run.
+
+This is a policy/backend experiment, with no engine scheduling change. Runtime
+activation quantization, poorly occupied INT8 tiles, lost fusion, or more fallback
+tokens may erase GEMM gains. A candidate is reported as faster only when complete
+E2E improves under matching conditions; otherwise retain BF16 as the faster profile.
+
+The calibrated text/visual MLP profile remains experimental after the paired
+closed-loop evaluation found navigation regression. Preserve BF16 as the default;
+the measured quality and latency comparison is maintained in the Orin NX benchmark README.

@@ -107,6 +107,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             raise ValueError("batch_size must be a positive Python integer")
         if decode_linear and tree_fp32_projection:
             raise ValueError("decode_linear and tree_fp32_projection are alternative projections")
+        if tree_fp32_projection and policy._quantization_config is not None:
+            raise ValueError("tree_fp32_projection does not support INT8 projections")
         if packed_prefill and (kv_pool_tokens is None or attention_kernel != "gqa" or not cuda_graph):
             raise ValueError("packed prefill requires CUDA graphs, a shared KV pool and the GQA kernel")
         if type(packed_prefill_bucket) is not int or packed_prefill_bucket < 1:

@@ -84,7 +84,7 @@ def parse_fp8_config(value: str | Mapping[str, Any] | FP8Config | None) -> FP8Co
     )
 
 
-_INT8_BACKENDS = {"auto", "native", "torch"}
+_INT8_BACKENDS = {"auto", "native", "triton", "torch"}
 
 
 @dataclass(frozen=True)
@@ -322,6 +322,7 @@ for _method in ("fp8", "int8", "nvfp4"):
 register_lazy_linear(
     "fp8_triton", "embodiinfer.backend.triton.fp8", "fp8_weight_only_linear", "fp8_weight_only_capability"
 )
+register_lazy_linear("int8_triton", "embodiinfer.backend.triton.int8", "int8_linear", "int8_capability")
 
 __all__ = [
     "FP8Config",

@@ -18,7 +18,7 @@ from pathlib import Path
 from prepare_checkpoint import digest, verify
 
 DIRECTORY = Path(__file__).resolve().parents[1]
-BENCHMARK = DIRECTORY.parent
+BENCHMARK = DIRECTORY.parents[1]
 REPOSITORY = BENCHMARK.parents[1]
 
 
@@ -77,6 +77,7 @@ def capture_hardware() -> dict[str, str]:
 def main() -> int:
     """Resolve portable paths, verify inputs, and execute the existing benchmark once."""
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path, default=DIRECTORY / "configs/r2r-b1.json")
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument(
         "--data-root", type=Path, required=True, help="R2R root containing annotations and images/"
@@ -99,7 +100,7 @@ def main() -> int:
         raise FileExistsError(f"Use a new output directory: {output}")
     verify(checkpoint)
     validate_selection(data)
-    config = json.loads((DIRECTORY / "configs/r2r-b1.json").read_text())
+    config = json.loads(args.config.read_text())
     config.update(checkpoint=str(checkpoint), output_dir=str(output / "reports"))
     config["datasets"][0].update(root=str(data), annotations=str(data / "annotations_v1-3.json"))
     if args.profile == "smoke":
@@ -114,7 +115,7 @@ def main() -> int:
         "file": str(adapter) if args.loader != "original" else None,
         "sha256": digest(adapter) if args.loader != "original" else None,
         "checkpoint_page_eviction": args.loader == "streamed",
-        "scope": "Weight loading only; the shared PR12 benchmark and inference kernels are unchanged.",
+        "scope": "Adapter changes weight loading only; runtime and quantization follow the benchmark config.",
     }
     output.mkdir(parents=True)
     for name in ("reports", "logs", "cache/triton", "cache/cuda", "cache/huggingface", "tmp"):

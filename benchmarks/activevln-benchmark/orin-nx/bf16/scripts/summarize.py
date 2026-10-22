@@ -99,6 +99,7 @@ def summarize(root: Path) -> dict[str, Any]:
                 "episodes_selected": len(report["selection"]),
                 "batch_size": report["batch_size"],
                 "dtype": report["config"]["dtype"],
+                "quantization": report.get("quantization", {"enabled": False}),
                 "workspace_tokens": report["config"]["graph_workspace_tokens"],
                 "warmup": report.get("warmup"),
                 "metrics": report.get("metrics"),
@@ -129,7 +130,7 @@ def summarize(root: Path) -> dict[str, Any]:
     hardware = root / "logs/hardware-settings.json"
     result = {
         "hardware_settings": json.loads(hardware.read_text()) if hardware.exists() else None,
-        "scope": "Offline recorded R2R replay. No navigation SR/SPL, quantization, or NX baseline speedup claim.",
+        "scope": "Offline recorded R2R replay. Precision is recorded per run; no navigation SR/SPL claim.",
         "system_memory_scope": "Whole process including loading/capture/warmup; sampled every second. "
         "Tegrastats MB interpreted as MiB. CUDA shares physical RAM; do not sum them.",
         "runs": summaries,

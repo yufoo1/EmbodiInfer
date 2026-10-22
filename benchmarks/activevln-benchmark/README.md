@@ -10,8 +10,8 @@ Both datasets use `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` at revision
 
 ## Orin NX batch-one experiment
 
-See [Orin NX](orin-nx/README.md) for reproduction commands and the R2R result summary;
-configurations and scripts are in the same directory.
+See [Orin NX](orin-nx/README.md) for BF16 and INT8 reproduction commands and R2R results;
+each precision directory contains its configurations, scripts, and summary.
 
 ## Tensor batches
 

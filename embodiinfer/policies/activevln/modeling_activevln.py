@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -12,6 +12,8 @@ import torch
 
 from ...exceptions import SessionCancelledError, UnsupportedRecurrentModeError
 from ...layers import get_attention_backend
+from ...layers.linear import INT8Config, parse_int8_config, resolve_linear_backend
+from ...models.linear import INT8Linear
 from ...types import DecodeTrace, Observation
 from ..base import PrefixState, VLAPolicy
 from ..config import VLAPolicyConfig
@@ -539,6 +541,8 @@ class ActiveVLNPolicy(VLAPolicy):
         repetition_penalty: float = 1.05,
         do_sample: bool = True,
         action_space: str = "r2r",
+        quantization: str | Mapping[str, object] | INT8Config | None = None,
+        vision_quantization: str | Mapping[str, object] | INT8Config | None = None,
     ) -> None:
         if action_space not in SYSTEM_PROMPTS:
             raise ValueError(f"unknown ActiveVLN action space: {action_space!r}")
@@ -574,6 +578,57 @@ class ActiveVLNPolicy(VLAPolicy):
         self._inference_runtime: ActiveVLNGraphRuntime | None = None
         self.gpu_image_transform = None
         self._host_turns: dict[tuple, tuple[ProcessedTurn, torch.Tensor, int]] = {}
+        self._quantization_config = parse_int8_config(quantization)
+        self._vision_quantization_config = parse_int8_config(vision_quantization)
+        selections = [("text", self._text, self._quantization_config)]
+        if self._vision_quantization_config is not None:
+            selections.append(("visual", self._visual, self._vision_quantization_config))
+        with torch.no_grad():
+            for scope, root, config in selections:
+                if config is None:
+                    continue
+                names = [
+                    name
+                    for name, module in root.named_modules()
+                    if isinstance(module, torch.nn.Linear) and not config.is_ignored(scope + "." + name)
+                ]
+                for name in names:
+                    module = root.get_submodule(name)
+                    parent, attribute = name.rsplit(".", 1)
+                    converted = INT8Linear.from_linear(module, config)
+                    setattr(root.get_submodule(parent), attribute, converted)
+
+    def quantization_stats(self) -> dict[str, object]:
+        """Report opt-in text/visual projections and actual linear backend selection."""
+        layers = []
+        roots = [("text", self._text)]
+        if self._vision_quantization_config is not None:
+            roots.append(("visual", self._visual))
+        for scope, root in roots:
+            for name, module in root.named_modules():
+                if isinstance(module, INT8Linear):
+                    probe = torch.empty(
+                        (1, module.in_features), dtype=module.compute_dtype, device=module.weight.device
+                    )
+                    backend = resolve_linear_backend(
+                        "int8", module.backend, probe, module.weight, module.weight_scale
+                    )
+                    layers.append(
+                        {
+                            "name": scope + "." + name,
+                            "backend": backend,
+                            "weight_shape": list(module.weight.shape),
+                            "weight_dtype": str(module.weight.dtype),
+                        }
+                    )
+        return {
+            "enabled": bool(layers),
+            "method": "int8" if layers else None,
+            "activation_scheme": "dynamic" if layers else None,
+            "layers": layers,
+            "layer_count": len(layers),
+            "accuracy_contract": "lossy" if layers else "unquantized",
+        }
 
     def set_gpu_preprocess(self, enabled: bool) -> None:
         """Compute image patches on the device with the bit-exact processor port."""
@@ -1087,6 +1142,8 @@ def _build_activevln(
     repetition_penalty: float = 1.05,
     do_sample: bool = True,
     action_space: str = "r2r",
+    quantization: str | Mapping[str, object] | INT8Config | None = None,
+    vision_quantization: str | Mapping[str, object] | INT8Config | None = None,
     **overrides,
 ) -> VLAPolicy:
     if checkpoint is None:
@@ -1097,6 +1154,8 @@ def _build_activevln(
         raise ValueError(f"unknown ActiveVLN overrides: {sorted(overrides)}")
     if action_space not in SYSTEM_PROMPTS:
         raise ValueError(f"unknown ActiveVLN action space: {action_space!r}")
+    quantization = parse_int8_config(quantization)
+    vision_quantization = parse_int8_config(vision_quantization)
     path = Path(checkpoint)
     if not path.exists() and not allow_download:
         raise ValueError("activevln checkpoint must be a local snapshot unless allow_download=True")
@@ -1127,4 +1186,6 @@ def _build_activevln(
         repetition_penalty=repetition_penalty,
         do_sample=do_sample,
         action_space=action_space,
+        quantization=quantization,
+        vision_quantization=vision_quantization,
     )
