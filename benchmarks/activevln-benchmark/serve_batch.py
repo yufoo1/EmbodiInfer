@@ -181,7 +181,9 @@ class TensorBatchAdapter:
     def reset(self, session_id: str) -> None:
         """Release one session only, after its HTTP step has drained."""
         with self.lock:
-            self.memories.pop(session_id, None)
+            memory = self.memories.pop(session_id, None)
+            if memory is not None and getattr(self.runtime, "resident_kv", False):
+                self.runtime.reset_resident_kv()
 
 
 def main() -> None:
@@ -226,6 +228,7 @@ def main() -> None:
             tree_fp32_projection=config["tree_fp32_projection"],
             tree_repeat_actions=config["tree_repeat_actions"],
             kv_pool_tokens=config["kv_pool_tokens"],
+            resident_kv=config.get("resident_kv", False),
         )
         probes = [
             benchmark.make_observation(benchmark.read_rgb(ep.frames[0]), ep.instruction) for ep in episodes
@@ -241,6 +244,7 @@ def main() -> None:
             memories = [g.memory for g in generations]
             del prepared, generations
         del memories, observation
+        runtime.reset_resident_kv()
         gc.collect()
         torch.cuda.synchronize(device)
         torch.cuda.reset_peak_memory_stats(device)

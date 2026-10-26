@@ -1,4 +1,4 @@
-"""True batched, greedy ActiveVLN inference with private per-episode memories."""
+"""Tensor-batched ActiveVLN inference with explicit episode KV ownership."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import torch
 
 from ...exceptions import SessionCancelledError
 from ...types import Observation
-from .cache_activevln import ActiveVLNMemory, _layer_views
+from .cache_activevln import ActiveVLNMemory, _layer_views, _ResidentKVLease
 from .cuda_graph import ActiveVLNGraphRuntime, _TextGraph
 from .modeling_activevln import ActiveVLNGeneration, HostActiveVLNTurn, PreparedActiveVLNTurn
 from .processor_activevln import ProcessedTurn
@@ -69,7 +69,9 @@ class _PackedGraphBuffers:
 class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     """Share weights and execute vision/text/decode across independent batch rows.
 
-    This inference-only API owns execution scratch, never committed episode KV.
+    By default, execution scratch is separate from committed episode KV.
+    Opt-in ``resident_kv`` lends one fixed arena to an exclusive batch-one session;
+    returned memories and tensor views are borrowed until the session is reset.
     CPU execution is an unfused correctness reference. CUDA graphs are optional
     and captured only by ``prewarm``; missing shapes use counted batched eager
     execution. The generic recurrent engine retains its separate B=1 contract.
@@ -97,6 +99,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         gpu_preprocess: bool = False,
         attention_kernel: str = "split",
         incremental_kv_commit: bool = False,
+        resident_kv: bool = False,
         vision_kernel: str = "hf",
         skip_padded_queries: bool = False,
         packed_prefill: bool = False,
@@ -105,6 +108,10 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     ) -> None:
         if type(batch_size) is not int or batch_size < 1:
             raise ValueError("batch_size must be a positive Python integer")
+        if type(resident_kv) is not bool:
+            raise ValueError("resident_kv must be a boolean")
+        if resident_kv and (batch_size != 1 or kv_pool_tokens is None):
+            raise ValueError("resident_kv requires batch_size=1 and an explicit kv_pool_tokens capacity")
         if decode_linear and tree_fp32_projection:
             raise ValueError("decode_linear and tree_fp32_projection are alternative projections")
         if packed_prefill and (kv_pool_tokens is None or attention_kernel != "gqa" or not cuda_graph):
@@ -157,6 +164,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         self._packed_keys: dict[int, int] = {}
         self._packed_buffers: _PackedGraphBuffers | None = None
         self.incremental_kv_commit = incremental_kv_commit
+        self.resident_kv = resident_kv
         self.gpu_preprocess = gpu_preprocess
         policy.set_gpu_preprocess(gpu_preprocess)
         self.workspace_limit = workspace_tokens
@@ -258,6 +266,62 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             )
         self._resident_rows = [None] * batch_size
         self._owned_rows: list[tuple[torch.Tensor, object, list] | None] = [None] * batch_size
+        self._single_kv_lease: _ResidentKVLease | None = None
+        self._single_kv_memory: ref[ActiveVLNMemory] | None = None
+        if self.resident_kv:
+            self._set_resident_layout()
+
+    def _set_resident_layout(self) -> None:
+        """Keep the session region and packed-padding region disjoint at fixed addresses."""
+        capacity = self.storage.shape[-2] - self._spare_tokens
+        self._row_starts = [0]
+        self._row_capacities = [capacity]
+        self._spare_start = capacity
+        self._cache_layout[0].zero_()
+        self._cache_layout[1].fill_(capacity)
+
+    def reset_resident_kv(self) -> None:
+        """End the exclusive session and invalidate its borrowed memories and prefixes.
+
+        The arena and captured graph addresses are retained. Call only after a
+        request has drained; raw tensor views must not be used after reset. Use
+        ``memory.fork()`` first to retain an independently owned history. This
+        method is a no-op when resident KV is disabled.
+        """
+        if not self.resident_kv:
+            return
+        with self.lock:
+            if self._single_kv_lease is not None:
+                self._single_kv_lease.valid = False
+            self._single_kv_lease = self._single_kv_memory = None
+            self._pending_generation = None
+            self._generation += 1
+            self._resident_rows = [None]
+
+    def _check_resident_memory(self, memory: ActiveVLNMemory | None) -> None:
+        """Reject interleaved sessions and stale continuations before writing the arena."""
+        if not self.resident_kv:
+            return
+        if memory is not None:
+            memory._check_lease()
+        current = None if self._single_kv_memory is None else self._single_kv_memory()
+        if current is not None:
+            if memory is not current:
+                raise RuntimeError(
+                    "resident KV requires the latest memory; reset before starting another session"
+                )
+        elif memory is not None and memory._resident_lease is not None:
+            raise RuntimeError("cannot import a stale or foreign resident KV memory; import a private fork")
+
+    def _begin_resident_turn(self, memory: ActiveVLNMemory | None) -> None:
+        self._check_resident_memory(memory)
+        current = None if self._single_kv_memory is None else self._single_kv_memory()
+        if current is None:
+            if self._single_kv_lease is not None:
+                self._single_kv_lease.valid = False
+            self._single_kv_lease = _ResidentKVLease()
+            self._single_kv_memory = None
+            self._resident_rows = [None]
 
     def reset_stats(self) -> None:
         """Reset graph/tree and cache reuse counts without dropping prepared graphs."""
@@ -273,6 +337,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             prefill_actual_tokens=0,
             prefill_padding_tokens=0,
             prefill_packed=0,
+            resident_kv_commits=0,
         )
 
     def _validate(self) -> None:
@@ -310,6 +375,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             "packed_prefill_bucket": self.packed_prefill_bucket if self.packed_prefill else None,
             "decode_linear": self.decode_linear,
             "incremental_kv_commit": self.incremental_kv_commit,
+            "resident_kv": self.resident_kv,
+            "resident_kv_capacity": self.storage.shape[-2] - self._spare_tokens if self.resident_kv else None,
             "gpu_preprocess": self.gpu_preprocess,
             "text_graph_executables": len({id(entry.graph) for entry in self.text_graphs.values()}),
             "tree_graph_executables": len({id(entry.graph) for entry in self.tree_graphs.values()}),
@@ -351,6 +418,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         memories = [None] * count if memories is None else list(memories)
         if len(memories) != count:
             raise ValueError("memories must align with observations")
+        if self.resident_kv:
+            self._check_resident_memory(memories[0])
         for memory in memories:
             if memory is not None and memory.token_ids_buffer.device != self.device:
                 raise ValueError("batch memories must already be on the model device")
@@ -381,6 +450,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     def _ensure_capacity(self, required: int) -> None:
         if required <= self.storage.shape[-2]:
             return
+        if self.resident_kv:
+            raise ValueError("resident KV has fixed capacity; rebuild the runtime with a larger arena")
         limit = (
             self.batch_size * self.policy.max_context + self._spare_tokens
             if self.pooled_kv
@@ -416,6 +487,14 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             else 1
             for row, n in enumerate(past)
         ]
+        if self.resident_kv:
+            capacity = self.storage.shape[-2] - self._spare_tokens
+            if required[0] > capacity:
+                raise ValueError(
+                    f"resident KV capacity {capacity} cannot fit turn budget {required[0]}; "
+                    "history was not truncated and no KV was written"
+                )
+            return
         if not self.pooled_kv:
             self._ensure_capacity(max(required))
             return
@@ -580,7 +659,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             return None
         from ...backend.triton.gqa_split_attention import PACKED_MIN_ROWS, gqa_launch_config
 
-        key_bucket = min(self.policy.max_context, max(512, 1 << (max(past) + query - 1).bit_length()))
+        key_bucket = self._key_bucket(max(past) + query)
         key = self._packed_keys.get(gqa_launch_config(PACKED_MIN_ROWS, key_bucket)[4], 0)
         bucket = self.packed_prefill_bucket
         tokens = -(-sum(sizes) // bucket) * bucket
@@ -631,6 +710,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     def prewarm(self, observations: Sequence[Observation], *, context_buckets: Sequence[int]) -> None:
         """Capture supplied input shapes before measurement, without retaining answers."""
         self._validate()
+        if self.resident_kv and self._single_kv_lease is not None:
+            raise RuntimeError("reset_resident_kv before prewarming; capture overwrites the resident arena")
         if not self.use_cuda_graph:
             return
         if self._pending_generation is not None:
@@ -679,6 +760,8 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             finally:
                 self.capture_enabled = False
                 self._pending_generation = None
+                if self.resident_kv:
+                    self._set_resident_layout()
             self.storage.zero_()
             self._resident_rows = [None] * self.batch_size
 
@@ -705,6 +788,13 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             if (query, key) not in graphs:
                 graphs[(query, key)] = self._capture_batch(query, key, tree=tree)
 
+    def _key_bucket(self, extent: int) -> int:
+        """Round an attention bound within the allocated scratch storage."""
+        limit = self.storage.shape[-2]
+        if self.pooled_kv:
+            limit = min(limit, self.policy.max_context)
+        return min(limit, max(512, 1 << (extent - 1).bit_length()))
+
     def _forward(
         self,
         hidden: torch.Tensor,
@@ -715,9 +805,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         write_lengths: Sequence[int] | None = None,
     ) -> torch.Tensor:
         query = hidden.shape[1]
-        extent = max(past) + query
-        limit = self.policy.max_context if self.pooled_kv else self.storage.shape[-2]
-        key_bucket = min(limit, max(512, 1 << (extent - 1).bit_length()))
+        key_bucket = self._key_bucket(max(past) + query)
         written = [query] * self.batch_size if write_lengths is None else write_lengths
         offsets, lengths = self._upload(np.asarray(past, dtype=np.int64), np.asarray(written, dtype=np.int64))
         self._write_lengths.copy_(lengths)
@@ -745,11 +833,15 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
             rows = prepared.turns
             if not 1 <= len(rows) <= self.batch_size:
                 raise ValueError("prepared batch does not fit this runtime")
+            if self.resident_kv:
+                self._check_resident_memory(rows[0].memory)
             sizes = [row.turn.input_ids.shape[1] for row in rows]
             query = self._query_bucket(max(sizes))
             past = [0 if row.memory is None else row.memory.seq_len for row in rows]
             past += [0] * (self.batch_size - len(rows))
             self._plan_rows(past, query, len(rows))
+            if self.resident_kv:
+                self._begin_resident_turn(rows[0].memory)
             packed = self._packed_graph(sizes, query, past)
             if packed is None:
                 token_ids = torch.zeros(self.batch_size, query, device=self.device, dtype=torch.long)
@@ -767,7 +859,9 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                 ids, pos = row.turn.input_ids[0], row.positions[:, 0]
                 if memory is not None:
                     resident = self._resident_rows[index]
-                    if resident is not None and resident[0]() is memory and resident[1] == memory.seq_len:
+                    if (self.resident_kv and memory._resident_lease is self._single_kv_lease) or (
+                        resident is not None and resident[0]() is memory and resident[1] == memory.seq_len
+                    ):
                         self.counters["memory_resident_hits"] += 1
                     else:
                         destination = self._row_kv(index, 0, past[index])
@@ -831,7 +925,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     def generate(
         self, prefix: ActiveVLNBatchPrefix, *, cancelled: Callable[[], bool] | None = None
     ) -> tuple[ActiveVLNGeneration, ...]:
-        """Decode all live rows together; snapshot private histories only after success."""
+        """Decode all live rows together and publish committed histories only after success."""
         self._validate()
         with self.lock:
             if prefix.owner is not self._owner or self._pending_generation != prefix.generation:
@@ -918,7 +1012,7 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
     _OWNED_KV_ALIGNMENT = 4096
 
     def _commit_row_kv(self, row: int, length: int, memory: ActiveVLNMemory | None) -> torch.Tensor:
-        """Return this row's persistent committed-KV buffer, filled from scratch.
+        """Return the resident arena or copy scratch into this row's private KV.
 
         The buffer replaces the previous ``_row_kv(...).clone().contiguous()``
         per-call allocation. Reuse requires ownership identity: a buffer is
@@ -929,6 +1023,12 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
         so earlier memories keep their committed histories. Capacity grows by a
         fixed token alignment instead of a full-history reallocation.
         """
+        if self.resident_kv:
+            if length > self._row_capacities[0]:
+                raise ValueError("resident KV commit exceeds its fixed capacity")
+            # The uncommitted suffix is already in its final location. Metadata
+            # publication below is the transaction's only commit operation.
+            return self.storage
         source = self._row_kv(row, 0, length)
         entry = self._owned_rows[row]
         if entry is not None:
@@ -992,10 +1092,15 @@ class ActiveVLNBatchedRuntime(ActiveVLNGraphRuntime):
                 + (prefix.prepared.turns[row].turn.prompt_sha256,),
                 _next_position=coordinates[row],
                 _packed_kv=packed,
+                _resident_lease=self._single_kv_lease if self.resident_kv else None,
             )
-            self._owned_rows[row] = (packed, ref(memory), layers)
-            self._resident_rows[row] = (ref(memory), memory.seq_len)
             generations.append(
                 ActiveVLNGeneration(memory, response[None], response_scores[None], reasons[row])
             )
+            if self.resident_kv:
+                self._single_kv_memory = ref(memory)
+                self.counters["resident_kv_commits"] += 1
+            else:
+                self._owned_rows[row] = (packed, ref(memory), layers)
+            self._resident_rows[row] = (ref(memory), memory.seq_len)
         return tuple(generations)

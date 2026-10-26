@@ -8,6 +8,41 @@ This is an offline latency workload, without Habitat or SR/SPL measurement.
 Both datasets use `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` at revision
 `160987313e3e869705f42400d1b8f28177044518` and its R2R action grammar.
 
+## Orin NX: 48-episode results
+
+Orin NX 16GB, batch=1, using the checkpoint above. Historical
+[configurations and scripts](https://github.com/yufoo1/EmbodiInfer/tree/3fbda32281853c8c3005d2b19cc39d9035320cf0/benchmarks/activevln-benchmark/orin-nx)
+record the environment and runtime switches.
+INT8 uses calibrated W8A8 for text and vision block MLPs, with the remaining
+layers in BF16.
+
+After 33 untimed warmup calls, BF16 offline replay completed 48 R2R episodes /
+2,997 frames: **662.47 ms mean
+E2E**, 647.74 ms mean forward, and 9.949 / 11.025 GiB peak CUDA allocated /
+reserved memory, with no OOM or execution fallback.
+
+The separate EmbodiRun closed-loop comparison uses the same 48 selected R2R
+training episodes and matching initial observations/poses:
+
+| Metric | BF16 baseline | Calibrated INT8 |
+| --- | ---: | ---: |
+| Successes / 48 | 33 | 28 |
+| SR | 68.75% | 58.33% |
+| SPL | 0.6437 | 0.5522 |
+| Navigation error | 4.679 m | 5.722 m |
+| Oracle SR | 75.00% | 66.67% |
+| Model calls | 930 | 986 |
+| Model E2E mean / P95 | 669.96 / 914.56 ms | 514.84 / 726.24 ms |
+
+Both runs completed without OOM or invalid actions. E2E covers decoded CPU RGB
+to CPU actions, excluding disk I/O, startup/warmup, HTTP and simulator execution.
+**INT8 lowers observed mean E2E by 23.2%, but SR drops 10.42 percentage points;
+BF16 remains the default.** Excluding the calibration episode still gives
+32/47 versus 27/47 successes. Different closed-loop trajectories and call counts
+prevent interpreting these timings as a fixed-input speedup.
+These historical results cover R2R only and predate the new `resident_kv` option;
+that option has no NX performance or navigation result yet.
+
 ## Tensor batches
 
 `benchmark_batch.py` measures true tensor batches with independent episode
@@ -27,6 +62,12 @@ the complete batch succeeds. A prefix belongs to one runtime and is invalidated
 by its next prefill or generation attempt. Generic engine/HTTP session batching,
 sampling and training keep their existing contracts and are not exposed by this
 policy-local inference API.
+
+For batch one, optional `resident_kv: true` commits into a fixed `kv_pool_tokens`
+arena without copying history. Continue only the latest returned memory and call
+`runtime.reset_resident_kv()` between sessions; both harnesses reset automatically.
+Memories borrow the arena until reset: use `memory.fork()` for private snapshots.
+Insufficient capacity rejects the turn before writes. The option defaults to false.
 
 CUDA Graph, rounded fusion, split-KV attention and root-partitioned action trees
 are supported. Each row can verify a different tree or take a singleton fallback

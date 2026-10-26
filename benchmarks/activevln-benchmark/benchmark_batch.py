@@ -170,6 +170,7 @@ def run(config: dict[str, Any], output: Path) -> int:
                 gpu_preprocess=config.get("gpu_preprocess", False),
                 attention_kernel=config.get("attention_kernel", "split"),
                 incremental_kv_commit=config.get("incremental_kv_commit", False),
+                resident_kv=config.get("resident_kv", False),
                 vision_kernel=config.get("vision_kernel", "hf"),
                 skip_padded_queries=config.get("skip_padded_queries", False),
                 packed_prefill=config.get("packed_prefill", False),
@@ -196,6 +197,7 @@ def run(config: dict[str, Any], output: Path) -> int:
                 memories = [generation.memory for generation in generations]
                 del prepared, generations
             del memories, observation
+            runtime.reset_resident_kv()
             gc.collect()
             torch.cuda.synchronize(device)
             report["warmup_seconds"] = time.perf_counter() - start
@@ -300,6 +302,8 @@ def run(config: dict[str, Any], output: Path) -> int:
                     if slot.step
                     < (len(slot.episode.frames) if limit is None else min(limit, len(slot.episode.frames)))
                 ]
+                if not slots:
+                    runtime.reset_resident_kv()
                 del prepared, prefix, generations, results, actions, observations, images, result, slot
                 if len(report["batches"]) % 25 == 0:
                     report["metrics"] = summarize_batches(report["batches"])

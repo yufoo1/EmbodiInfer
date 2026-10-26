@@ -36,7 +36,26 @@ class _LayerBuffer:
 
 
 @dataclass
+class _ResidentKVLease:
+    """Invalidate borrowed arena views together when their session is reset."""
+
+    valid: bool = True
+
+    def check(self) -> None:
+        if not self.valid:
+            raise RuntimeError(
+                "resident KV memory is invalidated; retain a fork before resetting its runtime"
+            )
+
+
+@dataclass
 class ActiveVLNMemory:
+    """A visible episode prefix with private or explicitly leased KV storage.
+
+    Resident-runtime memories borrow their arena until session reset. Keep raw
+    tensor views within that lifetime; use ``fork()`` for an owned snapshot.
+    """
+
     layers: list[_LayerBuffer]
     token_ids_buffer: torch.Tensor  # [capacity]
     attention_buffer: torch.Tensor  # [capacity]
@@ -46,17 +65,25 @@ class ActiveVLNMemory:
     prompt_hashes: tuple[str, ...] = field(default_factory=tuple)
     _next_position: int | None = None
     _packed_kv: torch.Tensor | None = field(default=None, repr=False)
+    _resident_lease: _ResidentKVLease | None = field(default=None, repr=False, compare=False)
+
+    def _check_lease(self) -> None:
+        if self._resident_lease is not None:
+            self._resident_lease.check()
 
     @property
     def seq_len(self) -> int:
+        self._check_lease()
         return self.length
 
     @property
     def capacity(self) -> int:
+        self._check_lease()
         return self.token_ids_buffer.shape[0]
 
     @property
     def next_position(self) -> int:
+        self._check_lease()
         if self.length == 0:
             return 0
         if self._next_position is not None:
@@ -65,25 +92,46 @@ class ActiveVLNMemory:
 
     @property
     def token_ids(self) -> torch.Tensor:
+        self._check_lease()
         return self.token_ids_buffer[: self.length][None]
 
     @property
     def attention_mask(self) -> torch.Tensor:
+        self._check_lease()
         return self.attention_buffer[: self.length][None]
 
     @property
     def position_ids(self) -> torch.Tensor:
+        self._check_lease()
         return self.position_buffer[:, : self.length, None].transpose(1, 2)
 
     def visible_kv(self) -> list[tuple[torch.Tensor, torch.Tensor]]:
+        self._check_lease()
         return [(layer.key[:, :, : self.length], layer.value[:, :, : self.length]) for layer in self.layers]
 
     @property
     def packed_kv(self) -> torch.Tensor | None:
         """Visible inference KV, when layers share one allocation; never includes spare slots."""
+        self._check_lease()
         return None if self._packed_kv is None else self._packed_kv[..., : self.length, :]
 
     def to(self, device: torch.device | str) -> ActiveVLNMemory:
+        """Move private state; borrowed resident state becomes an independent snapshot."""
+        self._check_lease()
+        if self._resident_lease is not None:
+            # Even a same-device conversion must detach from the leased arena.
+            packed = self.packed_kv.to(device=device, copy=True)
+            return ActiveVLNMemory(
+                layers=_layer_views(packed),
+                token_ids_buffer=self.token_ids_buffer[: self.length].to(device=device, copy=True),
+                attention_buffer=self.attention_buffer[: self.length].to(device=device, copy=True),
+                position_buffer=self.position_buffer[:, : self.length].to(device=device, copy=True),
+                length=self.length,
+                max_length=self.max_length,
+                prompt_hashes=self.prompt_hashes,
+                _next_position=self._next_position,
+                _packed_kv=packed,
+            )
         packed = None if self._packed_kv is None else self._packed_kv.to(device)
         return ActiveVLNMemory(
             layers=[layer.to(device) for layer in self.layers] if packed is None else _layer_views(packed),
@@ -103,6 +151,7 @@ class ActiveVLNMemory:
         The optional spare capacity is bounded by the context limit and changes
         allocation only; visible length and committed state remain unchanged.
         """
+        self._check_lease()
         if type(extra_capacity) is not int or extra_capacity < 0:
             raise ValueError("extra_capacity must be a nonnegative Python integer")
         capacity = min(self.max_length, max(16, self.length + extra_capacity))
@@ -160,6 +209,7 @@ class ActiveVLNMemory:
 
     def compact(self, keep: Sequence[int] | torch.Tensor | None = None) -> ActiveVLNMemory:
         """Append-only ActiveVLN has no token compaction in the first version."""
+        self._check_lease()
         if keep is not None:
             indices = keep.tolist() if isinstance(keep, torch.Tensor) else list(keep)
             if indices not in ([], [0]):
@@ -294,6 +344,11 @@ class ActiveVLNMemory:
         avoid a GPU reduction/synchronization for every generated token. Calls
         without it invalidate the cached value and retain the reference lookup.
         """
+        self._check_lease()
+        if self._resident_lease is not None:
+            raise RuntimeError(
+                "cannot append to borrowed resident KV; continue through its runtime or fork it"
+            )
         if next_position is not None and (type(next_position) is not int or next_position < 0):
             raise ValueError("next_position must be a nonnegative Python integer")
         q_len = token_ids.shape[-1]

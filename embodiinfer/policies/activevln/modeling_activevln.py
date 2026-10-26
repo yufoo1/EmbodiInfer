@@ -622,6 +622,7 @@ class ActiveVLNPolicy(VLAPolicy):
         gpu_preprocess: bool = False,
         attention_kernel: str = "split",
         incremental_kv_commit: bool = False,
+        resident_kv: bool = False,
         vision_kernel: str = "hf",
         skip_padded_queries: bool = False,
         packed_prefill: bool = False,
@@ -635,6 +636,12 @@ class ActiveVLNPolicy(VLAPolicy):
         retain their existing contracts; this is an inference-only policy API.
         Sampled decoding follows the policy's temperature/top-p; phrase trees
         stay greedy-only, grammar trees verify either rule exactly.
+
+        ``resident_kv=True`` requires batch one and explicit ``kv_pool_tokens``.
+        It returns borrowed, append-only session memories in a fixed arena.
+        Continue only the latest memory; reset the runtime between live sessions,
+        and fork before reset to keep a private snapshot. Capacity exhaustion
+        raises before KV writes instead of growing or truncating the history.
         """
         from .batching_activevln import ActiveVLNBatchedRuntime
 
@@ -658,6 +665,7 @@ class ActiveVLNPolicy(VLAPolicy):
             gpu_preprocess=gpu_preprocess,
             attention_kernel=attention_kernel,
             incremental_kv_commit=incremental_kv_commit,
+            resident_kv=resident_kv,
             vision_kernel=vision_kernel,
             skip_padded_queries=skip_padded_queries,
             packed_prefill=packed_prefill,
