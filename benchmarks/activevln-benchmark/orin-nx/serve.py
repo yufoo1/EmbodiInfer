@@ -1,4 +1,4 @@
-"""Serve the measured Orin NX profile using the shared batch HTTP adapter."""
+"""Serve the optimized device profiles using the shared batch HTTP adapter."""
 
 from __future__ import annotations
 
@@ -8,9 +8,11 @@ import hashlib
 import importlib.util
 import json
 import os
+import random
 import sys
 import time
 from contextlib import nullcontext
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -44,6 +46,10 @@ def main() -> None:
     config = json.loads(args.config.read_text())
     device = benchmark.cuda_device(config)
     torch.set_num_threads(config["cpu_threads"])
+    random.seed(config["seed"])
+    np.random.seed(config["seed"])
+    torch.manual_seed(config["seed"])
+    torch.set_float32_matmul_precision("highest")
     started = time.monotonic()
     from streamed_loading import streamed_loading
 
@@ -59,6 +65,7 @@ def main() -> None:
             max_context=config["max_context"],
             do_sample=config["do_sample"],
             repetition_penalty=config["repetition_penalty"],
+            action_space=config.get("action_space", "r2r"),
         )
         policy.to(device=device, dtype=getattr(torch, config["dtype"])).eval()
     quantization = {"layer_count": 0, "layers": []}
@@ -71,6 +78,19 @@ def main() -> None:
     elif config.get("precision_experiment"):
         raise ValueError("INT8 requires --calibration")
     episodes = [ep for entry in config["datasets"] for ep in benchmark.load_navigation(entry)]
+
+    def make_observation(image: np.ndarray, instruction: str) -> Any:
+        observation = benchmark.make_observation(image, instruction)
+        if config.get("uint8_observations", False):
+            observation.metadata["rgb_uint8"] = image
+        return observation
+
+    manifest = Path(config["navigation_manifest"])
+    manifest_digest = hashlib.sha256(manifest.read_bytes()).hexdigest()
+    expected_digest = config["navigation"]["selections"][config["evaluation_dataset"]]["sha256"]
+    if manifest_digest != expected_digest:
+        raise ValueError("Navigation manifest changed after configuration was frozen")
+    navigation = json.loads(manifest.read_text())["episodes"]
     with torch.inference_mode():
         runtime = policy.create_batched_runtime(
             batch_size=config["batch_size"],
@@ -98,15 +118,20 @@ def main() -> None:
             packed_prefill_bucket=config.get("packed_prefill_bucket", 64),
             decode_linear=config.get("decode_linear", False),
         )
-        probes = [
-            benchmark.make_observation(benchmark.read_rgb(ep.frames[0]), ep.instruction) for ep in episodes
-        ]
+        # Navigation sensors always produce 640x480 RGB. Share one dummy image
+        # across instructions, avoiding hundreds of full image copies on NX.
+        dummy = make_observation(np.zeros((480, 640, 3), dtype=np.uint8), "shape probe")
+        instructions = sorted(
+            {row["instruction"]["instruction_text"] for row in navigation}
+            | {ep.instruction for ep in episodes}
+        )
+        probes = [replace(dummy, instruction=text) for text in instructions]
         runtime.prewarm(probes, context_buckets=config["prewarm_context_buckets"])
-        del probes
+        del probes, dummy
         warmup = next(ep for ep in episodes if len(ep.frames) >= config["warmup_calls"])
         memories = [None] * config["batch_size"]
         for frame in warmup.frames[: config["warmup_calls"]]:
-            observation = benchmark.make_observation(benchmark.read_rgb(frame), warmup.instruction)
+            observation = make_observation(benchmark.read_rgb(frame), warmup.instruction)
             prepared = runtime.prepare([observation] * config["batch_size"], memories)
             generations = runtime.generate(runtime.prefill(prepared))
             memories = [g.memory for g in generations]
@@ -115,14 +140,9 @@ def main() -> None:
         runtime.reset_resident_kv()
         gc.collect()
         torch.cuda.synchronize(device)
+        torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats(device)
         runtime.reset_stats()
-
-    def make_observation(image: np.ndarray, instruction: str) -> Any:
-        observation = benchmark.make_observation(image, instruction)
-        if config.get("uint8_observations", False):
-            observation.metadata["rgb_uint8"] = image
-        return observation
 
     adapter_benchmark = SimpleNamespace(make_observation=make_observation, timed_model=benchmark.timed_model)
     adapter = TensorBatchAdapter(
@@ -143,19 +163,34 @@ def main() -> None:
     )
     server = create_http_server(service, host="127.0.0.1", port=args.port)
     environment = benchmark.provenance(device)
+    snapshot_path = args.source / "snapshot.json"
+    snapshot = json.loads(snapshot_path.read_text()) if snapshot_path.is_file() else None
+    if snapshot is not None:
+        for relative, expected in snapshot["files"].items():
+            if hashlib.sha256((args.source / relative).read_bytes()).hexdigest() != expected:
+                raise ValueError(f"Frozen source changed: {relative}")
     ready = {
         "pid": os.getpid(),
         "port": server.server_address[1],
         "config": config,
         "source": str(args.source),
+        "source_snapshot": snapshot,
         "environment": environment,
         "adapter_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "allocator_config": os.environ.get("PYTORCH_ALLOC_CONF", os.environ.get("PYTORCH_CUDA_ALLOC_CONF")),
         "startup_seconds": time.monotonic() - started,
+        "navigation_manifest_sha256": manifest_digest,
+        "shape_probe_instructions": len(instructions),
+        "warmup": {
+            "dataset": warmup.dataset,
+            "episode_id": warmup.episode_id,
+            "calls": config["warmup_calls"],
+        },
+        "float32_matmul_precision": torch.get_float32_matmul_precision(),
         "scheduler": scheduler.capabilities(),
         "runtime": runtime.stats(),
         "quantization": quantization,
-        "inference_commit": environment["source_revision"],
+        "inference_commit": snapshot["base_commit"] if snapshot else environment["source_revision"],
         "loading_adapter_sha256": hashlib.sha256(
             Path(__file__).with_name("streamed_loading.py").read_bytes()
         ).hexdigest(),

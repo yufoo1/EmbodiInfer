@@ -1,46 +1,37 @@
 # ActiveVLN · Orin NX
 
-## 运行
-
-使用已准备好的 Jetson Python 环境、BF16 权重和 R2R 数据，配置见 [config.json](config.json)。
-在 NX 上依次启动两组服务，每组评测结束后 Ctrl-C 退出：
+R2R val-unseen，BF16 / 校准 INT8 各 256 集、batch=1；Orin NX 推理，RTX 4090 渲染。
+两组使用相同的按场景比例抽样清单，配置见 [config.json](config.json)。
 
 ```bash
 BENCH=benchmarks/activevln-benchmark/orin-nx
-python "$BENCH/run.py" bf16 --checkpoint "$CKPT" --data-root "$R2R" --output results/nx-bf16
-python "$BENCH/run.py" int8 --checkpoint "$CKPT" --data-root "$R2R" --output results/nx-int8 \
-  --calibration "$CALIBRATION"
+DATASET=r2r
+python "$BENCH/run.py" bf16 --dataset "$DATASET" \
+  --checkpoint "$CKPT" --data-root "$WARMUP_R2R" \
+  --manifest "$MANIFESTS/selected-$DATASET-navigation-256.json" --output "$RUN_ROOT"
+# INT8：把 bf16 改为 int8，使用新的输出目录，并加 --calibration "$CALIBRATION"
 ```
 
-`CALIBRATION` 使用此前的 `calibration-maxima.pt`，脚本校验其哈希。
-在模拟器机器转发 NX 的 `18767` 端口，将该组输出的 `config.json`、`service-ready.json`、
-`service-token` 和保留的 `selected-r2r-navigation-48.json` 放入 `$RUN_ROOT`，然后运行：
+`CKPT` 使用已准备的 BF16 快照；`CALIBRATION` 是保留的 `calibration-maxima.pt`，
+脚本校验哈希。INT8 量化 204 个文本/视觉 MLP 层，其余保持 BF16。
+
+转发 NX 服务端口，将该组输出的配置、ready、token 和 episode 清单复制到模拟器机器的
+`RUN_ROOT`，然后运行：
 
 ```bash
-EMBODIRUN=/path/to/EmbodiRun HABITAT_PYTHON=/path/to/habitat/python SCENES=/path/to/scene_datasets \
-  bash "$BENCH/navigate.sh" "$RUN_ROOT" http://127.0.0.1:18767 "$RUN_ROOT/navigation"
+EMBODIRUN=/path/to/EmbodiRun HABITAT_PYTHON=/path/to/habitat/python \
+SCENES=/path/to/scene_datasets SIMULATOR_GPU=0 \
+  bash "$BENCH/navigate.sh" "$DATASET" "$RUN_ROOT" http://127.0.0.1:18767 "$RUN_ROOT/navigation"
 ```
 
-导航循环与 SR/SPL 由 EmbodiRun 的 `benchmarks/activevln-navigation` 提供。
-权重、校准文件、数据和日志不提交 Git。
+| 精度 | 完成集数 | 模型 E2E mean / P95 | SR | SPL | NE / Oracle SR | 峰值 CUDA allocated / reserved | 整集耗时合计 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BF16 | 256 / 256 | 672.31 / 956.86 ms | 46.09% | 0.4184 | 5.838 m / 50.00% | 9.67 / 10.31 GiB | 90.71 min |
+| INT8 | 256 / 256 | 505.42 / 786.50 ms | 46.48% | 0.4148 | 5.720 m / 51.56% | 6.96 / 8.01 GiB | 65.05 min |
 
-## R2R 48 集结果
+INT8 平均模型 E2E 降低 **24.8%**，SR 增加 0.39 个百分点，SPL 降低 0.0036。
+两组均无 OOM、非法动作或图执行回退。
 
-Orin NX 16GB，batch=1，resident KV；同一组训练集轨迹，排除 33 次 warmup。
-模型为 `Arvil/Qwen2.5-VL-3B_rl_r2r_4000`，版本及运行开关见配置。
-INT8 为 204 个文本/视觉 MLP 层的校准 W8A8，其余保持 BF16。
-
-| 指标 | BF16 | INT8 |
-| --- | ---: | ---: |
-| SR | 68.75%（33/48） | 58.33%（28/48） |
-| SPL | 0.6437 | 0.5522 |
-| NE / Oracle SR | 4.679 m / 75.00% | 5.722 m / 66.67% |
-| 模型调用数 | 930 | 986 |
-| 模型 E2E mean / P95 | 663.06 / 900.64 ms | 512.73 / 718.09 ms |
-| 峰值 CUDA allocated / reserved | 8.54 / 9.19 GiB | 5.84 / 6.89 GiB |
-
-**INT8 平均延迟降低 22.7%，SR 下降 10.42 个百分点，默认仍用 BF16。**
-排除参与校准的第 1 集后，成功数为 32/47 对 27/47。两组均无 OOM、无执行 fallback；
-各自与此前相同精度的 48 条 token/action 轨迹完全一致。
-E2E 从已解码 CPU RGB 到 CPU actions，不含磁盘、warmup、HTTP 和模拟器；
-闭环轨迹不同，这不是固定输入的加速比，也不代表 val-unseen 或 RxR 精度。
+模型 E2E 从已解码 CPU RGB 到 CPU actions，不含预热、HTTP 和模拟器；整集耗时为
+256 集实际耗时之和。两组闭环轨迹、调用数不同（BF16 6480 / INT8 5858），耗时差异不是固定输入的加速比。
+完整 HTTP 耗时、逐集 token/action 轨迹与日志保留在本地，不提交 Git。

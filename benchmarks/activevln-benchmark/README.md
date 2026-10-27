@@ -11,7 +11,7 @@ Both datasets use `Arvil/Qwen2.5-VL-3B_rl_r2r_4000` at revision
 ## Orin NX
 
 See [Orin NX](orin-nx/README.md) for scripts, configuration and the latest
-batch-one BF16 / INT8 R2R results.
+batch-one BF16 / calibrated INT8 R2R results, 256 episodes per precision.
 
 ## Tensor batches
 

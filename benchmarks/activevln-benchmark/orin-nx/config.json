@@ -22,9 +22,10 @@
     4096,
     8192,
     16384,
-    32768
+    32768,
+    65536
   ],
-  "graph_workspace_tokens": 32768,
+  "graph_workspace_tokens": 65536,
   "max_new_tokens": 512,
   "max_context": 128000,
   "do_sample": false,
@@ -40,11 +41,12 @@
       "episode_limit": 48,
       "selection_sha256": "b1fe693db13a4dcf3fbca696c796250c35b31e8e11126ab39b22deec54231457",
       "root": "assets/R2R",
-      "annotations": "assets/R2R/annotations_v1-3.json"
+      "annotations": "assets/R2R/annotations_v1-3.json",
+      "purpose": "startup warmup only; excluded from navigation metrics"
     }
   ],
   "batch_size": 1,
-  "kv_pool_tokens": 32768,
+  "kv_pool_tokens": 65536,
   "grammar_tree_budget": 31,
   "grammar_prefix_weight": 1.0,
   "grammar_local_weight": 1.0,
@@ -69,7 +71,7 @@
     "model-00004-of-00004.safetensors": "ba8d5863729d41b8081aa1b134fccb8375cdcf9ffc10fcfacdac3417ca598e41"
   },
   "reference_environment": {
-    "source_revision": "d7325b425a918ec00691187dbd0d2f7aae73bcbb",
+    "source_revision": "2003f2ad3c7edd12c22ac925ded03129d3a4d374",
     "device": "Jetson Orin NX 16GB",
     "power_mode": "MAXN (mode 0)",
     "gpu_max_frequency_hz": 918000000,
@@ -98,5 +100,22 @@
     "calibration_dataset": null,
     "fused_smoothing": true,
     "script_sha256": "9709a7423c2b1675fb36c674344e4a5e57a763d1d62cbb88186bd622520a4190"
+  },
+  "streamed_loading": true,
+  "allocator_config": "backend:native,garbage_collection_threshold:0.7,max_split_size_mb:128",
+  "navigation": {
+    "episode_count": 256,
+    "split": "val_unseen",
+    "sampling_seed": 42,
+    "sampling_method_version": "sha256-seed-dataset-scene-python-random-min1-v1",
+    "checkpoint_protocol": "R2R checkpoint and R2R action grammar for both datasets; cross-dataset evaluation on RxR",
+    "selections": {
+      "r2r": {
+        "sha256": "ea4c07eeff3eaa2b5cb4085269404b04d5ef19aea8a3db0a44e2f8f576e9f7d8"
+      },
+      "rxr": {
+        "sha256": "3b4d565d6170a54041f449ae9ffceb9c71aeb5b2f8e496bdae0cff9308cc282d"
+      }
+    }
   }
 }
