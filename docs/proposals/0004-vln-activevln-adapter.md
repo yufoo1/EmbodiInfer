@@ -740,3 +740,31 @@ remains faster in all five completed paired conditions. Neither engine achieves
 40 ms E2E; near-40 ms R2R B=4 numbers describe amortized forward only. No native
 vLLM closed-loop SR/SPL claim follows. The canonical benchmark README retains
 the exact conditions, comparative tables, validation limits and evidence paths.
+
+## 21. Opt-in asynchronous execution prefix
+
+For onboard R2R deployment, EmbodiRun may observe during the preceding chunk
+and overlap the next inference with its immutable remaining actions. The B=1
+HTTP adapter advertises `execution_prefix: activevln.execution_prefix.v1` only
+when its loaded processor supports the extension. Request metadata carries
+`activevln_execution = {schema, previous_step_id, remaining_actions}`; rows use
+R2R action IDs and remaining cm/degrees, including fractional progress. At most
+three forward/left/right rows are allowed; an empty tail means already finished.
+The previous step must be exactly `step_id - 1` with committed session memory.
+Unsupported profiles, malformed tails and missing history fail before execution.
+
+The owning processor inserts continuation context in the user turn, shared by
+CPU and GPU image preprocessing. It asks for actions AFTER the committed tail.
+The response echoes `execution_prefix_sha256`, SHA-256 of canonical JSON
+(sorted keys, compact separators, float magnitudes), so clients reject silently
+ignored context. No generic engine scheduling or flow-RTC capability is added.
+EmbodiRun owns observation timing, partial-action estimates, heartbeat renewal,
+STOP/cancellation and draining outstanding requests before session close.
+
+Without metadata, serialized prompts remain byte-identical to the synchronous
+reference; model math, dtype, attention and sampling are unchanged. With metadata,
+this is experimental AR prompt conditioning, not a numerical-parity optimization
+or hard flow-matching prefix guidance. Existing synchronous benchmark accuracy
+must not be attributed to this mode. CPU tests validate prompts, protocol failures,
+context forwarding and acknowledgement; Go2/NX closed-loop accuracy, timing and
+physical calibration remain unverified. No GPU/checkpoint validation is claimed.

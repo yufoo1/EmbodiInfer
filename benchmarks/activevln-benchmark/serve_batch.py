@@ -46,6 +46,9 @@ class TensorBatchAdapter:
         self.lock = threading.RLock()
         self.index = 0
         self.failed = False
+        self.execution_prefix_schema = getattr(
+            getattr(policy, "_processor", None), "execution_prefix_schema", None
+        )
 
     def capabilities(self) -> dict[str, Any]:
         """Advertise actual tensor capacity and independent recurrent sessions."""
@@ -54,6 +57,11 @@ class TensorBatchAdapter:
             "action_space": self.action_space,
             "recurrent": True,
             "max_batch_size": self.runtime.batch_size,
+            **(
+                {"execution_prefix": self.execution_prefix_schema}
+                if self.execution_prefix_schema and self.runtime.batch_size == 1
+                else {}
+            ),
         }
 
     def infer(self, request: RawPolicyRequest) -> ModelResult:
@@ -76,6 +84,19 @@ class TensorBatchAdapter:
             raise ValueError("duplicate slot or session in tensor batch")
         order = sorted(range(len(requests)), key=lambda row: slots[row])
         ordered = [requests[row] for row in order]
+        prefixes = []
+        for request in ordered:
+            prefix = request.metadata.get("activevln_execution")
+            if prefix is not None:
+                if (
+                    self.execution_prefix_schema != "activevln.execution_prefix.v1"
+                    or self.runtime.batch_size != 1
+                ):
+                    raise ValueError("execution prefixes require the updated batch-one ActiveVLN profile")
+                # Keep this adapter usable against frozen synchronous sources
+                # which predate the optional policy-owned prefix parser.
+                prefix = self.policy._processor.parse_execution_prefix(prefix, step_id=request.step_id)
+            prefixes.append(prefix)
         images = []
         for request in ordered:
             if len(request.images) != 1 or request.images[0].name != "observation.images.rgb":
@@ -85,6 +106,9 @@ class TensorBatchAdapter:
         with self.lock, torch.inference_mode():
             if self.failed:
                 raise RuntimeError("a previous model failure invalidated this benchmark process")
+            for prefix, request in zip(prefixes, ordered, strict=True):
+                if prefix is not None and request.session_id not in self.memories:
+                    raise ValueError("execution prefix requires committed session memory")
             torch.cuda.set_device(self.device)
             with torch.cuda.stream(torch.cuda.default_stream(self.device)):
                 evidence = {
@@ -107,6 +131,9 @@ class TensorBatchAdapter:
                         self.benchmark.make_observation(image, request.instruction)
                         for image, request in zip(images, ordered, strict=True)
                     ]
+                    for observation, prefix in zip(observations, prefixes, strict=True):
+                        if prefix is not None:
+                            observation.metadata["activevln_execution"] = prefix.to_wire()
                     prepared = self.runtime.prepare(
                         observations, [self.memories.get(r.session_id) for r in ordered]
                     )
@@ -118,11 +145,12 @@ class TensorBatchAdapter:
                     torch.cuda.synchronize(self.device)
                     elapsed_ms = (time.perf_counter_ns() - start) / 1e6
                     outputs = []
-                    for result, action in zip(decoded, actions, strict=True):
+                    for result, action, prefix in zip(decoded, actions, prefixes, strict=True):
                         if not torch.isfinite(action).all():
                             raise ValueError("nonfinite model action")
                         trace = result.traces[0]
                         values = {
+                            **({"execution_prefix_sha256": prefix.digest} if prefix is not None else {}),
                             "rows": action.tolist(),
                             "token_ids": trace.token_ids.cpu().tolist(),
                             "text": trace.text,

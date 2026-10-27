@@ -5,6 +5,7 @@ from __future__ import annotations
 import io
 import runpy
 from contextlib import nullcontext
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -13,6 +14,7 @@ import torch
 from PIL import Image
 
 from embodiinfer.engine.serve.contracts import RawImage, RawPolicyRequest
+from embodiinfer.policies.activevln.execution_activevln import EXECUTION_PREFIX_SCHEMA, ExecutionPrefix
 
 
 @pytest.fixture
@@ -118,3 +120,40 @@ def test_duplicate_sessions_or_slots_are_rejected_before_model_execution(adapter
     with pytest.raises(ValueError, match="duplicate"):
         adapter.infer_batch([request(0, "a", 3), request(0, "b", 4)])
     assert not hasattr(adapter.runtime, "inputs")
+
+
+def test_prefix_reaches_observation_and_acknowledges_exact_context(adapter):
+    adapter.runtime.batch_size = 1
+    adapter.execution_prefix_schema = EXECUTION_PREFIX_SCHEMA
+    adapter.policy._processor = SimpleNamespace(parse_execution_prefix=ExecutionPrefix.parse)
+
+    class ObservationText(str):
+        def __new__(cls, text):
+            value = super().__new__(cls, text)
+            value.metadata = {}
+            return value
+
+    adapter.benchmark.make_observation = lambda image, text: ObservationText(text)
+    adapter.infer(request(0, "a", 3))
+    value = {"schema": EXECUTION_PREFIX_SCHEMA, "previous_step_id": 0, "remaining_actions": [[1, 12.5]]}
+    next_request = replace(request(0, "a", 4), step_id=1, metadata={"activevln_execution": value})
+    result = adapter.infer(next_request)
+    assert adapter.runtime.inputs[0][0].metadata["activevln_execution"] == value
+    assert result.actions[0].values["execution_prefix_sha256"] == ExecutionPrefix.parse(value).digest
+    assert adapter.memories["a"].seq_len == 4
+    assert adapter.capabilities()["execution_prefix"] == EXECUTION_PREFIX_SCHEMA
+    adapter.runtime.batch_size = 2
+    assert "execution_prefix" not in adapter.capabilities()
+
+
+def test_prefix_rejection_never_advances_model_state(adapter):
+    value = {"schema": EXECUTION_PREFIX_SCHEMA, "previous_step_id": 0, "remaining_actions": []}
+    next_request = replace(request(0, "a", 4), step_id=1, metadata={"activevln_execution": value})
+    with pytest.raises(ValueError, match="updated batch-one"):
+        adapter.infer(next_request)
+    adapter.runtime.batch_size = 1
+    adapter.execution_prefix_schema = EXECUTION_PREFIX_SCHEMA
+    adapter.policy._processor = SimpleNamespace(parse_execution_prefix=ExecutionPrefix.parse)
+    with pytest.raises(ValueError, match="committed session"):
+        adapter.infer(next_request)
+    assert not adapter.memories and not adapter.failed and not hasattr(adapter.runtime, "inputs")
